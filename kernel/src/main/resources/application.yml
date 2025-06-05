@@ -1,0 +1,9 @@
+spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.http.converter.json: DEBUG
+    com.zhonghe: DEBUG

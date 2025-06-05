@@ -1,0 +1,49 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhonghe.adapter.mapper.U8.GLAccvouchMapper">
+
+    <select id="selectGLAccvouchById" parameterType="int" resultType="com.zhonghe.adapter.model.U8.GLAccvouch">
+        SELECT * FROM GL_accvouch WHERE [i_id] = #{iId}
+    </select>
+
+    <insert id="insertFull" parameterType="com.zhonghe.adapter.model.U8.GLAccvouch" useGeneratedKeys="true" keyProperty="iId">
+        INSERT INTO GL_accvouch (
+            iperiod, csign, isignseq, ino_id, inid, dbill_date, idoc,
+            cbill, ccheck, cbook, ibook, ccashier, iflag, ctext1, ctext2,
+            cdigest, ccode, cexch_name, md, mc, md_f, mc_f, nfrat, nd_s, nc_s,iyperiod,iyear,cdept_id,csup_id
+        )
+        VALUES (
+                   #{iperiod}, #{csign}, #{isignseq}, #{inoId}, #{inid}, GETDATE(), #{idoc},
+                   #{cbill}, #{ccheck}, #{cbook}, #{ibook}, #{ccashier}, #{iflag}, #{ctext1}, #{ctext2},
+                   #{cdigest}, #{ccode}, #{cexchName}, #{md}, #{mc}, #{mdF}, #{mcF}, #{nfrat}, #{ndS}, #{ncS}, #{iYPeriod}, #{iyear}, #{cdept_id}, #{csup_id}
+               )
+    </insert>
+
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO GL_accvouch (
+        iperiod, csign, isignseq, ino_id, inid, dbill_date, idoc,
+        cbill, ccheck, cbook, ibook, ccashier, iflag, ctext1, ctext2,
+        cdigest, ccode, cexch_name, md, mc, md_f, mc_f, nfrat, nd_s,nc_s,iyperiod,iyear,cdept_id,csup_id
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.iperiod}, #{item.csign}, #{item.isignseq}, #{item.inoId}, #{item.inid}, '2015-01-31', #{item.idoc},
+            #{item.cbill}, #{item.ccheck}, #{item.cbook}, #{item.ibook}, #{item.ccashier}, #{item.iflag}, #{item.ctext1}, #{item.ctext2},
+            #{item.cdigest}, #{item.ccode}, #{item.cexchName}, #{item.md}, #{item.mc}, #{item.mdF}, #{item.mcF}, #{item.nfrat}, #{item.ndS},
+            #{item.ncS},#{item.iYPeriod},#{item.iyear},#{item.cdeptId},#{item.csupId}
+            )
+        </foreach>
+    </insert>
+
+    <select id="selectInoIdMaxByMonth" resultType="java.lang.Integer">
+        SELECT MAX(ino_id) AS max_inid
+        FROM GL_accvouch
+        WHERE iyperiod = 201501
+          and iyear = 2015
+        --         WHERE iyperiod = MONTH(GETDATE())
+--           and iyear = YEAR(GETDATE())
+
+    </select>
+</mapper>

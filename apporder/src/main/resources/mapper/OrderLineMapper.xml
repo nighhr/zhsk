@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.apporder.mapper.OrderLineMapper">
+
+    <select id="selectByOrderId" resultType="com.zhonghe.apporder.model.SalesOrderLine">
+        SELECT *
+        FROM omssalesorderline
+        WHERE orderId = #{orderId}
+          AND tenantId = #{tenantId}
+          AND deleted = 0
+        ORDER BY createTime ASC
+    </select>
+
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO omssalesorderline (
+        id, tenantId, orderId,
+        imgUrl, itemCode, itemFullName, itemAbbrName,
+        price, lineQty, lineAmount, memo,creator,createTime
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.id}, #{item.tenantId}, #{item.orderId},
+            #{item.imgUrl}, #{item.itemCode}, #{item.itemFullName}, #{item.itemAbbrName},
+            #{item.price}, #{item.lineQty}, #{item.lineAmount}, #{item.memo},#{item.creator},#{item.createTime}
+            )
+        </foreach>
+    </insert>
+    <update id="deleteByOrderId">
+        UPDATE omssalesorderline
+        SET deleted = 1,
+            updater = #{updater},
+            updateTime = NOW()
+        WHERE orderId = #{orderId}
+          AND tenantId = #{tenantId}
+    </update>
+</mapper>

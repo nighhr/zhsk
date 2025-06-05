@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.apporder.mapper.ItemMapper">
+
+    <select id="selectItems" resultType="com.zhonghe.apporder.model.VO.ItemVO">
+        SELECT i.id,
+               i.itemCode,
+               i.itemFullName,
+               i.itemAbbreviation,
+               i.itemImg,
+               i.uomName,
+               i.salesPrice
+        FROM pimitem i
+        WHERE i.tenantId = #{tenantId}
+          AND i.deleted = false
+        ORDER BY i.itemFullName
+    </select>
+
+    <select id="selectById" resultType="com.zhonghe.apporder.model.Item">
+        SELECT *
+        FROM pimitem i
+        where id = #{id}
+          AND tenantId = #{tenantId}
+    </select>
+</mapper>
+

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.apporder.mapper.CustomerMapper">
+    <select id="selectCustomersByMemberId" resultType="com.zhonghe.apporder.model.VO.CustomerVO">
+        SELECT
+            t1.id,
+            t1.customerCode,
+            t1.customerName,
+            t1.customerAddress
+        FROM
+            customer t1
+        WHERE
+            t1.memberId = #{memberId}
+          AND t1.deleted = 0
+          AND t1.enabled = 1
+    </select>
+</mapper>

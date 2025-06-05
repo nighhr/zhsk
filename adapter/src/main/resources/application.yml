@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    secondary:
+      jdbc-url: "jdbc:sqlserver://192.168.28.26:1433;databaseName=UFDATA_999_2014;encrypt=true;trustServerCertificate=true"
+      username: sa
+      password: "Aa123456"
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      hikari:
+        pool-name: SecondarySQLServerPool
+        maximum-pool-size: 5
+        connection-timeout: 30000
+
+mybatis:
+  secondary:
+    mapper-locations: classpath:mapper/u8/*.xml
+    type-aliases-package: com.zhonghe.adapter.model.U8
+
+logging:
+  level:
+    com.zhonghe.adapter.mapper.U8: DEBUG
