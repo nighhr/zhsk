@@ -6,6 +6,7 @@ import com.zhonghe.apporder.model.User;
 import com.zhonghe.apporder.model.VO.SalesOrderVO;
 import com.zhonghe.kernel.vo.PageResult;
 
+import java.text.ParseException;
 import java.util.Map;
 
 public interface OrderService {
@@ -20,7 +21,7 @@ public interface OrderService {
      */
     SalesOrderVO getOrderDetailById(String orderId, Long tenantId);
 
-    String createOrder(OrderCreateDTO orderCreateDTO, User currentUser);
+    String createOrder(OrderCreateDTO orderCreateDTO, User currentUser) throws ParseException;
 
     SalesOrderVO updateOrder(OrderCreateDTO orderCreateDTO, User currentUser);
 }

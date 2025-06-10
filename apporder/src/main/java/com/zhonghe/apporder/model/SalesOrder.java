@@ -1,5 +1,6 @@
 package com.zhonghe.apporder.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.zhonghe.kernel.model.BaseEditModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,6 +33,7 @@ public class SalesOrder extends BaseEditModel {
     /**
      * 订单时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date orderDate;
     /**
      * 订单状态（1.保存2.提交3.审核中4.审核通过）

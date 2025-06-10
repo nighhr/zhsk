@@ -6,7 +6,7 @@
         select t1.id,t1.tenantId,t1.userName,t1.userCode,t1.mobileNo,t1.departmentName,t1.lastLoginTime
         from kerneluser t1
         where t1.openId = #{openId}
-          and t1.userType = '1'
+          and t1.userType = 1
           and t1.enabled = true
           and t1.deleted = false
           and t1.tenantId = 1
@@ -17,7 +17,7 @@
         from kerneluser t1
         where t1.tenantId = 1
           and t1.mobileNo = #{mobileNo}
-          and t1.userType = '1'
+          and t1.userType = 1
           and t1.enabled = true
           and t1.deleted = false
     </select>

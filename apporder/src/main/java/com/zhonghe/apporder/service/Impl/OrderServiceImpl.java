@@ -17,9 +17,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Service
@@ -73,7 +76,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public String createOrder(OrderCreateDTO orderCreateDTO, User currentUser) {
+    public String createOrder(OrderCreateDTO orderCreateDTO, User currentUser) throws ParseException {
         // 1. 生成订单ID
         String orderId = IdUtil.simpleUUID();
 
@@ -91,7 +94,11 @@ public class OrderServiceImpl implements OrderService {
         } else {
             order.setOrderStatus(OrderStatusEnum.SUBMITTED.getCode());
         }
-        order.setOrderDate(orderCreateDTO.getOrderDate());
+
+        SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        utcFormat.setTimeZone(TimeZone.getTimeZone("UTC")); // 设置为 UTC
+        String format = utcFormat.format(orderCreateDTO.getOrderDate());
+        order.setOrderDate(utcFormat.parse(format));
         order.setMemo(orderCreateDTO.getMemo());
         order.setCreator(currentUser.getUserName());
         order.setCreateTime(new Date());
