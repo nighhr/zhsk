@@ -8,12 +8,27 @@ spring:
       hikari:
         pool-name: PrimaryMySQLPool
         maximum-pool-size: 10
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/apporder-changelog-master.yaml
+    default-schema: aite
+
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.zhonghe.apporder.model
   configuration:
     map-underscore-to-camel-case: true
+
+# 新增的日志配置部分
+logging:
+  level:
+    java.sql.Connection: DEBUG
+    java.sql.Statement: DEBUG
+    java.sql.PreparedStatement: DEBUG
+    java.sql.ResultSet: DEBUG
+    org.apache.ibatis: DEBUG
+    com.zhonghe.apporder.mapper: DEBUG
 
 wechat:
   appid: wxdff311abd067599f

@@ -84,6 +84,11 @@
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-core</artifactId>
+                <version>4.20.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
