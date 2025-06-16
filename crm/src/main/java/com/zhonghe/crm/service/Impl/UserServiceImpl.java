@@ -49,9 +49,9 @@ public class UserServiceImpl implements UserService {
     public Result login(String code) {
         try {
             //查询业务员表
-//            WxSessionDTO wxSessionDTO = wxLogin(code);
-//            ArrayList<User> users = userMapper.selectSalesmanByOpenId(wxSessionDTO.getOpenid());
-            ArrayList<User> users = userMapper.selectSalesmanByOpenId("123123");
+            WxSessionDTO wxSessionDTO = wxLogin(code);
+            ArrayList<User> users = userMapper.selectSalesmanByOpenId(wxSessionDTO.getOpenid());
+//            ArrayList<User> users = userMapper.selectSalesmanByOpenId("123123");
             //如果没有查询到数据 返回为首次绑定 让其输入手机号验证校验
             if (users.isEmpty()) {
                 throw new BusinessException(ErrorCode.BIND_USER);

@@ -11,13 +11,9 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.zhonghe.adapter",
         "com.zhonghe.backoffice"
 })
-@MapperScan({
-        "com.zhonghe.apporder.mapper",
-        "com.zhonghe.adapter.mapper"
-})
 @EnableFeignClients(basePackages = "com.zhonghe.adapter.feign")
-public class AppOrderApplication {
+public class AppCrmApplication {
     public static void main(String[] args) {
-        SpringApplication.run(AppOrderApplication.class, args);
+        SpringApplication.run(AppCrmApplication.class, args);
     }
 }
