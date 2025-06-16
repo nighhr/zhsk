@@ -1,9 +1,9 @@
-package com.zhonghe.apporder.controller;
+package com.zhonghe.crm.controller;
 
-import com.zhonghe.apporder.model.User;
-import com.zhonghe.apporder.model.VO.ItemVO;
-import com.zhonghe.apporder.service.ItemService;
-import com.zhonghe.apporder.service.UserService;
+import com.zhonghe.crm.model.User;
+import com.zhonghe.crm.model.VO.ItemVO;
+import com.zhonghe.crm.service.ItemService;
+import com.zhonghe.crm.service.UserService;
 import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

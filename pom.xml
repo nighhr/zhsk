@@ -12,7 +12,8 @@
         <module>kernel</module>
         <module>backoffice</module>
         <module>adapter</module>
-        <module>apporder</module>
+        <module>crm</module>
+        <module>srm</module>
     </modules>
 
     <properties>

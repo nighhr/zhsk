@@ -1,4 +1,4 @@
-package com.zhonghe.apporder.model;
+package com.zhonghe.crm.model;
 
 import lombok.Data;
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package com.zhonghe.apporder.model.DTO;
+package com.zhonghe.crm.model.DTO;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;

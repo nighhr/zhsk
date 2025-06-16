@@ -1,19 +1,22 @@
 package com.zhonghe.backoffice.mapper;
 
-import com.zhonghe.backoffice.model.Item;
+import com.zhonghe.backoffice.model.Product;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
 
-public interface ItemMapper {
-   List<Item> selectItems(Map<String, Object> params);
+@Mapper
+public interface ProductMapper {
 
-   Item selectById(@Param("HCid") String HCid);
+   List<Product> selectProducts(Map<String, Object> params);
 
-   int insertItem(Item item);
+   Product selectById(@Param("HCid") String HCid);
 
-   int updateItem(Item item);
+   int insertProduct(Product product);
+
+   int updateProduct(Product product);
 
    int deleteById(@Param("HCid") String HCid);
 

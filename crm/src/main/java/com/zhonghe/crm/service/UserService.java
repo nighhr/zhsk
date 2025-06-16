@@ -1,7 +1,7 @@
-package com.zhonghe.apporder.service;
+package com.zhonghe.crm.service;
 
 
-import com.zhonghe.apporder.model.User;
+import com.zhonghe.crm.model.User;
 import com.zhonghe.kernel.vo.Result;
 
 public interface UserService {

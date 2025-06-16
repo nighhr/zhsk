@@ -1,6 +1,6 @@
-package com.zhonghe.apporder.mapper;
+package com.zhonghe.crm.mapper;
 
-import com.zhonghe.apporder.model.SalesOrderLine;
+import com.zhonghe.crm.model.SalesOrderLine;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

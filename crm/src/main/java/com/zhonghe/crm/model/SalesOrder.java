@@ -1,4 +1,4 @@
-package com.zhonghe.apporder.model;
+package com.zhonghe.crm.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.zhonghe.kernel.model.BaseEditModel;

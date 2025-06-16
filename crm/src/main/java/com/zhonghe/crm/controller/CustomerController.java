@@ -1,7 +1,7 @@
-package com.zhonghe.apporder.controller;
+package com.zhonghe.crm.controller;
 
-import com.zhonghe.apporder.model.VO.CustomerVO;
-import com.zhonghe.apporder.service.CustomerService;
+import com.zhonghe.crm.model.VO.CustomerVO;
+import com.zhonghe.crm.service.CustomerService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;

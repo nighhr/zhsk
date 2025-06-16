@@ -1,12 +1,12 @@
-package com.zhonghe.apporder.service.Impl;
+package com.zhonghe.crm.service.Impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zhonghe.apporder.mapper.UserMapper;
-import com.zhonghe.apporder.model.DTO.LoginResult;
-import com.zhonghe.apporder.model.DTO.WxSessionDTO;
-import com.zhonghe.apporder.model.User;
-import com.zhonghe.apporder.service.UserService;
+import com.zhonghe.crm.mapper.UserMapper;
+import com.zhonghe.crm.model.DTO.LoginResult;
+import com.zhonghe.crm.model.DTO.WxSessionDTO;
+import com.zhonghe.crm.model.User;
+import com.zhonghe.crm.service.UserService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.exception.UnauthorizedException;

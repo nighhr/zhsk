@@ -1,6 +1,6 @@
-package com.zhonghe.apporder.model.DTO;
+package com.zhonghe.crm.model.DTO;
 
-import com.zhonghe.apporder.model.User;
+import com.zhonghe.crm.model.User;
 import lombok.Data;
 
 @Data

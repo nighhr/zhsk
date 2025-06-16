@@ -1,8 +1,8 @@
-package com.zhonghe.apporder.service.Impl;
+package com.zhonghe.crm.service.Impl;
 
-import com.zhonghe.apporder.mapper.ItemMapper;
-import com.zhonghe.apporder.model.VO.ItemVO;
-import com.zhonghe.apporder.service.ItemService;
+import com.zhonghe.crm.mapper.ItemMapper;
+import com.zhonghe.crm.model.VO.ItemVO;
+import com.zhonghe.crm.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;

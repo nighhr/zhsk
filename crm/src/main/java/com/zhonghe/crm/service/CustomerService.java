@@ -1,7 +1,7 @@
-package com.zhonghe.apporder.service;
+package com.zhonghe.crm.service;
 
 
-import com.zhonghe.apporder.model.VO.CustomerVO;
+import com.zhonghe.crm.model.VO.CustomerVO;
 
 import java.util.List;
 

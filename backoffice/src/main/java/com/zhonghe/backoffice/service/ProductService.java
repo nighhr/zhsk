@@ -1,12 +1,12 @@
 package com.zhonghe.backoffice.service;
 
-import com.zhonghe.backoffice.model.Item;
+import com.zhonghe.backoffice.model.Product;
 import com.zhonghe.kernel.vo.Result;
 
 import java.util.List;
 import java.util.Map;
 
-public interface ItemService {
+public interface ProductService {
 
-    Result<List<Item>> searchItem(Map<String, Object> params);
+    Result<List<Product>> searchItem(Map<String, Object> params);
 }

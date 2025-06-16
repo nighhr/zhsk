@@ -1,4 +1,4 @@
-package com.zhonghe.apporder.model;
+package com.zhonghe.crm.model;
 
 import com.zhonghe.kernel.model.BaseEditModel;
 import lombok.Data;

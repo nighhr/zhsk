@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.zhonghe.backoffice.mapper.ItemMapper">
+<mapper namespace="com.zhonghe.backoffice.mapper.ProductMapper">
 
     <!-- 通用查询结果映射 -->
-    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.Item">
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.Product">
         <id column="HCid" property="HCid" jdbcType="VARCHAR"/>
         <result column="code" property="code" jdbcType="VARCHAR"/>
         <result column="name" property="name" jdbcType="VARCHAR"/>
@@ -31,10 +31,9 @@
         <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <!-- 查询商品列表（带分页） -->
-    <select id="selectItems" resultMap="BaseResultMap">
+    <select id="selectProducts" resultMap="BaseResultMap">
         SELECT *
-        FROM AT_Item
+        FROM product
         WHERE deleted = false
         <if test="name != null and name != ''">
             AND name LIKE CONCAT('%', #{name}, '%')
@@ -52,7 +51,7 @@
     </select>
 
     <!-- 插入商品 -->
-    <insert id="insertItem" parameterType="com.zhonghe.backoffice.model.Item">
+    <insert id="insertProduct" parameterType="com.zhonghe.backoffice.model.Product">
         INSERT INTO product (
             HCid, code, name, bar_code, provider_no, provider_Number,
             provider_Name, brand_id, brand_Number, brand_Name, producer,
@@ -69,7 +68,7 @@
     </insert>
 
     <!-- 更新商品 -->
-    <update id="updateItem" parameterType="com.zhonghe.backoffice.model.Item">
+    <update id="updateProduct" parameterType="com.zhonghe.backoffice.model.Product">
         UPDATE product
         SET
             code = #{code},

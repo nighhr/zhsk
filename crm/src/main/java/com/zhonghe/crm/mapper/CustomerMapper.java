@@ -1,6 +1,6 @@
-package com.zhonghe.apporder.mapper;
+package com.zhonghe.crm.mapper;
 
-import com.zhonghe.apporder.model.VO.CustomerVO;
+import com.zhonghe.crm.model.VO.CustomerVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

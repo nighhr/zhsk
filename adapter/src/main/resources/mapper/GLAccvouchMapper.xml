@@ -27,12 +27,12 @@
         cdigest, ccode, cexch_name, md, mc, md_f, mc_f, nfrat, nd_s,nc_s,iyperiod,iyear,cdept_id,csup_id
         )
         VALUES
-        <foreach collection="list" item="item" separator=",">
+        <foreach collection="list" product="product" separator=",">
             (
-            #{item.iperiod}, #{item.csign}, #{item.isignseq}, #{item.inoId}, #{item.inid}, '2015-01-31', #{item.idoc},
-            #{item.cbill}, #{item.ccheck}, #{item.cbook}, #{item.ibook}, #{item.ccashier}, #{item.iflag}, #{item.ctext1}, #{item.ctext2},
-            #{item.cdigest}, #{item.ccode}, #{item.cexchName}, #{item.md}, #{item.mc}, #{item.mdF}, #{item.mcF}, #{item.nfrat}, #{item.ndS},
-            #{item.ncS},#{item.iYPeriod},#{item.iyear},#{item.cdeptId},#{item.csupId}
+            #{product.iperiod}, #{product.csign}, #{product.isignseq}, #{product.inoId}, #{product.inid}, '2015-01-31', #{product.idoc},
+            #{product.cbill}, #{product.ccheck}, #{product.cbook}, #{product.ibook}, #{product.ccashier}, #{product.iflag}, #{product.ctext1}, #{product.ctext2},
+            #{product.cdigest}, #{product.ccode}, #{product.cexchName}, #{product.md}, #{product.mc}, #{product.mdF}, #{product.mcF}, #{product.nfrat}, #{product.ndS},
+            #{product.ncS},#{product.iYPeriod},#{product.iyear},#{product.cdeptId},#{product.csupId}
             )
         </foreach>
     </insert>

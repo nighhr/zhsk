@@ -63,23 +63,30 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <!-- 在 crm/pom.xml 的 <build> 标签内添加 -->
     <build>
         <plugins>
-            <!-- 只保留 spring-boot-maven-plugin -->
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
+                        <id>copy-backoffice-resources</id>
+                        <phase>process-resources</phase>
                         <goals>
-                            <goal>repackage</goal>
+                            <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <!-- 最终生成的 JAR 替换原始 JAR，不保留 .original -->
-                            <attach>false</attach>
-                            <classifier>exec</classifier>
-                            <mainClass>com.zhonghe.apporder.AppOrderApplication</mainClass>
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../backoffice/src/main/resources</directory>
+                                    <includes>
+                                        <include>**/*.xml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>

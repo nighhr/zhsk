@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.zhonghe.apporder.mapper.OrderMapper">
+<mapper namespace="com.zhonghe.crm.mapper.OrderMapper">
 
-    <select id="selectSalesOrderListByUser" resultType="com.zhonghe.apporder.model.SalesOrder">
+    <select id="selectSalesOrderListByUser" resultType="com.zhonghe.crm.model.SalesOrder">
         SELECT
         id,
         tenantId,
@@ -63,11 +63,11 @@
             AND orderDate <![CDATA[ <= ]]> #{endDate}
         </if>
     </select>
-    <select id="selectByIdAndTenantId" resultType="com.zhonghe.apporder.model.SalesOrder">
+    <select id="selectByIdAndTenantId" resultType="com.zhonghe.crm.model.SalesOrder">
         SELECT * FROM omssalesorder
         WHERE id = #{id} AND tenantId = #{tenantId} AND deleted = 0
     </select>
-    <insert id="insert" parameterType="com.zhonghe.apporder.model.SalesOrder">
+    <insert id="insert" parameterType="com.zhonghe.crm.model.SalesOrder">
         INSERT INTO omssalesorder (
             id, tenantId, memberId, memberName,
             customerId, customerName, customerAddr,
@@ -78,7 +78,7 @@
                      #{orderDate}, #{orderStatus}, #{totalAmount}, #{memo},#{creator},#{createTime}
                  )
     </insert>
-    <update id="update" parameterType="com.zhonghe.apporder.model.SalesOrder">
+    <update id="update" parameterType="com.zhonghe.crm.model.SalesOrder">
         UPDATE omssalesorder
         <set>
             <if test="customerId != null">customerId = #{customerId},</if>

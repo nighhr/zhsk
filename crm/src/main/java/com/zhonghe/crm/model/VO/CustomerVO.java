@@ -1,4 +1,4 @@
-package com.zhonghe.apporder.model.VO;
+package com.zhonghe.crm.model.VO;
 
 import lombok.Data;
 

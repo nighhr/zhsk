@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    primary:
+      jdbc-url: "jdbc:mysql://localhost:3306/aite?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      username: root
+      password: Root@1234
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        pool-name: PrimaryMySQLPool
+        maximum-pool-size: 10
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/apporder-changelog-master.yaml
+    default-schema: aite
+
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.zhonghe.apporder.model
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 新增的日志配置部分
+logging:
+  level:
+    java.sql.Connection: DEBUG
+    java.sql.Statement: DEBUG
+    java.sql.PreparedStatement: DEBUG
+    java.sql.ResultSet: DEBUG
+    org.apache.ibatis: DEBUG
+    com.zhonghe.apporder.mapper: DEBUG
+
+#wechat:
+#  appid: wxdff311abd067599f
+#  appsecret: 9af1d9aca4a3c1a3c8156c0a429b34b3
+
+api:
+  base-url: http://hndbkd.top:54351
+  sign-header-value: NsRm1fqs+mEW0MROZM4w5w==

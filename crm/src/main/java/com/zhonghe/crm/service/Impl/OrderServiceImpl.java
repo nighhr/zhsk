@@ -1,15 +1,15 @@
-package com.zhonghe.apporder.service.Impl;
+package com.zhonghe.crm.service.Impl;
 
 import cn.hutool.core.util.IdUtil;
-import com.zhonghe.apporder.mapper.OrderLineMapper;
-import com.zhonghe.apporder.mapper.OrderMapper;
-import com.zhonghe.apporder.model.DTO.OrderCreateDTO;
-import com.zhonghe.apporder.model.SalesOrder;
-import com.zhonghe.apporder.model.SalesOrderLine;
-import com.zhonghe.apporder.model.User;
-import com.zhonghe.apporder.model.VO.SalesOrderVO;
-import com.zhonghe.apporder.model.enums.OrderStatusEnum;
-import com.zhonghe.apporder.service.OrderService;
+import com.zhonghe.crm.mapper.OrderLineMapper;
+import com.zhonghe.crm.mapper.OrderMapper;
+import com.zhonghe.crm.model.DTO.OrderCreateDTO;
+import com.zhonghe.crm.model.SalesOrder;
+import com.zhonghe.crm.model.SalesOrderLine;
+import com.zhonghe.crm.model.User;
+import com.zhonghe.crm.model.VO.SalesOrderVO;
+import com.zhonghe.crm.model.enums.OrderStatusEnum;
+import com.zhonghe.crm.service.OrderService;
 import com.zhonghe.kernel.vo.PageResult;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

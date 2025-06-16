@@ -16,9 +16,30 @@ import javax.sql.DataSource;
 
 @Configuration
 @MapperScan(
-        basePackages = "com.zhonghe.backoffice.mapper",
+        basePackages = {
+                "com.zhonghe.crm.mapper"
+        },
         sqlSessionFactoryRef = "primarySqlSessionFactory"
 )
-public class CrmDataSourceConfig {
+public class PrimaryDataSourceConfig {
 
+    @Primary
+    @Bean(name = "primaryDataSource")
+    @ConfigurationProperties(prefix = "spring.datasource.primary")
+    public DataSource primaryDataSource() {
+        // 添加驱动类加载验证
+        return DataSourceBuilder.create()
+                .type(HikariDataSource.class)
+                .build();
+    }
+
+    @Bean(name = "primarySqlSessionFactory")
+    public SqlSessionFactory primarySqlSessionFactory(
+            @Qualifier("primaryDataSource") DataSource dataSource) throws Exception {
+        SqlSessionFactoryBean bean = new SqlSessionFactoryBean();
+        bean.setDataSource(dataSource);
+        bean.setMapperLocations(new PathMatchingResourcePatternResolver()
+                .getResources("classpath:mapper/*.xml"));
+        return bean.getObject();
+    }
 }

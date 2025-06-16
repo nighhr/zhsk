@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.zhonghe.apporder.mapper.ItemMapper">
+<mapper namespace="com.zhonghe.crm.mapper.ItemMapper">
 
-    <select id="selectItems" resultType="com.zhonghe.apporder.model.VO.ItemVO">
+    <select id="selectItems" resultType="com.zhonghe.crm.model.VO.ItemVO">
         SELECT i.id,
                i.itemCode,
                i.itemFullName,
@@ -16,7 +16,7 @@
         ORDER BY i.itemFullName
     </select>
 
-    <select id="selectById" resultType="com.zhonghe.apporder.model.Item">
+    <select id="selectById" resultType="com.zhonghe.crm.model.Item">
         SELECT *
         FROM pimitem i
         where id = #{id}

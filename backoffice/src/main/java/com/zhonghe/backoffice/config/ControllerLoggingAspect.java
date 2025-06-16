@@ -2,6 +2,7 @@ package com.zhonghe.backoffice.config;
 
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.slf4j.Logger;
@@ -57,5 +58,16 @@ public class ControllerLoggingAspect {
         } else {
             logger.info("方法无参数或参数已过滤");
         }
+    }
+    // 新增异常捕获
+    @AfterThrowing(
+            pointcut = "execution(* com.zhonghe.*.controller..*.*(..))",
+            throwing = "ex"
+    )
+    public void logAfterThrowing(JoinPoint joinPoint, Throwable ex) {
+        logger.error("Controller方法执行异常: {}.{}()",
+                joinPoint.getSignature().getDeclaringTypeName(),
+                joinPoint.getSignature().getName(),
+                ex);
     }
 }

@@ -14,9 +14,13 @@ public class AiTeController {
     @Autowired
     private PurInService purInService;
 
+    /**
+     *  采购入库接口
+     * */
     @PostMapping("/pur")
-    public PurInResponse getDeptData() {
+    public PurInResponse getPurInData() {
         return purInService.queryPurIn(1, 50, "", "");
     }
+
 
 }

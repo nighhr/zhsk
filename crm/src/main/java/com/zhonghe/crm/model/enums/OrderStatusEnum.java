@@ -1,4 +1,4 @@
-package com.zhonghe.apporder.model.enums;
+package com.zhonghe.crm.model.enums;
 
 import java.util.Arrays;
 import java.util.Map;

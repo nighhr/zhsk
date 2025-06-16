@@ -11,7 +11,6 @@ import java.util.List;
 public class PurInResponse {
     private String OFlag;
     private String Message;
-    private Integer CountPage;
     private List<FOrder> Data;
 
 }

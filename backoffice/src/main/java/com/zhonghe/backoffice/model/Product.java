@@ -3,8 +3,9 @@ package com.zhonghe.backoffice.model;
 import lombok.Data;
 
 import java.util.Date;
+
 @Data
-public class Item {
+public class Product {
     private String HCid;          // 商品id
     private String code;          // 编号
     private String name;          // 名称

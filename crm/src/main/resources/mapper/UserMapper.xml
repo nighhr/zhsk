@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.zhonghe.apporder.mapper.UserMapper">
+<mapper namespace="com.zhonghe.crm.mapper.UserMapper">
 
-    <select id="selectSalesmanByOpenId" resultType="com.zhonghe.apporder.model.User">
+    <select id="selectSalesmanByOpenId" resultType="com.zhonghe.crm.model.User">
         select t1.id,t1.tenantId,t1.userName,t1.userCode,t1.mobileNo,t1.departmentName,t1.lastLoginTime
         from kerneluser t1
         where t1.openId = #{openId}
@@ -12,7 +12,7 @@
           and t1.tenantId = 1
     </select>
 
-    <select id="selectSalesmanByMobileNo" resultType="com.zhonghe.apporder.model.User">
+    <select id="selectSalesmanByMobileNo" resultType="com.zhonghe.crm.model.User">
         select t1.id,t1.tenantId,t1.userName,t1.userCode,t1.mobileNo,t1.departmentName
         from kerneluser t1
         where t1.tenantId = 1
@@ -21,7 +21,7 @@
           and t1.enabled = true
           and t1.deleted = false
     </select>
-    <select id="selectById" resultType="com.zhonghe.apporder.model.User">
+    <select id="selectById" resultType="com.zhonghe.crm.model.User">
         select * from kerneluser t1
         where t1.id = #{id}
     </select>

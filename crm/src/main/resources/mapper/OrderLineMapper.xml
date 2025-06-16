@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.zhonghe.apporder.mapper.OrderLineMapper">
+<mapper namespace="com.zhonghe.crm.mapper.OrderLineMapper">
 
-    <select id="selectByOrderId" resultType="com.zhonghe.apporder.model.SalesOrderLine">
+    <select id="selectByOrderId" resultType="com.zhonghe.crm.model.SalesOrderLine">
         SELECT *
         FROM omssalesorderline
         WHERE orderId = #{orderId}
@@ -17,11 +17,11 @@
         imgUrl, itemCode, itemFullName, itemAbbrName,
         price, lineQty, lineAmount, memo,creator,createTime
         ) VALUES
-        <foreach collection="list" item="item" separator=",">
+        <foreach collection="list" item="product" separator=",">
             (
-            #{item.id}, #{item.tenantId}, #{item.orderId},
-            #{item.imgUrl}, #{item.itemCode}, #{item.itemFullName}, #{item.itemAbbrName},
-            #{item.price}, #{item.lineQty}, #{item.lineAmount}, #{item.memo},#{item.creator},#{item.createTime}
+            #{product.id}, #{product.tenantId}, #{product.orderId},
+            #{product.imgUrl}, #{product.itemCode}, #{product.itemFullName}, #{product.itemAbbrName},
+            #{product.price}, #{product.lineQty}, #{product.lineAmount}, #{product.memo},#{product.creator},#{product.createTime}
             )
         </foreach>
     </insert>

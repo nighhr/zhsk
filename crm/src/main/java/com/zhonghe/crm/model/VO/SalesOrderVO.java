@@ -1,7 +1,7 @@
-package com.zhonghe.apporder.model.VO;
+package com.zhonghe.crm.model.VO;
 
-import com.zhonghe.apporder.model.SalesOrder;
-import com.zhonghe.apporder.model.SalesOrderLine;
+import com.zhonghe.crm.model.SalesOrder;
+import com.zhonghe.crm.model.SalesOrderLine;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

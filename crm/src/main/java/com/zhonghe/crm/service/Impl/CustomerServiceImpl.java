@@ -1,8 +1,8 @@
-package com.zhonghe.apporder.service.Impl;
+package com.zhonghe.crm.service.Impl;
 
-import com.zhonghe.apporder.mapper.CustomerMapper;
-import com.zhonghe.apporder.model.VO.CustomerVO;
-import com.zhonghe.apporder.service.CustomerService;
+import com.zhonghe.crm.mapper.CustomerMapper;
+import com.zhonghe.crm.model.VO.CustomerVO;
+import com.zhonghe.crm.service.CustomerService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
