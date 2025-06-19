@@ -2,6 +2,7 @@ package com.zhonghe.backoffice.controller;
 
 import com.zhonghe.backoffice.model.Department;
 import com.zhonghe.backoffice.service.DeptService;
+import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +22,7 @@ public class DeptController {
      *  HC部门拉取接口
      * */
     @GetMapping("/get")
-    public ArrayList<Department> getDeptData() {
+    public Result<Integer> getDeptData() {
         return deptService.getDepts();
     }
 }

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.SuppMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.Supplier">
+        <id column="hc_id" property="HCid" jdbcType="BIGINT"/>
+        <result column="no" property="no" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="data_type" property="dataType" jdbcType="VARCHAR"/>
+        <result column="business_category" property="businessCategory" jdbcType="VARCHAR"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.zhonghe.backoffice.model.Supplier" useGeneratedKeys="true" keyProperty="HCid">
+        INSERT INTO supplier
+        (no, name, status, data_type, business_category, create_date, update_date)
+        VALUES
+            (#{no}, #{name}, #{status}, #{dataType}, #{businessCategory}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.zhonghe.backoffice.model.Supplier">
+        UPDATE supplier
+        SET
+            no = #{no},
+            name = #{name},
+            status = #{status},
+            data_type = #{dataType},
+            business_category = #{businessCategory},
+            update_date = NOW()
+        WHERE hc_id = #{HCid}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM supplier WHERE hc_id = #{id}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM supplier WHERE hc_id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap" parameterType="map">
+        SELECT * FROM supplier
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="dataType != null and dataType != ''">
+                AND data_type = #{dataType}
+            </if>
+            <if test="businessCategory != null and businessCategory != ''">
+                AND business_category = #{businessCategory}
+            </if>
+        </where>
+        ORDER BY create_date DESC
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="count" resultType="long" parameterType="map">
+        SELECT COUNT(*) FROM supplier
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="dataType != null and dataType != ''">
+                AND data_type = #{dataType}
+            </if>
+            <if test="businessCategory != null and businessCategory != ''">
+                AND business_category = #{businessCategory}
+            </if>
+        </where>
+    </select>
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO supplier
+        (no, name, status, data_type, business_category, create_date, update_date)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.no},
+            #{item.name},
+            #{item.status},
+            #{item.dataType},
+            #{item.businessCategory},
+            NOW(),
+            NOW()
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        name = VALUES(name),
+        status = VALUES(status),
+        data_type = VALUES(data_type),
+        business_category = VALUES(business_category),
+        update_date = NOW()
+    </insert>
+</mapper>

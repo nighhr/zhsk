@@ -3,10 +3,10 @@ package com.zhonghe.backoffice.service.Impl;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.zhonghe.adapter.feign.DeptClient;
-import com.zhonghe.backoffice.mapper.DeptMapper;
-import com.zhonghe.backoffice.model.Department;
-import com.zhonghe.backoffice.service.DeptService;
+import com.zhonghe.adapter.feign.SuppClient;
+import com.zhonghe.backoffice.mapper.SuppMapper;
+import com.zhonghe.backoffice.model.Supplier;
+import com.zhonghe.backoffice.service.SuppService;
 import com.zhonghe.kernel.vo.Result;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,30 +18,30 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class DeptServiceImpl implements DeptService {
+public class SuppServiceImpl implements SuppService {
 
-    private final DeptClient deptClient;
+    private final SuppClient suppClient;
 
     @Autowired
-    private DeptMapper deptMapper;
+    private SuppMapper suppMapper;
 
     @Override
-    public Result<Integer> getDepts() {
-        ArrayList<Department> insertData = new ArrayList<>();
+    public Result<Integer> getSupp() {
+        ArrayList<Supplier> insertData = new ArrayList<>();
         for (int i = 1; ; i++) {
             ApiRequest request = new ApiRequest(1, 200);
-            String responseString = deptClient.queryDeptInRaw(request);
+            String responseString = suppClient.querySuppInRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
 
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
                 JSONArray dataArray = parse.getJSONArray("Data");
-                List<Department> deptList = JSONUtil.toList(dataArray, Department.class);
-                if (deptList.size() == 0) {
+                List<Supplier> suppList = JSONUtil.toList(dataArray, Supplier.class);
+                if (suppList.size() == 0) {
                     break;
                 } else {
-                    deptMapper.batchInsert(deptList);
-                    insertData.addAll(deptList);
+                    suppMapper.batchInsert(suppList);
+                    insertData.addAll(suppList);
                 }
 
             } else {
@@ -51,6 +51,7 @@ public class DeptServiceImpl implements DeptService {
                 break;
             }
         }
+
 
 
         return Result.success(insertData.size());
