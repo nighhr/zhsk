@@ -1,6 +1,6 @@
 spring:
   datasource:
-    primary:
+    backoffice:
       jdbc-url: "jdbc:mysql://localhost:3306/aite?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
       username: root
       password: Root@1234
@@ -10,29 +10,21 @@ spring:
         maximum-pool-size: 10
   liquibase:
     enabled: true
-    change-log: classpath:db/changelog/apporder-changelog-master.yaml
+    change-log: classpath:db/changelog/backoffice-changelog-master.yaml
     default-schema: aite
 
-
 mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.zhonghe.crm.model
+  mapper-locations:
+    - classpath*:mapper/*.xml
+  type-aliases-package: com.zhonghe.backoffice.model
   configuration:
     map-underscore-to-camel-case: true
 
-# 新增的日志配置部分
+
 logging:
   level:
-    java.sql.Connection: DEBUG
-    java.sql.Statement: DEBUG
-    java.sql.PreparedStatement: DEBUG
-    java.sql.ResultSet: DEBUG
-    org.apache.ibatis: DEBUG
-    com.zhonghe.apporder.mapper: DEBUG
-
-wechat:
-  appid: wxdff311abd067599f
-  appsecret: 9af1d9aca4a3c1a3c8156c0a429b34b3
+    org.mybatis: DEBUG
+    com.zhonghe.backoffice.mapper: DEBUG
 
 api:
   base-url: http://hndbkd.top:54351

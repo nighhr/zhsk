@@ -4,10 +4,7 @@ import com.zhonghe.backoffice.model.Product;
 import com.zhonghe.backoffice.service.ProductService;
 import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -27,4 +24,6 @@ public class ProductController {
 
         return productService.searchItem(params);
     }
+
+
 }

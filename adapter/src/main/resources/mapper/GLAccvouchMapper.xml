@@ -27,7 +27,7 @@
         cdigest, ccode, cexch_name, md, mc, md_f, mc_f, nfrat, nd_s,nc_s,iyperiod,iyear,cdept_id,csup_id
         )
         VALUES
-        <foreach collection="list" product="product" separator=",">
+        <foreach collection="list" item="product" separator=",">
             (
             #{product.iperiod}, #{product.csign}, #{product.isignseq}, #{product.inoId}, #{product.inid}, '2015-01-31', #{product.idoc},
             #{product.cbill}, #{product.ccheck}, #{product.cbook}, #{product.ibook}, #{product.ccashier}, #{product.iflag}, #{product.ctext1}, #{product.ctext2},

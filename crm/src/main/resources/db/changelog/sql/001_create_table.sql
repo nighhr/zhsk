@@ -1,5 +1,7 @@
 -- liquibase formatted sql
-
+-- UPDATE DATABASECHANGELOG
+-- SET MD5SUM = '8:da87877b4a479eb10f0315c4b0db94af'
+-- WHERE ID = '1.02' AND AUTHOR = 'zq' AND FILENAME = 'db/changelog/sql/001_create_table.sql';
 -- changeset zq:1.01
 CREATE TABLE IF NOT EXISTS `kerneluser` (
     `id` int NOT NULL AUTO_INCREMENT,
@@ -57,3 +59,20 @@ CREATE TABLE IF NOT EXISTS `product` (
                            `deleted` tinyint(1) DEFAULT NULL,
                            PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='商品信息表';
+
+CREATE TABLE `department` (
+                              `id` bigint AUTO_INCREMENT COMMENT '部门id',
+                              `HCid` bigint NOT NULL COMMENT '华创部门id',
+                              `code` varchar(50) NOT NULL COMMENT '编码',
+                              `name` varchar(100) NOT NULL COMMENT '名称',
+                              `area_id` bigint DEFAULT NULL COMMENT '区域',
+                              `type` varchar(50) DEFAULT NULL COMMENT '类型',
+                              `parent_id` bigint DEFAULT NULL COMMENT '上级机构id',
+                              `parent_ids` varchar(1000) DEFAULT NULL COMMENT '所有上级机构id',
+                              `create_date` datetime NOT NULL COMMENT '创建时间',
+                              `update_date` datetime NOT NULL COMMENT '更新时间',
+                              PRIMARY KEY (`id`),
+                              KEY `idx_parent_id` (`parent_id`),
+                              KEY `idx_parent_ids` (`parent_ids`(255)),
+                              KEY `idx_area_id` (`area_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='部门表';

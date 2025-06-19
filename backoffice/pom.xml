@@ -28,7 +28,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql-connector.version}</version>
+        </dependency>
         <!-- 日志 -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -53,6 +57,8 @@
                 <includes>
                     <include>**/*.xml</include>
                     <include>**/*.properties</include>
+                    <include>**/*.yml</include>
+                    <include>**/*.yaml</include>
                 </includes>
             </resource>
             <!-- 如果XML文件放在java目录下 -->
@@ -61,6 +67,13 @@
                 <includes>
                     <include>**/*.xml</include>
                 </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources/mapper</directory>
+                <includes>
+                    <include>*.xml</include>
+                </includes>
+                <targetPath>mapper</targetPath>
             </resource>
         </resources>
     </build>

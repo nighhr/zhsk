@@ -7,8 +7,9 @@ import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
 import com.zhonghe.adapter.model.FOrder;
 import com.zhonghe.adapter.model.FOrderLine;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
-import com.zhonghe.adapter.response.PurInResponse;
+import com.zhonghe.adapter.response.AiTeResponse;
 import com.zhonghe.adapter.service.PurInService;
+import com.zhonghe.kernel.vo.Result;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -37,20 +38,20 @@ public class PurInServiceImpl implements PurInService {
     private GLAccvouchMapper glAccvouchMapper;
 
     @Override
-    public PurInResponse queryPurIn(Integer currentPage, Integer pageSize, String name, String code) {
+    public AiTeResponse queryPurIn(Integer currentPage, Integer pageSize, String name, String code) {
         ApiRequest request = new ApiRequest(currentPage, pageSize);
         request.setName(name);
         request.setCode(code);
         String ResponseString = purInClient.queryPurInRaw(request);
         JSON parse = JSONUtil.parse(ResponseString);
-        PurInResponse purInResponse = parse.toBean(PurInResponse.class);
+        AiTeResponse purInResponse = parse.toBean(AiTeResponse.class);
         GLAccvouchMapper mapper = secondarySqlSessionTemplate.getMapper(GLAccvouchMapper.class);
         DataPurInHandle(purInResponse, mapper);
         return null;
 
     }
 
-    public GLAccvouch DataPurInHandle(PurInResponse purInResponse, GLAccvouchMapper glAccvouchMapper) {
+    public GLAccvouch DataPurInHandle(AiTeResponse<FOrder> purInResponse, GLAccvouchMapper glAccvouchMapper) {
         int inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
         List<GLAccvouch> glAccvouchDList = new ArrayList<>();
         List<GLAccvouch> glAccvouchJList = new ArrayList<>();
