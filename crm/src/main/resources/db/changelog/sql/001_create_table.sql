@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `product` (
                            PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='商品信息表';
 
-CREATE TABLE `department` (
+CREATE TABLE IF NOT EXISTS `department` (
                               `id` bigint AUTO_INCREMENT COMMENT '部门id',
                               `HCid` bigint NOT NULL COMMENT '华创部门id',
                               `code` varchar(50) NOT NULL COMMENT '编码',
@@ -76,3 +76,37 @@ CREATE TABLE `department` (
                               KEY `idx_parent_ids` (`parent_ids`(255)),
                               KEY `idx_area_id` (`area_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='部门表';
+
+-- changeset zq:1.03
+CREATE TABLE IF NOT EXISTS `supplier` (
+                            `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+                            `hc_id` bigint(20) NOT NULL COMMENT '供应商id',
+                            `no` varchar(50) NOT NULL COMMENT '编码',
+                            `name` varchar(100) NOT NULL COMMENT '名称',
+                            `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态:1->启用,2->暂停',
+                            `data_type` varchar(20) NOT NULL COMMENT '类型:internal 内部, external:外部',
+                            `business_category` varchar(20) NOT NULL COMMENT '经营类别:SELL->经销,AGENCY->代销,POOL->联营',
+                            `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                            `update_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                            PRIMARY KEY (`id`),
+                            UNIQUE KEY `uk_no` (`no`),
+                            KEY `idx_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='供应商表';
+
+CREATE TABLE IF NOT EXISTS `stock` (
+                         `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+                         `hc_id` bigint(20) NOT NULL COMMENT '部门id',
+                         `code` varchar(50) NOT NULL COMMENT '编码',
+                         `name` varchar(100) NOT NULL COMMENT '名称',
+                         `area_id` bigint(20) DEFAULT NULL COMMENT '区域id',
+                         `type` varchar(20) DEFAULT NULL COMMENT '类型',
+                         `parent_id` bigint(20) DEFAULT NULL COMMENT '上级机构id',
+                         `parent_ids` varchar(500) DEFAULT NULL COMMENT '所有上级机构id(格式如: ,1,2,3,)',
+                         `create_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                         `update_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                         PRIMARY KEY (`id`),
+                         UNIQUE KEY `uk_code` (`code`),
+                         KEY `idx_parent_id` (`parent_id`),
+                         KEY `idx_parent_ids` (`parent_ids`(255)),
+                         KEY `idx_area_id` (`area_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='仓库表';

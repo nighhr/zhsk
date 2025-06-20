@@ -1,26 +1,24 @@
 package com.zhonghe.backoffice.controller;
 
-import com.zhonghe.backoffice.service.SuppService;
+import com.zhonghe.backoffice.service.StockService;
 import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/backoffice/supplier")
-public class SuppController {
+@RequestMapping("/backoffice/stock")
+public class StockController {
 
     @Autowired
-    private SuppService suppService;
+    private StockService stockService;
     /**
      *  供应商同步接口
      * */
     @GetMapping("/get")
-    public Result<Integer> getSupplier() {
+    public Result<Integer> getStock() {
 
-        return suppService.getSupp();
+        return stockService.getStock();
     }
 }

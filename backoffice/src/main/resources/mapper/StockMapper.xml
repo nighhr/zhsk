@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.StockMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.Stock">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="hc_id" property="HCid" jdbcType="BIGINT"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="area_id" property="areaId" jdbcType="BIGINT"/>
+        <result column="type" property="type" jdbcType="VARCHAR"/>
+        <result column="parent_id" property="parentId" jdbcType="BIGINT"/>
+        <result column="parent_ids" property="parentIds" jdbcType="VARCHAR"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 插入单条记录 -->
+    <insert id="insert" parameterType="com.zhonghe.backoffice.model.Stock" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO stock
+        (hc_id, code, name, area_id, type, parent_id, parent_ids, create_date, update_date)
+        VALUES
+            (#{hcId}, #{code}, #{name}, #{areaId}, #{type}, #{parentId}, #{parentIds}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新记录 -->
+    <update id="update" parameterType="com.zhonghe.backoffice.model.Stock">
+        UPDATE stock
+        SET
+            hc_id = #{hcId},
+            code = #{code},
+            name = #{name},
+            area_id = #{areaId},
+            type = #{type},
+            parent_id = #{parentId},
+            parent_ids = #{parentIds},
+            update_date = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteById">
+        DELETE FROM stock WHERE id = #{id}
+    </delete>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM stock WHERE id = #{id}
+    </select>
+
+    <!-- 条件查询列表 -->
+    <select id="selectList" resultMap="BaseResultMap" parameterType="map">
+        SELECT * FROM stock
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="code != null and code != ''">
+                AND code = #{code}
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="areaId != null">
+                AND area_id = #{areaId}
+            </if>
+            <if test="parentId != null">
+                AND parent_id = #{parentId}
+            </if>
+            <if test="hcId != null">
+                AND hc_id = #{hcId}
+            </if>
+        </where>
+        ORDER BY create_date DESC
+        <if test="offset != null and pageSize != null">
+            LIMIT #{offset}, #{pageSize}
+        </if>
+    </select>
+
+    <!-- 条件计数 -->
+    <select id="count" resultType="long" parameterType="map">
+        SELECT COUNT(*) FROM stock
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="code != null and code != ''">
+                AND code = #{code}
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="areaId != null">
+                AND area_id = #{areaId}
+            </if>
+            <if test="parentId != null">
+                AND parent_id = #{parentId}
+            </if>
+            <if test="hcId != null">
+                AND hc_id = #{hcId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO stock
+        (hc_id, code, name, area_id, type, parent_id, parent_ids, create_date, update_date)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.hcId},
+            #{item.code},
+            #{item.name},
+            #{item.areaId},
+            #{item.type},
+            #{item.parentId},
+            #{item.parentIds},
+            NOW(),
+            NOW()
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量插入(带重复检查) MySQL特有 -->
+    <insert id="batchInsertOnDuplicateUpdate" parameterType="list">
+        INSERT INTO stock
+        (hc_id, code, name, area_id, type, parent_id, parent_ids, create_date, update_date)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.hcId},
+            #{item.code},
+            #{item.name},
+            #{item.areaId},
+            #{item.type},
+            #{item.parentId},
+            #{item.parentIds},
+            NOW(),
+            NOW()
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        name = VALUES(name),
+        area_id = VALUES(area_id),
+        type = VALUES(type),
+        parent_id = VALUES(parent_id),
+        parent_ids = VALUES(parent_ids),
+        update_date = NOW()
+    </insert>
+</mapper>
