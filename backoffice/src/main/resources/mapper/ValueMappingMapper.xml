@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.ValueMappingMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.ValueMapping">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="column_mapping_id" property="columnMappingId" jdbcType="INTEGER"/>
+        <result column="source_value" property="sourceValue" jdbcType="VARCHAR"/>
+        <result column="target_value" property="targetValue" jdbcType="VARCHAR"/>
+        <result column="creator" property="creator" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updater" property="updater" jdbcType="VARCHAR"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <association property="columnMapping" column="column_mapping_id"
+                     select="com.zhonghe.backoffice.mapper.ColumnMappingMapper.selectById"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, column_mapping_id, source_value, target_value, creator, create_time, updater, update_time
+    </sql>
+
+    <select id="selectByColumnMappingId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM value_mapping
+        WHERE column_mapping_id = #{columnMappingId}
+        ORDER BY id
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM value_mapping
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO value_mapping (
+            column_mapping_id, source_value, target_value, creator, updater
+        ) VALUES (
+                     #{columnMappingId}, #{sourceValue}, #{targetValue}, #{creator}, #{updater}
+                 )
+    </insert>
+
+    <insert id="insertBatch">
+        INSERT INTO value_mapping (
+        column_mapping_id, source_value, target_value, creator, updater
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.columnMappingId}, #{item.sourceValue}, #{item.targetValue}, #{item.creator}, #{item.updater})
+        </foreach>
+    </insert>
+
+    <update id="update">
+        UPDATE value_mapping
+        SET column_mapping_id = #{columnMappingId},
+            source_value = #{sourceValue},
+            target_value = #{targetValue},
+            updater = #{updater},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM value_mapping WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteBatch">
+        DELETE FROM value_mapping WHERE id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

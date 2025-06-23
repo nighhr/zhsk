@@ -110,3 +110,46 @@ CREATE TABLE IF NOT EXISTS `stock` (
                          KEY `idx_parent_ids` (`parent_ids`(255)),
                          KEY `idx_area_id` (`area_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='仓库表';
+
+-- changeset zq:1.04
+CREATE TABLE IF NOT EXISTS table_mapping (
+                               id INT PRIMARY KEY AUTO_INCREMENT,
+                               rule_name VARCHAR(255) NOT NULL COMMENT '映射名称',
+                               type VARCHAR(100) COMMENT '映射类型',
+                               is_active TINYINT(1) DEFAULT 1 COMMENT '是否激活',
+                               description VARCHAR(500) COMMENT '映射描述',
+                               creator VARCHAR(100) COMMENT '创建人',
+                               create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               updater VARCHAR(100) COMMENT '更新人',
+                               update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表映射配置';
+
+CREATE TABLE IF NOT EXISTS `column_mapping` (
+                                  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                  `table_mapping_id` int(11) NOT NULL COMMENT '关联的表映射ID',
+                                  `source_column_name` varchar(100) NOT NULL COMMENT '源列名',
+                                  `target_column_name` varchar(100) NOT NULL COMMENT '目标列名',
+                                  `description` varchar(500) DEFAULT NULL COMMENT '字段描述',
+                                  `creator` varchar(50) DEFAULT NULL COMMENT '创建人',
+                                  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                  `updater` varchar(50) DEFAULT NULL COMMENT '更新人',
+                                  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                  PRIMARY KEY (`id`),
+                                  KEY `idx_table_mapping_id` (`table_mapping_id`),
+                                  KEY `idx_source_column` (`source_column_name`),
+                                  KEY `idx_target_column` (`target_column_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字段映射表';
+
+CREATE TABLE IF NOT EXISTS `value_mapping` (
+                                 `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                 `column_mapping_id` int(11) NOT NULL COMMENT '列映射ID',
+                                 `source_value` varchar(255) NOT NULL COMMENT '源值',
+                                 `target_value` varchar(255) NOT NULL COMMENT '目标值',
+                                 `creator` varchar(50) DEFAULT NULL COMMENT '创建人',
+                                 `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                 `updater` varchar(50) DEFAULT NULL COMMENT '更新人',
+                                 `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                 PRIMARY KEY (`id`),
+                                 KEY `idx_column_mapping_id` (`column_mapping_id`),
+                                 CONSTRAINT `fk_column_mapping` FOREIGN KEY (`column_mapping_id`) REFERENCES `column_mapping` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='值映射表';

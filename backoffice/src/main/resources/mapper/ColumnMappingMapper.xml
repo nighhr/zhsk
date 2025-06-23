@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.ColumnMappingMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.ColumnMapping">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="table_mapping_id" property="tableMappingId" jdbcType="INTEGER"/>
+        <result column="source_column_name" property="sourceColumnName" jdbcType="VARCHAR"/>
+        <result column="target_column_name" property="targetColumnName" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="creator" property="creator" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updater" property="updater" jdbcType="VARCHAR"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, table_mapping_id, source_column_name, target_column_name,
+        description, creator, create_time, updater, update_time
+    </sql>
+
+    <select id="selectByTableMappingId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM column_mapping
+        WHERE table_mapping_id = #{tableMappingId}
+        ORDER BY id
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM column_mapping
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO column_mapping (
+            table_mapping_id, source_column_name, target_column_name,
+            description, creator, create_time, updater, update_time
+        ) VALUES (
+                     #{tableMappingId}, #{sourceColumnName}, #{targetColumnName},
+                     #{description}, #{creator}, #{createTime}, #{updater}, #{updateTime}
+                 )
+    </insert>
+
+    <update id="update">
+        UPDATE column_mapping
+        SET source_column_name = #{sourceColumnName},
+            target_column_name = #{targetColumnName},
+            description = #{description},
+            updater = #{updater},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM column_mapping WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByTableMappingId">
+        DELETE FROM column_mapping WHERE table_mapping_id = #{tableMappingId}
+    </delete>
+</mapper>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.TableMappingMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.TableMapping">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="rule_name" property="ruleName" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="VARCHAR"/>
+        <result column="is_active" property="isActive" jdbcType="BOOLEAN"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="creator" property="creator" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updater" property="updater" jdbcType="VARCHAR"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, rule_name, type, is_active, description, creator, create_time, updater, update_time
+    </sql>
+
+    <select id="selectByCondition" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM table_mapping
+        <where>
+            <if test="ruleName != null and ruleName != ''">
+                AND rule_name LIKE CONCAT('%', #{ruleName}, '%')
+            </if>
+            <if test="description != null and description != ''">
+                AND description LIKE CONCAT('%', #{description}, '%')
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByCondition" resultType="int">
+        SELECT COUNT(1)
+        FROM table_mapping
+        <where>
+            <if test="ruleName != null and ruleName != ''">
+                AND rule_name LIKE CONCAT('%', #{ruleName}, '%')
+            </if>
+            <if test="description != null and description != ''">
+                AND description LIKE CONCAT('%', #{description}, '%')
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertTableMapping" parameterType="com.zhonghe.backoffice.model.TableMapping" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO table_mapping
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ruleName != null and ruleName != ''">rule_name,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="isActive != null">is_active,</if>
+            <if test="description != null and description != ''">description,</if>
+            <if test="creator != null and creator != ''">creator,</if>
+            create_time,
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="ruleName != null and ruleName != ''">#{ruleName},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="isActive != null">#{isActive},</if>
+            <if test="description != null and description != ''">#{description},</if>
+            <if test="creator != null and creator != ''">#{creator},</if>
+            NOW(),
+        </trim>
+    </insert>
+
+    <update id="updateTableMapping" parameterType="com.zhonghe.backoffice.model.TableMapping">
+        UPDATE table_mapping
+        <set>
+            <if test="ruleName != null and ruleName != ''">rule_name = #{ruleName},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+            <if test="description != null and description != ''">description = #{description},</if>
+            <if test="updater != null and updater != ''">updater = #{updater},</if>
+            update_time = NOW(),
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteTableMapping" parameterType="int">
+        DELETE FROM table_mapping WHERE id = #{id}
+    </delete>
+
+    <select id="selectTableMappingById" resultMap="BaseResultMap" parameterType="int">
+        SELECT id, rule_name, type, is_active, description, creator, create_time, updater, update_time
+        FROM table_mapping
+        WHERE id = #{id}
+    </select>
+</mapper>

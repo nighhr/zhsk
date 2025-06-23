@@ -30,7 +30,6 @@ public class SuppEnum {
             this.desc = desc;
         }
 
-        // getters
     }
 
     public enum SupplierBusinessCategory {
