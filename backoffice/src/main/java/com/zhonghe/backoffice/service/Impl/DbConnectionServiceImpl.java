@@ -236,7 +236,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
      * @return 加密后的密码
      */
     private String encryptPassword(String password) {
-        // TODO: 实现您的密码加密逻辑，例如使用BCryptPasswordEncoder
+        // TODO: 实现密码加密逻辑，例如使用BCryptPasswordEncoder
         return password;
     }
 
