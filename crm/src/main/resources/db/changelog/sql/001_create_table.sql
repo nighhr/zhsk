@@ -153,3 +153,26 @@ CREATE TABLE IF NOT EXISTS `value_mapping` (
                                  KEY `idx_column_mapping_id` (`column_mapping_id`),
                                  CONSTRAINT `fk_column_mapping` FOREIGN KEY (`column_mapping_id`) REFERENCES `column_mapping` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='值映射表';
+
+-- changeset zq:1.05
+CREATE TABLE `db_connections` (
+                                  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                                  `connection_name` varchar(100) NOT NULL COMMENT '连接名称',
+                                  `connection_type` varchar(50) NOT NULL COMMENT '连接类型',
+                                  `db_host` varchar(100) NOT NULL COMMENT '数据库主机',
+                                  `db_port` int NOT NULL COMMENT '数据库端口',
+                                  `db_name` varchar(100) NOT NULL COMMENT '数据库名称',
+                                  `username` varchar(100) NOT NULL COMMENT '用户名',
+                                  `password` varchar(255) NOT NULL COMMENT '密码(加密存储)',
+                                  `last_edit_time` datetime NOT NULL COMMENT '最后编辑时间',
+                                  `last_edit_user` varchar(100) NOT NULL COMMENT '最后编辑用户',
+                                  `creator` varchar(100) NOT NULL COMMENT '创建人',
+                                  `create_time` datetime NOT NULL COMMENT '创建时间',
+                                  `updater` varchar(100) NOT NULL COMMENT '更新人',
+                                  `update_time` datetime NOT NULL COMMENT '更新时间',
+                                  `is_deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除(0-否,1-是)',
+                                  PRIMARY KEY (`id`),
+                                  KEY `idx_connection_name` (`connection_name`),
+                                  KEY `idx_db_name` (`db_name`),
+                                  KEY `idx_connection_type` (`connection_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据库连接信息表';

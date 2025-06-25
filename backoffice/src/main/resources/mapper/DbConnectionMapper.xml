@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.DbConnectionMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.DbConnection">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="connection_name" property="connectionName" jdbcType="VARCHAR"/>
+        <result column="connection_type" property="connectionType" jdbcType="VARCHAR"/>
+        <result column="db_host" property="dbHost" jdbcType="VARCHAR"/>
+        <result column="db_port" property="dbPort" jdbcType="INTEGER"/>
+        <result column="db_name" property="dbName" jdbcType="VARCHAR"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <result column="charset" property="charset" jdbcType="VARCHAR"/>
+        <result column="creator" property="creator" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updater" property="updater" jdbcType="VARCHAR"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, connection_name, connection_type, db_host, db_port, db_name, username,
+        password, charset, creator, create_time, updater, update_time, is_deleted
+    </sql>
+
+    <select id="selectDbConnectionList" resultMap="BaseResultMap" parameterType="map">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM db_connections
+        WHERE is_deleted = 0
+        <if test="connectionName != null and connectionName != ''">
+            AND connection_name LIKE CONCAT('%', #{connectionName}, '%')
+        </if>
+        <if test="dbName != null and dbName != ''">
+            AND db_name LIKE CONCAT('%', #{dbName}, '%')
+        </if>
+        <if test="connectionType != null and connectionType != ''">
+            AND connection_type = #{connectionType}
+        </if>
+        ORDER BY update_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectDbConnectionCount" resultType="long" parameterType="map">
+        SELECT COUNT(*)
+        FROM db_connections
+        WHERE is_deleted = 0
+        <if test="connectionName != null and connectionName != ''">
+            AND connection_name LIKE CONCAT('%', #{connectionName}, '%')
+        </if>
+        <if test="dbName != null and dbName != ''">
+            AND db_name LIKE CONCAT('%', #{dbName}, '%')
+        </if>
+        <if test="connectionType != null and connectionType != ''">
+            AND connection_type = #{connectionType}
+        </if>
+    </select>
+
+    <insert id="insert" parameterType="com.zhonghe.backoffice.model.DbConnection" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO db_connections (
+            connection_name, connection_type, db_host, db_port, db_name,
+            username, password, charset,
+            creator, create_time, updater, update_time, is_deleted
+        ) VALUES (
+                     #{connectionName}, #{connectionType}, #{dbHost}, #{dbPort}, #{dbName},
+                     #{username}, #{password},#{charset},
+                     #{creator}, #{createTime}, #{updater}, #{updateTime}, #{isDeleted}
+                 )
+    </insert>
+
+    <update id="updateByIdSelective" parameterType="com.zhonghe.backoffice.model.DbConnection">
+        UPDATE db_connections
+        <set>
+            <if test="connectionName != null">connection_name = #{connectionName},</if>
+            <if test="connectionType != null">connection_type = #{connectionType},</if>
+            <if test="dbHost != null">db_host = #{dbHost},</if>
+            <if test="dbPort != null">db_port = #{dbPort},</if>
+            <if test="dbName != null">db_name = #{dbName},</if>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="charset != null">charset = #{charset},</if>
+            <if test="updater != null">updater = #{updater},</if>
+            update_time = #{updateTime},
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="BaseResultMap" parameterType="long">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM db_connections
+        WHERE id = #{id} AND is_deleted = 0
+    </select>
+</mapper>

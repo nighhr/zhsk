@@ -17,6 +17,14 @@ public class Result<T> {
         return result;
     }
 
+    // 成功静态方法
+    public static <T> Result<T> fail(T data) {
+        Result<T> result = new Result<>();
+        result.setCode(200);
+        result.setMessage("fail");
+        result.setData(data);
+        return result;
+    }
     // 错误静态方法
     public static <T> Result<T> error(int code, String message) {
         Result<T> result = new Result<>();
