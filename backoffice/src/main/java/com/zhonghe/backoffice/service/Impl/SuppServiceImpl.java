@@ -28,8 +28,9 @@ public class SuppServiceImpl implements SuppService {
     @Override
     public Result<Integer> getSupp() {
         ArrayList<Supplier> insertData = new ArrayList<>();
+        int current_page = 1;
         for (int i = 1; ; i++) {
-            ApiRequest request = new ApiRequest(1, 200);
+            ApiRequest request = new ApiRequest(current_page, 200);
             String responseString = suppClient.querySuppInRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
 
@@ -42,6 +43,7 @@ public class SuppServiceImpl implements SuppService {
                 } else {
                     suppMapper.batchInsert(suppList);
                     insertData.addAll(suppList);
+                    current_page++;
                 }
 
             } else {

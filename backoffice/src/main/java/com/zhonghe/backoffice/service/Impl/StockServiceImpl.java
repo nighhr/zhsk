@@ -29,8 +29,11 @@ public class StockServiceImpl implements StockService {
     @Override
     public Result<Integer> getStock() {
         ArrayList<Stock> insertData = new ArrayList<>();
+        int current_page = 1;
         for (int i = 1; ; i++) {
-            ApiRequest request = new ApiRequest(1, 200);
+            ApiRequest request = new ApiRequest(current_page, 200);
+            request.setName("");
+            request.setCode("");
             String responseString = stockClient.queryStockInRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
 
@@ -43,6 +46,8 @@ public class StockServiceImpl implements StockService {
                 } else {
                     stockMapper.batchInsert(stockList);
                     insertData.addAll(stockList);
+                    current_page++;
+
                 }
 
             } else {

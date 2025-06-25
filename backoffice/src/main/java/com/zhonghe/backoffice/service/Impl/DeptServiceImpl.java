@@ -28,8 +28,11 @@ public class DeptServiceImpl implements DeptService {
     @Override
     public Result<Integer> getDepts() {
         ArrayList<Department> insertData = new ArrayList<>();
+        int current_page = 1;
         for (int i = 1; ; i++) {
-            ApiRequest request = new ApiRequest(1, 200);
+            ApiRequest request = new ApiRequest(current_page, 200);
+            request.setName("");
+            request.setCode("");
             String responseString = deptClient.queryDeptInRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
 
@@ -42,6 +45,7 @@ public class DeptServiceImpl implements DeptService {
                 } else {
                     deptMapper.batchInsert(deptList);
                     insertData.addAll(deptList);
+                    current_page++;
                 }
 
             } else {
