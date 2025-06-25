@@ -20,8 +20,6 @@ public interface RuleService {
 
     void deleteTableMapping(Integer id);
 
-    TableMapping getTableMappingById(Integer id);
-
     // 字段映射CRUD
     List<ColumnMapping> getColumnMappingsByTableId(Integer tableMappingId);
     ColumnMapping getColumnMappingById(Integer id);

@@ -89,10 +89,6 @@ public class RuleServiceImpl implements RuleService {
         tableMappingMapper.deleteTableMapping(id);
     }
 
-    @Override
-    public TableMapping getTableMappingById(Integer id) {
-        return tableMappingMapper.selectTableMappingById(id);
-    }
 
     @Override
     public List<ColumnMapping> getColumnMappingsByTableId(Integer tableMappingId) {

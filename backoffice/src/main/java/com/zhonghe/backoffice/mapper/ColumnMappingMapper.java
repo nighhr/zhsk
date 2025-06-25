@@ -13,4 +13,5 @@ public interface ColumnMappingMapper {
     void update(ColumnMapping columnMapping);
     void delete(Integer id);
     void deleteByTableMappingId(Integer tableMappingId);
+
 }

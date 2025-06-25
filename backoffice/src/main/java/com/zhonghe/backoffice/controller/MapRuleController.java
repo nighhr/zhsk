@@ -47,12 +47,6 @@ public class MapRuleController {
         return Result.success(null);
     }
 
-    @GetMapping("/tableDetail/{id}")
-    public Result<TableMapping> getTableMappingDetail(@PathVariable Integer id) {
-        TableMapping tableMapping = ruleService.getTableMappingById(id);
-        return Result.success(tableMapping);
-    }
-
     // 字段映射CRUD接口
     @GetMapping("/columnList/{tableMappingId}")
     public Result<List<ColumnMapping>> getColumnMappings(@PathVariable Integer tableMappingId) {
