@@ -117,7 +117,6 @@ public class RuleServiceImpl implements RuleService {
         ColumnMapping column = new ColumnMapping();
         BeanUtils.copyProperties(columnMappingDTO, column);
         List<ColumnMapping> columnMappings = columnMappingMapper.selectCMappingBySourceColumnName(column.getSourceColumnName());
-        System.out.println("======================================================================"+TimeZone.getDefault());
         if (!columnMappings.isEmpty()){
             throw new BusinessException(ErrorCode.INTERNAL_ERROR,"源数据已存在 无法新增");
         }
