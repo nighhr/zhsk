@@ -116,7 +116,7 @@ public class RuleServiceImpl implements RuleService {
         ColumnMapping column = new ColumnMapping();
         BeanUtils.copyProperties(columnMappingDTO, column);
         List<ColumnMapping> columnMappings = columnMappingMapper.selectCMappingBySourceColumnName(column.getSourceColumnName());
-        if (columnMappings.size()>1){
+        if (!columnMappings.isEmpty()){
             throw new BusinessException(ErrorCode.PARAM_ERROR,"源数据已存在 无法新增:"+columnMappings);
         }
         column.setCreateTime(new Date());
@@ -157,7 +157,7 @@ public class RuleServiceImpl implements RuleService {
         ValueMapping valueMapping = new ValueMapping();
         BeanUtils.copyProperties(valueMappingDTO, valueMapping);
         List<ValueMapping> valueMappings = valueMappingMapper.selectVMappingBySourceColumnName(valueMapping.getSourceValue());
-        if (valueMappings.size()>1){
+        if (!valueMappings.isEmpty()){
             throw new BusinessException(ErrorCode.PARAM_ERROR,"源数据已存在 无法新增:"+valueMappings);
         }
         valueMappingMapper.insert(valueMapping);
