@@ -1,6 +1,9 @@
 package com.zhonghe.backoffice.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.zhonghe.kernel.model.DateTimeDeserializer;
 import lombok.Data;
 import java.util.Date;
 
@@ -28,8 +31,12 @@ public class Department {
     private String parentIds; // 所有上级机构id
 
     @JsonProperty("create_date")
+    @JsonDeserialize(using = DateTimeDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createDate; // 创建时间
 
     @JsonProperty("update_date")
+    @JsonDeserialize(using = DateTimeDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date updateDate; // 更新时间
 }

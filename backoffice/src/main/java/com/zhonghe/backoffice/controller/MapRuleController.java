@@ -30,9 +30,8 @@ public class MapRuleController {
     }
 
     @PostMapping("/tableAdd")
-    public Result<Void> addTableMapping(@RequestBody TableMapping tableMapping) {
-        ruleService.addTableMapping(tableMapping);
-        return Result.success(null);
+    public Result<TableMapping> addTableMapping(@RequestBody TableMapping tableMapping) {
+        return Result.success(ruleService.addTableMapping(tableMapping));
     }
 
     @PutMapping("/tableUpdate")
@@ -61,9 +60,8 @@ public class MapRuleController {
     }
 
     @PostMapping("/columnAdd")
-    public Result<Void> addColumnMapping(@RequestBody ColumnMappingDTO columnMappingDTO) {
-        ruleService.addColumnMapping(columnMappingDTO);
-        return Result.success(null);
+    public Result<ColumnMapping> addColumnMapping(@RequestBody ColumnMappingDTO columnMappingDTO) {
+        return Result.success(ruleService.addColumnMapping(columnMappingDTO));
     }
 
     @PutMapping("/columnUpdate")

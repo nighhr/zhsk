@@ -75,8 +75,10 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     @Transactional
-    public void addTableMapping(TableMapping tableMapping) {
+    public TableMapping addTableMapping(TableMapping tableMapping) {
+        tableMapping.setCreateTime(new Date());
         tableMappingMapper.insertTableMapping(tableMapping);
+        return tableMapping;
     }
 
     @Override
@@ -110,7 +112,7 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     @Transactional
-    public void addColumnMapping(ColumnMappingDTO columnMappingDTO) {
+    public ColumnMapping addColumnMapping(ColumnMappingDTO columnMappingDTO) {
         ColumnMapping column = new ColumnMapping();
         BeanUtils.copyProperties(columnMappingDTO, column);
         List<ColumnMapping> columnMappings = columnMappingMapper.selectCMappingBySourceColumnName(column.getSourceColumnName());
@@ -120,6 +122,7 @@ public class RuleServiceImpl implements RuleService {
         column.setCreateTime(new Date());
         column.setUpdateTime(new Date());
         columnMappingMapper.insert(column);
+        return column;
     }
 
     @Override

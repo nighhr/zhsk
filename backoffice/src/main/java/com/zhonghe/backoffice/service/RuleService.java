@@ -14,7 +14,7 @@ import java.util.List;
 public interface RuleService {
     PageResult<TableMappingVO> queryTableMappingList(TableMappingDTO queryDTO);
 
-    void addTableMapping(TableMapping tableMapping);
+    TableMapping addTableMapping(TableMapping tableMapping);
 
     void updateTableMapping(TableMapping tableMapping);
 
@@ -23,7 +23,7 @@ public interface RuleService {
     // 字段映射CRUD
     List<ColumnMapping> getColumnMappingsByTableId(Integer tableMappingId);
     ColumnMapping getColumnMappingById(Integer id);
-    void addColumnMapping(ColumnMappingDTO columnMappingDTO);
+    ColumnMapping addColumnMapping(ColumnMappingDTO columnMappingDTO);
     void updateColumnMapping(ColumnMappingDTO columnMappingDTO);
     void deleteColumnMapping(Integer id);
 

@@ -1,6 +1,9 @@
 package com.zhonghe.backoffice.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.zhonghe.kernel.model.DateTimeDeserializer;
 import lombok.Data;
 
 import java.util.Date;
@@ -78,9 +81,13 @@ public class Product {
     private String companyNumber; // 所属公司编码
 
     @JsonProperty("createDate")
+    @JsonDeserialize(using = DateTimeDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createDate; // 创建时间
 
     @JsonProperty("updateDate")
+    @JsonDeserialize(using = DateTimeDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date updateDate; // 更新时间
 
     @JsonProperty("deleted")
