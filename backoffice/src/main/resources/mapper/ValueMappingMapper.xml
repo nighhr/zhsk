@@ -75,4 +75,8 @@
         FROM value_mapping
         WHERE source_value = #{sourceValue}
     </select>
+
+    <delete id="deleteByColumnMappingId">
+        DELETE FROM value_mapping WHERE column_mapping_id = #{id}
+    </delete>
 </mapper>

@@ -88,6 +88,12 @@ public class RuleServiceImpl implements RuleService {
     @Override
     @Transactional
     public void deleteTableMapping(Integer id) {
+        List<ColumnMapping> columnMappings = columnMappingMapper.selectByTableMappingId(id);
+        for (ColumnMapping columnMapping : columnMappings) {
+            valueMappingMapper.deleteByColumnMappingId(columnMapping.getId());
+            columnMappingMapper.delete(columnMapping.getId());
+        }
+
         tableMappingMapper.deleteTableMapping(id);
     }
 
@@ -132,6 +138,7 @@ public class RuleServiceImpl implements RuleService {
     @Override
     @Transactional
     public void deleteColumnMapping(Integer id) {
+        valueMappingMapper.deleteByColumnMappingId(id);
         columnMappingMapper.delete(id);
     }
 

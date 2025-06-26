@@ -14,4 +14,5 @@ public interface ValueMappingMapper {
     int deleteById(Integer id);
     int deleteBatch(List<Integer> ids);
     List<ValueMapping> selectVMappingBySourceColumnName(String sourceValue);
+    void deleteByColumnMappingId(Integer id);
 }
