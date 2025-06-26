@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Service
@@ -116,8 +117,9 @@ public class RuleServiceImpl implements RuleService {
         ColumnMapping column = new ColumnMapping();
         BeanUtils.copyProperties(columnMappingDTO, column);
         List<ColumnMapping> columnMappings = columnMappingMapper.selectCMappingBySourceColumnName(column.getSourceColumnName());
+        System.out.println("======================================================================"+TimeZone.getDefault());
         if (!columnMappings.isEmpty()){
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"源数据已存在 无法新增:"+columnMappings);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,"源数据已存在 无法新增");
         }
         column.setCreateTime(new Date());
         column.setUpdateTime(new Date());
@@ -132,7 +134,7 @@ public class RuleServiceImpl implements RuleService {
         BeanUtils.copyProperties(columnMappingDTO, column);
         List<ColumnMapping> columnMappings = columnMappingMapper.selectCMappingBySourceColumnName(column.getSourceColumnName());
         if (columnMappings.size()>1){
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"源数据已存在 无法修改:"+columnMappings);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,"源数据已存在 无法修改");
         }
         column.setUpdateTime(new Date());
         columnMappingMapper.update(column);
@@ -158,7 +160,7 @@ public class RuleServiceImpl implements RuleService {
         BeanUtils.copyProperties(valueMappingDTO, valueMapping);
         List<ValueMapping> valueMappings = valueMappingMapper.selectVMappingBySourceColumnName(valueMapping.getSourceValue());
         if (!valueMappings.isEmpty()){
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"源数据已存在 无法新增:"+valueMappings);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,"源数据已存在 无法新增");
         }
         valueMappingMapper.insert(valueMapping);
     }
@@ -171,7 +173,7 @@ public class RuleServiceImpl implements RuleService {
         BeanUtils.copyProperties(valueMappingDTO, valueMapping);
         List<ValueMapping> valueMappings = valueMappingMapper.selectVMappingBySourceColumnName(valueMapping.getSourceValue());
         if (valueMappings.size()>1){
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"源数据已存在 无法修改:"+valueMappings);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,"源数据已存在 无法修改");
         }
         valueMappingMapper.update(valueMapping);
     }

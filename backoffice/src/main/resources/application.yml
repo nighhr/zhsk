@@ -1,7 +1,7 @@
 spring:
   datasource:
     backoffice:
-      jdbc-url: "jdbc:mysql://localhost:3306/aite?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      jdbc-url: "jdbc:mysql://localhost:3306/aite?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true"
       username: root
       password: Root@1234
       driver-class-name: com.mysql.cj.jdbc.Driver
