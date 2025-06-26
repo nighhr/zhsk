@@ -105,6 +105,10 @@ public class RuleServiceImpl implements RuleService {
     public void addColumnMapping(ColumnMappingDTO columnMappingDTO) {
         ColumnMapping column = new ColumnMapping();
         BeanUtils.copyProperties(columnMappingDTO, column);
+        List<ColumnMapping> columnMappings = columnMappingMapper.selectCMappingBySourceColumnName(column.getSourceColumnName());
+        if (columnMappings.size()>1){
+            throw new RuntimeException("源数据已存在 无法新增:"+columnMappings);
+        }
         column.setCreateTime(new Date());
         column.setUpdateTime(new Date());
         columnMappingMapper.insert(column);
@@ -115,6 +119,10 @@ public class RuleServiceImpl implements RuleService {
     public void updateColumnMapping(ColumnMappingDTO columnMappingDTO) {
         ColumnMapping column = new ColumnMapping();
         BeanUtils.copyProperties(columnMappingDTO, column);
+        List<ColumnMapping> columnMappings = columnMappingMapper.selectCMappingBySourceColumnName(column.getSourceColumnName());
+        if (columnMappings.size()>1){
+            throw new RuntimeException("源数据已存在 无法修改:"+columnMappings);
+        }
         column.setUpdateTime(new Date());
         columnMappingMapper.update(column);
     }
@@ -136,6 +144,10 @@ public class RuleServiceImpl implements RuleService {
     public void addValueMapping(ValueMappingDTO valueMappingDTO) {
         ValueMapping valueMapping = new ValueMapping();
         BeanUtils.copyProperties(valueMappingDTO, valueMapping);
+        List<ValueMapping> valueMappings = valueMappingMapper.selectVMappingBySourceColumnName(valueMapping.getSourceValue());
+        if (valueMappings.size()>1){
+            throw new RuntimeException("源数据已存在 无法新增:"+valueMappings);
+        }
         valueMappingMapper.insert(valueMapping);
     }
 
@@ -145,6 +157,10 @@ public class RuleServiceImpl implements RuleService {
     public void updateValueMapping(ValueMappingDTO valueMappingDTO) {
         ValueMapping valueMapping = new ValueMapping();
         BeanUtils.copyProperties(valueMappingDTO, valueMapping);
+        List<ValueMapping> valueMappings = valueMappingMapper.selectVMappingBySourceColumnName(valueMapping.getSourceValue());
+        if (valueMappings.size()>1){
+            throw new RuntimeException("源数据已存在 无法修改:"+valueMappings);
+        }
         valueMappingMapper.update(valueMapping);
     }
 

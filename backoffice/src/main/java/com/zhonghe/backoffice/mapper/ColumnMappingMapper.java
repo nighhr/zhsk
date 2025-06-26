@@ -14,4 +14,6 @@ public interface ColumnMappingMapper {
     void delete(Integer id);
     void deleteByTableMappingId(Integer tableMappingId);
 
+    List<ColumnMapping> selectCMappingBySourceColumnName(String sourceColumnName);
+
 }

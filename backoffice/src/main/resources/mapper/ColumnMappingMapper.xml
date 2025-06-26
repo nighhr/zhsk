@@ -61,4 +61,11 @@
     <delete id="deleteByTableMappingId">
         DELETE FROM column_mapping WHERE table_mapping_id = #{tableMappingId}
     </delete>
+
+    <select id="selectCMappingBySourceColumnName" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM column_mapping
+        WHERE source_column_name = #{sourceColumnName}
+    </select>
 </mapper>
