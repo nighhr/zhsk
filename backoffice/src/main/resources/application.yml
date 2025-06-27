@@ -26,6 +26,17 @@ logging:
     org.mybatis: DEBUG
     com.zhonghe.backoffice.mapper: DEBUG
 
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 30000
+        readTimeout: 30000
+ribbon:
+  ReadTimeout: 30000
+  ConnectTimeout: 30000
+
 api:
   base-url: http://hndbkd.top:54351
   sign-header-value: NsRm1fqs+mEW0MROZM4w5w==
+

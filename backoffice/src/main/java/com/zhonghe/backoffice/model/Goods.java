@@ -9,10 +9,13 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class Product {
+public class Goods {
+
+    @JsonProperty("id")
+    private int id;
 
     @JsonProperty("hcid")
-    private String HCid; // 商品id
+    private int HCid; // 商品id
 
     @JsonProperty("code")
     private String code; // 编号

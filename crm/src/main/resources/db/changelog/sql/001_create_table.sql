@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `kerneluser` (
     ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='中台用户表';
 
 -- changeset zq:1.02
-CREATE TABLE IF NOT EXISTS `product` (
+CREATE TABLE IF NOT EXISTS `goods` (
                            `id` INT AUTO_INCREMENT NOT NULL COMMENT '商品id',
                            `HCid` varchar(50) NOT NULL COMMENT '华创商品id',
                            `code` varchar(50) NOT NULL COMMENT '编号',

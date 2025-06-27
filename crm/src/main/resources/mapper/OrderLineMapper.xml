@@ -17,11 +17,11 @@
         imgUrl, itemCode, itemFullName, itemAbbrName,
         price, lineQty, lineAmount, memo,creator,createTime
         ) VALUES
-        <foreach collection="list" item="product" separator=",">
+        <foreach collection="list" item="goods" separator=",">
             (
-            #{product.id}, #{product.tenantId}, #{product.orderId},
-            #{product.imgUrl}, #{product.itemCode}, #{product.itemFullName}, #{product.itemAbbrName},
-            #{product.price}, #{product.lineQty}, #{product.lineAmount}, #{product.memo},#{product.creator},#{product.createTime}
+            #{goods.id}, #{goods.tenantId}, #{goods.orderId},
+            #{goods.imgUrl}, #{goods.itemCode}, #{goods.itemFullName}, #{goods.itemAbbrName},
+            #{goods.price}, #{goods.lineQty}, #{goods.lineAmount}, #{goods.memo},#{goods.creator},#{goods.createTime}
             )
         </foreach>
     </insert>

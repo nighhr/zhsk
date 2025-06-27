@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.GoodsMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.Goods">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="hcid" property="HCid" jdbcType="BIGINT"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="bar_code" property="barCode" jdbcType="VARCHAR"/>
+        <result column="provider_no" property="providerNo" jdbcType="VARCHAR"/>
+        <result column="provider_number" property="providerNumber" jdbcType="VARCHAR"/>
+        <result column="provider_name" property="providerName" jdbcType="VARCHAR"/>
+        <result column="brand_id" property="brandId" jdbcType="VARCHAR"/>
+        <result column="brand_number" property="brandNumber" jdbcType="VARCHAR"/>
+        <result column="brand_name" property="brandName" jdbcType="VARCHAR"/>
+        <result column="producer" property="producer" jdbcType="VARCHAR"/>
+        <result column="modal_id" property="modalId" jdbcType="VARCHAR"/>
+        <result column="kind_id" property="kindId" jdbcType="VARCHAR"/>
+        <result column="kind_name" property="kindName" jdbcType="VARCHAR"/>
+        <result column="kind_number" property="kindNumber" jdbcType="VARCHAR"/>
+        <result column="unit" property="unit" jdbcType="VARCHAR"/>
+        <result column="medium_unit" property="mediumUnit" jdbcType="VARCHAR"/>
+        <result column="max_unit" property="maxUnit" jdbcType="VARCHAR"/>
+        <result column="medium_unit_num" property="mediumUnitNum" jdbcType="INTEGER"/>
+        <result column="max_unit_num" property="maxUnitNum" jdbcType="INTEGER"/>
+        <result column="company" property="company" jdbcType="VARCHAR"/>
+        <result column="company_name" property="companyName" jdbcType="VARCHAR"/>
+        <result column="company_number" property="companyNumber" jdbcType="VARCHAR"/>
+        <result column="create_date" property="createDate" jdbcType="TIMESTAMP"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+        <result column="deleted" property="deleted" jdbcType="BOOLEAN"/>
+    </resultMap>
+
+    <insert id="batchInsert" parameterType="list" useGeneratedKeys="true" keyProperty="id">
+        INSERT IGNORE INTO goods
+        (
+        hcid, code, name, bar_code, provider_no,
+        provider_number, provider_name, brand_id,
+        brand_number, brand_name, producer, modal_id,
+        kind_id, kind_name, kind_number, unit,
+        medium_unit, max_unit, medium_unit_num, max_unit_num,
+        company, company_name, company_number, create_date,
+        update_date, deleted
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.HCid}, #{item.code}, #{item.name}, #{item.barCode}, #{item.providerNo},
+            #{item.providerNumber}, #{item.providerName}, #{item.brandId},
+            #{item.brandNumber}, #{item.brandName}, #{item.producer}, #{item.modalId},
+            #{item.kindId}, #{item.kindName}, #{item.kindNumber}, #{item.unit},
+            #{item.mediumUnit}, #{item.maxUnit}, #{item.mediumUnitNum}, #{item.maxUnitNum},
+            #{item.company}, #{item.companyName}, #{item.companyNumber}, #{item.createDate},
+            #{item.updateDate}, #{item.deleted}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 插入单条记录 -->
+    <insert id="insert" parameterType="com.zhonghe.backoffice.model.Goods" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO goods
+        (
+            hcid, code, name, bar_code, provider_no, provider_number, provider_name,
+            brand_id, brand_number, brand_name, producer, modal_id, kind_id, kind_name,
+            kind_number, unit, medium_unit, max_unit, medium_unit_num, max_unit_num,
+            company, company_name, company_number, create_date, update_date, deleted
+        )
+        VALUES
+            (
+                #{HCid},
+                #{code},
+                #{name},
+                #{barCode},
+                #{providerNo},
+                #{providerNumber},
+                #{providerName},
+                #{brandId},
+                #{brandNumber},
+                #{brandName},
+                #{producer},
+                #{modalId},
+                #{kindId},
+                #{kindName},
+                #{kindNumber},
+                #{unit},
+                #{mediumUnit},
+                #{maxUnit},
+                #{mediumUnitNum},
+                #{maxUnitNum},
+                #{company},
+                #{companyName},
+                #{companyNumber},
+                #{createDate},
+                #{updateDate},
+                #{deleted}
+            )
+    </insert>
+
+    <!-- 根据ID更新 -->
+    <update id="update" parameterType="com.zhonghe.backoffice.model.Goods">
+        UPDATE goods
+        SET
+            hcid = #{HCid},
+            code = #{code},
+            name = #{name},
+            bar_code = #{barCode},
+            provider_no = #{providerNo},
+            provider_number = #{providerNumber},
+            provider_name = #{providerName},
+            brand_id = #{brandId},
+            brand_number = #{brandNumber},
+            brand_name = #{brandName},
+            producer = #{producer},
+            modal_id = #{modalId},
+            kind_id = #{kindId},
+            kind_name = #{kindName},
+            kind_number = #{kindNumber},
+            unit = #{unit},
+            medium_unit = #{mediumUnit},
+            max_unit = #{maxUnit},
+            medium_unit_num = #{mediumUnitNum},
+            max_unit_num = #{maxUnitNum},
+            company = #{company},
+            company_name = #{companyName},
+            company_number = #{companyNumber},
+            update_date = #{updateDate},
+            deleted = #{deleted}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM goods WHERE id = #{id}
+    </select>
+
+    <!-- 根据华创ID查询 -->
+    <select id="selectByHcid" resultMap="BaseResultMap">
+        SELECT * FROM goods WHERE hcid = #{hcid}
+    </select>
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteById">
+        DELETE FROM goods WHERE id = #{id}
+    </delete>
+
+    <!-- 根据华创ID删除 -->
+    <delete id="deleteByHcid">
+        DELETE FROM goods WHERE hcid = #{hcid}
+    </delete>
+
+    <!-- 查询所有（未删除的） -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM goods WHERE deleted = 0
+    </select>
+
+    <!-- 条件查询 -->
+    <select id="selectByCondition" parameterType="map" resultMap="BaseResultMap">
+        SELECT * FROM goods
+        <where>
+            deleted = 0
+            <if test="code != null and code != ''">
+                AND code LIKE CONCAT('%', #{code}, '%')
+            </if>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="brandName != null and brandName != ''">
+                AND brand_name LIKE CONCAT('%', #{brandName}, '%')
+            </if>
+            <if test="kindName != null and kindName != ''">
+                AND kind_name LIKE CONCAT('%', #{kindName}, '%')
+            </if>
+        </where>
+        ORDER BY create_date DESC
+    </select>
+</mapper>
