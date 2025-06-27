@@ -15,13 +15,23 @@
         <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <!-- 插入单条记录 -->
-    <insert id="insert" parameterType="com.zhonghe.backoffice.model.Stock" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO stock
+    <insert id="insert" parameterType="com.zhonghe.backoffice.model.Stock">
+        INSERT IGNORE INTO stock
         (hc_id, code, name, area_id, type, parent_id, parent_ids, create_date, update_date)
         VALUES
-            (#{hcId}, #{code}, #{name}, #{areaId}, #{type}, #{parentId}, #{parentIds}, NOW(), NOW())
+        (
+        #{HCid},
+        #{code},
+        #{name},
+        #{areaId},
+        #{type},
+        #{parentId},
+        #{parentIds},
+        #{createDate},
+        #{updateDate}
+        )
     </insert>
+
 
     <!-- 更新记录 -->
     <update id="update" parameterType="com.zhonghe.backoffice.model.Stock">
@@ -103,49 +113,24 @@
     </select>
 
     <!-- 批量插入 -->
-    <insert id="batchInsert" parameterType="list">
-        INSERT INTO stock
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT IGNORE INTO stock
         (hc_id, code, name, area_id, type, parent_id, parent_ids, create_date, update_date)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.hcId},
+            #{item.HCid},
             #{item.code},
             #{item.name},
             #{item.areaId},
             #{item.type},
             #{item.parentId},
             #{item.parentIds},
-            NOW(),
-            NOW()
+            #{item.createDate},
+            #{item.updateDate}
             )
         </foreach>
     </insert>
 
-    <!-- 批量插入(带重复检查) MySQL特有 -->
-    <insert id="batchInsertOnDuplicateUpdate" parameterType="list">
-        INSERT INTO stock
-        (hc_id, code, name, area_id, type, parent_id, parent_ids, create_date, update_date)
-        VALUES
-        <foreach collection="list" item="item" separator=",">
-            (
-            #{item.hcId},
-            #{item.code},
-            #{item.name},
-            #{item.areaId},
-            #{item.type},
-            #{item.parentId},
-            #{item.parentIds},
-            NOW(),
-            NOW()
-            )
-        </foreach>
-        ON DUPLICATE KEY UPDATE
-        name = VALUES(name),
-        area_id = VALUES(area_id),
-        type = VALUES(type),
-        parent_id = VALUES(parent_id),
-        parent_ids = VALUES(parent_ids),
-        update_date = NOW()
-    </insert>
+
 </mapper>
