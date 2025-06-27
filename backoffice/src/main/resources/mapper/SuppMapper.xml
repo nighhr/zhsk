@@ -14,7 +14,7 @@
     </resultMap>
 
     <insert id="insert" parameterType="com.zhonghe.backoffice.model.Supplier" useGeneratedKeys="true" keyProperty="HCid">
-        INSERT INTO supplier
+        INSERT IGNORE INTO supplier
         (no, name, status, data_type, business_category, create_date, update_date)
         VALUES
             (#{no}, #{name}, #{status}, #{dataType}, #{businessCategory}, NOW(), NOW())
@@ -80,11 +80,12 @@
         </where>
     </select>
     <insert id="batchInsert" parameterType="list">
-        INSERT INTO supplier
-        (no, name, status, data_type, business_category, create_date, update_date)
+        INSERT IGNORE INTO supplier
+        (hc_id, no, name, status, data_type, business_category, create_date, update_date)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (
+            #{item.HCid},
             #{item.no},
             #{item.name},
             #{item.status},
@@ -94,11 +95,5 @@
             NOW()
             )
         </foreach>
-        ON DUPLICATE KEY UPDATE
-        name = VALUES(name),
-        status = VALUES(status),
-        data_type = VALUES(data_type),
-        business_category = VALUES(business_category),
-        update_date = NOW()
     </insert>
 </mapper>
