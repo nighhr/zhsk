@@ -1,15 +1,20 @@
 package com.zhonghe.adapter.service.Impl;
 
 import cn.hutool.json.JSON;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.PurInClient;
+import com.zhonghe.adapter.mapper.PurInLineMapper;
+import com.zhonghe.adapter.mapper.PurInMapper;
 import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
-import com.zhonghe.adapter.model.FOrder;
-import com.zhonghe.adapter.model.FOrderLine;
+import com.zhonghe.adapter.model.PurIn;
+import com.zhonghe.adapter.model.PurInLine;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.response.AiTeResponse;
 import com.zhonghe.adapter.service.PurInService;
-import com.zhonghe.kernel.vo.Result;
+import com.zhonghe.kernel.exception.BusinessException;
+import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -18,7 +23,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,28 +44,54 @@ public class PurInServiceImpl implements PurInService {
     @Autowired
     private GLAccvouchMapper glAccvouchMapper;
 
-    @Override
-    public AiTeResponse queryPurIn(Integer currentPage, Integer pageSize, String name, String code) {
-        ApiRequest request = new ApiRequest(currentPage, pageSize);
-        request.setName(name);
-        request.setCode(code);
-        String ResponseString = purInClient.queryPurInRaw(request);
-        JSON parse = JSONUtil.parse(ResponseString);
-        AiTeResponse purInResponse = parse.toBean(AiTeResponse.class);
-        GLAccvouchMapper mapper = secondarySqlSessionTemplate.getMapper(GLAccvouchMapper.class);
-        DataPurInHandle(purInResponse, mapper);
-        return null;
+    @Autowired
+    private PurInMapper purInMapper;
 
+    @Autowired
+    private PurInLineMapper purInLineMapper;
+
+
+    @Override
+    public void getPurIn(Integer currentPage, Integer pageSize,String start, String end) {
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        String startT = sdf.format(startTime);
+//        String endT = sdf.format(endTime);
+        for (int i = 1; ; i++) {
+        ApiRequest request = new ApiRequest(currentPage, pageSize);
+        request.setStart(start);
+        request.setEnd(end);
+        String responseString = purInClient.queryPurInRaw(request);
+        JSONObject parse = JSONUtil.parseObj(responseString);
+            if ("OK".equals(parse.getStr("OFlag"))) {
+                // 获取Data数组并转换为模型列表
+                JSONArray dataArray = parse.getJSONArray("Data");
+                List<PurIn> purInsList = JSONUtil.toList(dataArray, PurIn.class);
+                if (purInsList.size() == 0) {
+                    break;
+                } else {
+                    for (PurIn purIn : purInsList) {
+                        purInLineMapper.batchInsert(purIn.getFEntry());
+                        purInMapper.insert(purIn);
+                    }
+                    currentPage++;
+                }
+
+            } else {
+                // 处理错误情况
+                String errorMessage = parse.getStr("Message");
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR,"请求失败: " + errorMessage);
+            }
+        }
     }
 
-    public GLAccvouch DataPurInHandle(AiTeResponse<FOrder> purInResponse, GLAccvouchMapper glAccvouchMapper) {
+    public GLAccvouch DataPurInHandle(AiTeResponse<PurIn> purInResponse, GLAccvouchMapper glAccvouchMapper) {
         int inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
         List<GLAccvouch> glAccvouchDList = new ArrayList<>();
         List<GLAccvouch> glAccvouchJList = new ArrayList<>();
-        for (FOrder fOrder : purInResponse.getData()) {
-            List<FOrderLine> fEntry = fOrder.getFEntry();
+        for (PurIn purIn : purInResponse.getData()) {
+            List<PurInLine> fEntry = purIn.getFEntry();
             double totalAmount = fEntry.stream()
-                    .mapToDouble(FOrderLine::getFAllAmount)
+                    .mapToDouble(PurInLine::getFAllAmount)
                     .sum();
             GLAccvouch glAccvouchD = new GLAccvouch();
             glAccvouchD.setIperiod(1);
@@ -78,15 +111,15 @@ public class PurInServiceImpl implements PurInService {
             glAccvouchD.setMd(BigDecimal.ZERO);
             glAccvouchD.setIsignseq(1);
 
-            glAccvouchD.setCoutid(fOrder.getFOrderNo());
+            glAccvouchD.setCoutid(purIn.getFOrderNo());
             glAccvouchD.setIyear(2015);
             glAccvouchD.setIYPeriod(201501);
             glAccvouchD.setCdigest("摘要-供应商");
 
             //客户编码用的是FDepNumber
-            glAccvouchD.setCdeptId(fOrder.getFDepNumber());
+            glAccvouchD.setCdeptId(purIn.getFDepNumber());
             //供应商编码用的是FSupplierNumber
-            glAccvouchD.setCsupId(fOrder.getFSupplierNumber());
+            glAccvouchD.setCsupId(purIn.getFSupplierNumber());
 
             glAccvouchDList.add(glAccvouchD);
         }
@@ -157,5 +190,18 @@ public class PurInServiceImpl implements PurInService {
 //        glAccvouchMapper.batchInsert(glAccvouchList1);
 //        glAccvouchMapper.batchInsert(glAccvouchList);
         return null;
+    }
+
+
+    @Override
+    public AiTeResponse queryPurIn(Integer currentPage, Integer pageSize, String name, String code) {
+        ApiRequest request = new ApiRequest(currentPage, pageSize);
+        String ResponseString = purInClient.queryPurInRaw(request);
+        JSON parse = JSONUtil.parse(ResponseString);
+        AiTeResponse purInResponse = parse.toBean(AiTeResponse.class);
+        GLAccvouchMapper mapper = secondarySqlSessionTemplate.getMapper(GLAccvouchMapper.class);
+        DataPurInHandle(purInResponse, mapper);
+        return null;
+
     }
 }

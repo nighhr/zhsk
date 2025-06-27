@@ -15,7 +15,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import javax.sql.DataSource;
 
 @Configuration
-@MapperScan(basePackages = "com.zhonghe.backoffice.mapper", sqlSessionFactoryRef = "backofficeSqlSessionFactory")
+@MapperScan(basePackages = {"com.zhonghe.backoffice.mapper","com.zhonghe.adapter.mapper"}, sqlSessionFactoryRef = "backofficeSqlSessionFactory")
 public class BackOfficeDataSourceConfig {
     @Bean
     @ConfigurationProperties("spring.datasource.backoffice")

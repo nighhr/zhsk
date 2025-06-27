@@ -3,7 +3,7 @@ package com.zhonghe.adapter.model;
 import lombok.Data;
 
 @Data
-public class FOrderLine {
+public class PurInLine {
     private Long ID;
     private String FID;
     private String FEntryID;

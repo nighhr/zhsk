@@ -1,13 +1,13 @@
 package com.zhonghe.adapter.service;
 
 
-import com.zhonghe.adapter.model.FOrder;
 import com.zhonghe.adapter.response.AiTeResponse;
-import com.zhonghe.kernel.vo.Result;
 
-import java.util.List;
+import java.util.Date;
 
 public interface PurInService {
 
     AiTeResponse queryPurIn(Integer currentPage, Integer pageSize, String name, String code);
+
+    void getPurIn(Integer currentPage, Integer pageSize,String start, String end);
 }

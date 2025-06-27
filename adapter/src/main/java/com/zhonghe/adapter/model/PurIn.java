@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class FOrder {
+public class PurIn {
     private Long ID;
     private String FID;
     private String FOrderNo;
@@ -24,6 +24,6 @@ public class FOrder {
     private Object FBillType;
     private Object sync_flag;
     private Object sync_time;
-    private List<FOrderLine> FEntry;
+    private List<PurInLine> FEntry;
 
 }

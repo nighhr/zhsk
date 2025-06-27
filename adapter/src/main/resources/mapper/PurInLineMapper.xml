@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.adapter.mapper.PurInLineMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.adapter.model.PurInLine">
+        <id column="ID" property="ID" jdbcType="BIGINT"/>
+        <result column="FID" property="FID" jdbcType="VARCHAR"/>
+        <result column="FEntryID" property="FEntryID" jdbcType="VARCHAR"/>
+        <result column="FMaterialID" property="FMaterialID" jdbcType="VARCHAR"/>
+        <result column="FMaterialNumber" property="FMaterialNumber" jdbcType="VARCHAR"/>
+        <result column="FMaterialName" property="FMaterialName" jdbcType="VARCHAR"/>
+        <result column="FUnit" property="FUnit" jdbcType="VARCHAR"/>
+        <result column="FInQty" property="FInQty" jdbcType="DOUBLE"/>
+        <result column="FQty" property="FQty" jdbcType="DOUBLE"/>
+        <result column="FGiftQty" property="FGiftQty" jdbcType="DOUBLE"/>
+        <result column="FBatch" property="FBatch" jdbcType="VARCHAR"/>
+        <result column="FStockID" property="FStockID" jdbcType="VARCHAR"/>
+        <result column="FStockNumber" property="FStockNumber" jdbcType="VARCHAR"/>
+        <result column="FStockName" property="FStockName" jdbcType="VARCHAR"/>
+        <result column="FRate" property="FRate" jdbcType="DOUBLE"/>
+        <result column="FTaxPrice" property="FTaxPrice" jdbcType="DOUBLE"/>
+        <result column="FAllAmount" property="FAllAmount" jdbcType="DOUBLE"/>
+        <result column="FNote" property="FNote" jdbcType="VARCHAR"/>
+        <result column="FOrderEntryID" property="FOrderEntryID" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 单条插入 -->
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.PurInLine" useGeneratedKeys="true" keyProperty="ID">
+        INSERT IGNORE INTO at_pur_in_line (
+            FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName,
+            FUnit, FInQty, FQty, FGiftQty, FBatch,
+            FStockID, FStockNumber, FStockName, FRate, FTaxPrice,
+            FAllAmount, FNote, FOrderEntryID
+        ) VALUES (
+                     #{FID,jdbcType=VARCHAR},
+                     #{FEntryID,jdbcType=VARCHAR},
+                     #{FMaterialID,jdbcType=VARCHAR},
+                     #{FMaterialNumber,jdbcType=VARCHAR},
+                     #{FMaterialName,jdbcType=VARCHAR},
+                     #{FUnit,jdbcType=VARCHAR},
+                     #{FInQty,jdbcType=DOUBLE},
+                     #{FQty,jdbcType=DOUBLE},
+                     #{FGiftQty,jdbcType=DOUBLE},
+                     #{FBatch,jdbcType=VARCHAR},
+                     #{FStockID,jdbcType=VARCHAR},
+                     #{FStockNumber,jdbcType=VARCHAR},
+                     #{FStockName,jdbcType=VARCHAR},
+                     #{FRate,jdbcType=DOUBLE},
+                     #{FTaxPrice,jdbcType=DOUBLE},
+                     #{FAllAmount,jdbcType=DOUBLE},
+                     #{FNote,jdbcType=VARCHAR},
+                     #{FOrderEntryID,jdbcType=VARCHAR}
+                 )
+    </insert>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="ID">
+        INSERT IGNORE INTO at_pur_in_line (
+        FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName,
+        FUnit, FInQty, FQty, FGiftQty, FBatch,
+        FStockID, FStockNumber, FStockName, FRate, FTaxPrice,
+        FAllAmount, FNote, FOrderEntryID
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.FID,jdbcType=VARCHAR},
+            #{item.FEntryID,jdbcType=VARCHAR},
+            #{item.FMaterialID,jdbcType=VARCHAR},
+            #{item.FMaterialNumber,jdbcType=VARCHAR},
+            #{item.FMaterialName,jdbcType=VARCHAR},
+            #{item.FUnit,jdbcType=VARCHAR},
+            #{item.FInQty,jdbcType=DOUBLE},
+            #{item.FQty,jdbcType=DOUBLE},
+            #{item.FGiftQty,jdbcType=DOUBLE},
+            #{item.FBatch,jdbcType=VARCHAR},
+            #{item.FStockID,jdbcType=VARCHAR},
+            #{item.FStockNumber,jdbcType=VARCHAR},
+            #{item.FStockName,jdbcType=VARCHAR},
+            #{item.FRate,jdbcType=DOUBLE},
+            #{item.FTaxPrice,jdbcType=DOUBLE},
+            #{item.FAllAmount,jdbcType=DOUBLE},
+            #{item.FNote,jdbcType=VARCHAR},
+            #{item.FOrderEntryID,jdbcType=VARCHAR}
+            )
+        </foreach>
+    </insert>
+</mapper>

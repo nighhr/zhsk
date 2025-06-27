@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.adapter.mapper.PurInMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.adapter.model.PurIn">
+        <id column="ID" property="ID" jdbcType="BIGINT"/>
+        <result column="FID" property="FID" jdbcType="VARCHAR"/>
+        <result column="FOrderNo" property="FOrderNo" jdbcType="VARCHAR"/>
+        <result column="FDate" property="FDate" jdbcType="VARCHAR"/>
+        <result column="FDepID" property="FDepID" jdbcType="VARCHAR"/>
+        <result column="FDepNumber" property="FDepNumber" jdbcType="VARCHAR"/>
+        <result column="FDepName" property="FDepName" jdbcType="VARCHAR"/>
+        <result column="FSupplierID" property="FSupplierID" jdbcType="VARCHAR"/>
+        <result column="FSupplierNumber" property="FSupplierNumber" jdbcType="VARCHAR"/>
+        <result column="FSupplierName" property="FSupplierName" jdbcType="VARCHAR"/>
+        <result column="FRemark" property="FRemark" jdbcType="VARCHAR"/>
+        <result column="FCreateBy" property="FCreateBy" jdbcType="VARCHAR"/>
+        <result column="FCreateDate" property="FCreateDate" jdbcType="VARCHAR"/>
+        <result column="FUpdateBy" property="FUpdateBy" jdbcType="VARCHAR"/>
+        <result column="FUpdateDate" property="FUpdateDate" jdbcType="VARCHAR"/>
+        <result column="FBillType" property="FBillType" jdbcType="VARCHAR"/>
+        <result column="sync_flag" property="sync_flag" jdbcType="TINYINT"/>
+        <result column="sync_time" property="sync_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 单条插入 -->
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.PurIn" useGeneratedKeys="true" keyProperty="ID">
+        INSERT IGNORE INTO at_pur_in (
+            FID, FOrderNo, FDate, FDepID, FDepNumber, FDepName,
+            FSupplierID, FSupplierNumber, FSupplierName, FRemark,
+            FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, FBillType,
+            sync_flag, sync_time
+        ) VALUES (
+                     #{FID,jdbcType=VARCHAR},
+                     #{FOrderNo,jdbcType=VARCHAR},
+                     #{FDate,jdbcType=VARCHAR},
+                     #{FDepID,jdbcType=VARCHAR},
+                     #{FDepNumber,jdbcType=VARCHAR},
+                     #{FDepName,jdbcType=VARCHAR},
+                     #{FSupplierID,jdbcType=VARCHAR},
+                     #{FSupplierNumber,jdbcType=VARCHAR},
+                     #{FSupplierName,jdbcType=VARCHAR},
+                     #{FRemark,jdbcType=VARCHAR},
+                     #{FCreateBy,jdbcType=VARCHAR},
+                     #{FCreateDate,jdbcType=VARCHAR},
+                     #{FUpdateBy,jdbcType=VARCHAR},
+                     #{FUpdateDate,jdbcType=VARCHAR},
+                     #{FBillType,jdbcType=VARCHAR},
+                     #{sync_flag,jdbcType=TINYINT},
+                     #{sync_time,jdbcType=TIMESTAMP}
+                 )
+    </insert>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="ID">
+        INSERT IGNORE INTO at_pur_in (
+        FID, FOrderNo, FDate, FDepID, FDepNumber, FDepName,
+        FSupplierID, FSupplierNumber, FSupplierName, FRemark,
+        FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, FBillType,
+        sync_flag, sync_time
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.FID,jdbcType=VARCHAR},
+            #{item.FOrderNo,jdbcType=VARCHAR},
+            #{item.FDate,jdbcType=VARCHAR},
+            #{item.FDepID,jdbcType=VARCHAR},
+            #{item.FDepNumber,jdbcType=VARCHAR},
+            #{item.FDepName,jdbcType=VARCHAR},
+            #{item.FSupplierID,jdbcType=VARCHAR},
+            #{item.FSupplierNumber,jdbcType=VARCHAR},
+            #{item.FSupplierName,jdbcType=VARCHAR},
+            #{item.FRemark,jdbcType=VARCHAR},
+            #{item.FCreateBy,jdbcType=VARCHAR},
+            #{item.FCreateDate,jdbcType=VARCHAR},
+            #{item.FUpdateBy,jdbcType=VARCHAR},
+            #{item.FUpdateDate,jdbcType=VARCHAR},
+            #{item.FBillType,jdbcType=VARCHAR},
+            #{item.sync_flag,jdbcType=TINYINT},
+            #{item.sync_time,jdbcType=TIMESTAMP}
+            )
+        </foreach>
+    </insert>
+</mapper>

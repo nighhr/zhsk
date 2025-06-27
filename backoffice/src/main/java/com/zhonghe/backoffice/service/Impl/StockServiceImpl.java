@@ -32,8 +32,6 @@ public class StockServiceImpl implements StockService {
         int current_page = 1;
         for (int i = 1; ; i++) {
             ApiRequest request = new ApiRequest(current_page, 200);
-            request.setName("");
-            request.setCode("");
             String responseString = stockClient.queryStockInRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
 

@@ -31,8 +31,6 @@ public class DeptServiceImpl implements DeptService {
         int current_page = 1;
         for (int i = 1; ; i++) {
             ApiRequest request = new ApiRequest(current_page, 200);
-            request.setName("");
-            request.setCode("");
             String responseString = deptClient.queryDeptInRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
 
