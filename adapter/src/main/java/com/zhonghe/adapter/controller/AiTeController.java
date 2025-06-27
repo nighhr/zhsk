@@ -1,9 +1,8 @@
 package com.zhonghe.adapter.controller;
 
-import com.zhonghe.adapter.request.AiTeRequest;
 import com.zhonghe.adapter.response.AiTeResponse;
-import com.zhonghe.adapter.service.GoodService;
 import com.zhonghe.adapter.service.PurInService;
+import com.zhonghe.kernel.vo.request.ApiRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +19,7 @@ public class AiTeController {
      * 采购入库接口
      */
     @PostMapping("/getPurIn")
-    public void getPurInData(@RequestBody AiTeRequest aiTeRequest) {
+    public void getPurInData(@RequestBody ApiRequest aiTeRequest) {
         purInService.getPurIn(aiTeRequest.getCurrent_page(), aiTeRequest.getPage_size(), aiTeRequest.getStart(), aiTeRequest.getEnd());
     }
 
