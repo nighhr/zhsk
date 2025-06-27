@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS `product` (
                            PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='商品信息表';
 
-CREATE TABLE IF NOT EXISTS `department` (
-                              `id` bigint AUTO_INCREMENT COMMENT '部门id',
+CREATE TABLE `department` (
+                              `id` bigint NOT NULL AUTO_INCREMENT COMMENT '部门id',
                               `HCid` bigint NOT NULL COMMENT '华创部门id',
                               `code` varchar(50) NOT NULL COMMENT '编码',
                               `name` varchar(100) NOT NULL COMMENT '名称',
@@ -72,10 +72,8 @@ CREATE TABLE IF NOT EXISTS `department` (
                               `create_date` datetime NOT NULL COMMENT '创建时间',
                               `update_date` datetime NOT NULL COMMENT '更新时间',
                               PRIMARY KEY (`id`),
-                              KEY `idx_parent_id` (`parent_id`),
-                              KEY `idx_parent_ids` (`parent_ids`(255)),
-                              KEY `idx_area_id` (`area_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='部门表';
+                              UNIQUE KEY `uk_hcid` (`HCid`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='部门表';
 
 -- changeset zq:1.03
 CREATE TABLE IF NOT EXISTS `supplier` (
@@ -175,3 +173,4 @@ CREATE TABLE `db_connections` (
                                   KEY `idx_db_name` (`db_name`),
                                   KEY `idx_connection_type` (`connection_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='数据库连接信息表';
+

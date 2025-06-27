@@ -16,7 +16,7 @@
 
     <!-- 插入部门 -->
     <insert id="insertDepartment" parameterType="com.zhonghe.backoffice.model.Department">
-        INSERT INTO department (
+        INSERT IGNORE INTO department (
             HCid, code, name, area_id, type,
             parent_id, parent_ids, create_date, update_date
         ) VALUES (
@@ -87,7 +87,7 @@
     </select>
 
     <insert id="batchInsert" parameterType="list">
-        INSERT INTO department (
+        INSERT IGNORE INTO department (
         HCid, code, name, area_id, type,
         parent_id, parent_ids, create_date, update_date
         ) VALUES
