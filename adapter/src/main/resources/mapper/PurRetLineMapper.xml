@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.adapter.mapper.PurRetLineMapper">
+
+    <resultMap id="purRetLineMap" type="com.zhonghe.adapter.model.PurRetLine">
+        <id property="fid" column="FID"/>
+        <id property="entryId" column="FEntryID"/>
+        <result property="materialId" column="FMaterialID"/>
+        <result property="materialNumber" column="FMaterialNumber"/>
+        <result property="materialName" column="FMaterialName"/>
+        <result property="unit" column="FUnit"/>
+        <result property="qty" column="FQty"/>
+        <result property="batch" column="FBatch"/>
+        <result property="stockId" column="FStockID"/>
+        <result property="stockNumber" column="FStockNumber"/>
+        <result property="stockName" column="FStockName"/>
+        <result property="rate" column="FRate"/>
+        <result property="taxPrice" column="FTaxPrice"/>
+        <result property="allAmount" column="FAllAmount"/>
+        <result property="note" column="FNote"/>
+    </resultMap>
+
+    <insert id="insertLine">
+        INSERT IGNORE INTO pur_ret_line (
+            FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName, FUnit,
+            FQty, FBatch, FStockID, FStockNumber, FStockName, FRate,
+            FTaxPrice, FAllAmount, FNote
+        ) VALUES (
+        #{fid}, #{entryId}, #{materialId}, #{materialNumber}, #{materialName}, #{unit},
+        #{qty}, #{batch}, #{stockId}, #{stockNumber}, #{stockName}, #{rate},
+        #{taxPrice}, #{allAmount}, #{note}
+        )
+    </insert>
+
+
+    <insert id="batchInsertLines">
+        INSERT IGNORE INTO pur_ret_line (
+        FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName, FUnit,
+        FQty, FBatch, FStockID, FStockNumber, FStockName, FRate,
+        FTaxPrice, FAllAmount, FNote
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.fid}, #{item.entryId}, #{item.materialId}, #{item.materialNumber}, #{item.materialName}, #{item.unit},
+            #{item.qty}, #{item.batch}, #{item.stockId}, #{item.stockNumber}, #{item.stockName}, #{item.rate},
+            #{item.taxPrice}, #{item.allAmount}, #{item.note}
+            )
+        </foreach>
+    </insert>
+</mapper>
