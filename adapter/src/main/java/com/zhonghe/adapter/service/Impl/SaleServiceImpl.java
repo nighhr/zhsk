@@ -4,10 +4,12 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.PurRetClient;
-import com.zhonghe.adapter.mapper.PurRetLineMapper;
-import com.zhonghe.adapter.mapper.PurRetMapper;
+import com.zhonghe.adapter.feign.SaleClient;
+import com.zhonghe.adapter.mapper.SaleLineMapper;
+import com.zhonghe.adapter.mapper.SaleMapper;
 import com.zhonghe.adapter.model.PurRet;
-import com.zhonghe.adapter.service.PurRetService;
+import com.zhonghe.adapter.model.Sale;
+import com.zhonghe.adapter.service.SaleService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.request.ApiRequest;
@@ -19,35 +21,34 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PurRetServiceImpl implements PurRetService {
+public class SaleServiceImpl implements SaleService {
 
-    private final PurRetClient purRetClient;
-
-    @Autowired
-    private PurRetMapper purRetMapper;
+    private final SaleClient saleClient;
 
     @Autowired
-    private PurRetLineMapper purRetLineMapper;
+    private SaleMapper saleMapper;
 
+    @Autowired
+    private SaleLineMapper saleLineMapper;
 
     @Override
-    public void getPurRet(Integer currentPage, Integer pageSize, String start, String end) {
+    public void getSale(Integer currentPage, Integer pageSize, String start, String end) {
         for (int i = 1; ; i++) {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            String responseString = purRetClient.queryPurRetRaw(request);
+            String responseString = saleClient.querySaleRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
                 JSONArray dataArray = parse.getJSONArray("Data");
-                List<PurRet> purRetsList = JSONUtil.toList(dataArray, PurRet.class);
-                if (purRetsList.isEmpty()) {
+                List<Sale> salesList = JSONUtil.toList(dataArray, Sale.class);
+                if (salesList.isEmpty()) {
                     break;
                 } else {
-                    for (PurRet purRet : purRetsList) {
-                        purRetLineMapper.batchInsertLines(purRet.getEntries());
-                        purRetMapper.insert(purRet);
+                    for (Sale sale : salesList) {
+                        saleLineMapper.batchInsertSaleLine(sale.getEntries());
+                        saleMapper.insert(sale);
                     }
                     currentPage++;
                 }
@@ -55,7 +56,7 @@ public class PurRetServiceImpl implements PurRetService {
             } else {
                 // 处理错误情况
                 String errorMessage = parse.getStr("Message");
-                throw new BusinessException(ErrorCode.INTERNAL_ERROR,"请求失败: " + errorMessage);
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR, "请求失败: " + errorMessage);
             }
         }
     }

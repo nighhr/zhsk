@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.adapter.mapper.StoreTranEntryMapper">
+
+        <insert id="insertIgnore" parameterType="com.zhonghe.adapter.model.StoreTranEntry">
+            INSERT IGNORE INTO at_store_tran_entry (
+            FID, FEntryID, FDBType, FMaterialID, FMaterialNumber, FMaterialName,
+            FMaterialTypeNumber, FMaterialTypeName, FUnit, FQty,
+            FOutStockID, FOutStockNumber, FOutStockName,
+            FInStockID, FInStockNumber, FInStockName,
+            FBatch, FRate, FInPrice, FInAmount, FNote
+        ) VALUES (
+            #{FID}, #{FEntryID}, #{FDBType}, #{FMaterialID}, #{FMaterialNumber}, #{FMaterialName},
+            #{FMaterialTypeNumber}, #{FMaterialTypeName}, #{FUnit}, #{FQty},
+            #{FOutStockID}, #{FOutStockNumber}, #{FOutStockName},
+            #{FInStockID}, #{FInStockNumber}, #{FInStockName},
+            #{FBatch}, #{FRate}, #{FInPrice}, #{FInAmount}, #{FNote}
+            )
+        </insert>
+
+        <insert id="batchInsertIgnore" parameterType="java.util.List">
+            INSERT IGNORE INTO at_store_tran_entry (
+            FID, FEntryID, FDBType, FMaterialID, FMaterialNumber, FMaterialName,
+            FMaterialTypeNumber, FMaterialTypeName, FUnit, FQty,
+            FOutStockID, FOutStockNumber, FOutStockName,
+            FInStockID, FInStockNumber, FInStockName,
+            FBatch, FRate, FInPrice, FInAmount, FNote
+            ) VALUES
+            <foreach collection="list" item="item" separator=",">
+                (
+                #{item.FID}, #{item.FEntryID}, #{item.FDBType}, #{item.FMaterialID}, #{item.FMaterialNumber}, #{item.FMaterialName},
+                #{item.FMaterialTypeNumber}, #{item.FMaterialTypeName}, #{item.FUnit}, #{item.FQty},
+                #{item.FOutStockID}, #{item.FOutStockNumber}, #{item.FOutStockName},
+                #{item.FInStockID}, #{item.FInStockNumber}, #{item.FInStockName},
+                #{item.FBatch}, #{item.FRate}, #{item.FInPrice}, #{item.FInAmount}, #{item.FNote}
+                )
+            </foreach>
+        </insert>
+
+</mapper>
+

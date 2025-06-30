@@ -3,11 +3,11 @@ package com.zhonghe.adapter.service.Impl;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.zhonghe.adapter.feign.PurRetClient;
-import com.zhonghe.adapter.mapper.PurRetLineMapper;
-import com.zhonghe.adapter.mapper.PurRetMapper;
-import com.zhonghe.adapter.model.PurRet;
-import com.zhonghe.adapter.service.PurRetService;
+import com.zhonghe.adapter.feign.StockTakeClient;
+import com.zhonghe.adapter.mapper.StockTakeEntryMapper;
+import com.zhonghe.adapter.mapper.StockTakeMapper;
+import com.zhonghe.adapter.model.StockTake;
+import com.zhonghe.adapter.service.StockTakeService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.request.ApiRequest;
@@ -19,35 +19,33 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PurRetServiceImpl implements PurRetService {
+public class StockTakeServiceImpl implements StockTakeService {
 
-    private final PurRetClient purRetClient;
-
-    @Autowired
-    private PurRetMapper purRetMapper;
+    private final StockTakeClient stockTakeClient;
 
     @Autowired
-    private PurRetLineMapper purRetLineMapper;
+    private StockTakeMapper stockTakeMapper;
 
-
+    @Autowired
+    private StockTakeEntryMapper stockTakeEntryMapper;
     @Override
-    public void getPurRet(Integer currentPage, Integer pageSize, String start, String end) {
+    public void getStockTake(Integer currentPage, Integer pageSize, String start, String end) {
         for (int i = 1; ; i++) {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            String responseString = purRetClient.queryPurRetRaw(request);
+            String responseString = stockTakeClient.queryStockTakeRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
                 JSONArray dataArray = parse.getJSONArray("Data");
-                List<PurRet> purRetsList = JSONUtil.toList(dataArray, PurRet.class);
-                if (purRetsList.isEmpty()) {
+                List<StockTake> stockTakeList = JSONUtil.toList(dataArray, StockTake.class);
+                if (stockTakeList.isEmpty()) {
                     break;
                 } else {
-                    for (PurRet purRet : purRetsList) {
-                        purRetLineMapper.batchInsertLines(purRet.getEntries());
-                        purRetMapper.insert(purRet);
+                    for (StockTake stockTake : stockTakeList) {
+                        stockTakeMapper.insert(stockTake);
+                        stockTakeEntryMapper.batchInsertEntry(stockTake.getStockTakeEntryList());
                     }
                     currentPage++;
                 }
@@ -55,7 +53,7 @@ public class PurRetServiceImpl implements PurRetService {
             } else {
                 // 处理错误情况
                 String errorMessage = parse.getStr("Message");
-                throw new BusinessException(ErrorCode.INTERNAL_ERROR,"请求失败: " + errorMessage);
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR, "请求失败: " + errorMessage);
             }
         }
     }

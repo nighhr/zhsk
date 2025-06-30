@@ -3,11 +3,11 @@ package com.zhonghe.adapter.service.Impl;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.zhonghe.adapter.feign.PurRetClient;
-import com.zhonghe.adapter.mapper.PurRetLineMapper;
-import com.zhonghe.adapter.mapper.PurRetMapper;
-import com.zhonghe.adapter.model.PurRet;
-import com.zhonghe.adapter.service.PurRetService;
+import com.zhonghe.adapter.feign.ServiceCardClient;
+import com.zhonghe.adapter.mapper.ServiceCardEntryMapper;
+import com.zhonghe.adapter.mapper.ServiceCardMapper;
+import com.zhonghe.adapter.model.ServiceCard;
+import com.zhonghe.adapter.service.ServiceCardService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.request.ApiRequest;
@@ -19,35 +19,33 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PurRetServiceImpl implements PurRetService {
+public class ServiceCardServiceImpl implements ServiceCardService {
 
-    private final PurRetClient purRetClient;
-
-    @Autowired
-    private PurRetMapper purRetMapper;
+    private final ServiceCardClient serviceCardClient;
 
     @Autowired
-    private PurRetLineMapper purRetLineMapper;
+    private ServiceCardMapper serviceCardMapper;
 
-
+    @Autowired
+    private ServiceCardEntryMapper serviceCardEntryMapper;
     @Override
-    public void getPurRet(Integer currentPage, Integer pageSize, String start, String end) {
+    public void getServiceCard(Integer currentPage, Integer pageSize, String start, String end) {
         for (int i = 1; ; i++) {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            String responseString = purRetClient.queryPurRetRaw(request);
+            String responseString = serviceCardClient.queryServiceCardRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
                 JSONArray dataArray = parse.getJSONArray("Data");
-                List<PurRet> purRetsList = JSONUtil.toList(dataArray, PurRet.class);
-                if (purRetsList.isEmpty()) {
+                List<ServiceCard> serviceCardsList = JSONUtil.toList(dataArray, ServiceCard.class);
+                if (serviceCardsList.isEmpty()) {
                     break;
                 } else {
-                    for (PurRet purRet : purRetsList) {
-                        purRetLineMapper.batchInsertLines(purRet.getEntries());
-                        purRetMapper.insert(purRet);
+                    for (ServiceCard serviceCard : serviceCardsList) {
+                        serviceCardMapper.insertIgnore(serviceCard);
+                        serviceCardEntryMapper.batchInsertEntry(serviceCard.getServiceCardEntrylist());
                     }
                     currentPage++;
                 }
@@ -55,7 +53,7 @@ public class PurRetServiceImpl implements PurRetService {
             } else {
                 // 处理错误情况
                 String errorMessage = parse.getStr("Message");
-                throw new BusinessException(ErrorCode.INTERNAL_ERROR,"请求失败: " + errorMessage);
+                throw new BusinessException(ErrorCode.INTERNAL_ERROR, "请求失败: " + errorMessage);
             }
         }
     }

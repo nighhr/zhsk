@@ -64,7 +64,7 @@ public class PurInServiceImpl implements PurInService {
                 // 获取Data数组并转换为模型列表
                 JSONArray dataArray = parse.getJSONArray("Data");
                 List<PurIn> purInsList = JSONUtil.toList(dataArray, PurIn.class);
-                if (purInsList.size() == 0) {
+                if (purInsList.isEmpty()) {
                     break;
                 } else {
                     for (PurIn purIn : purInsList) {
