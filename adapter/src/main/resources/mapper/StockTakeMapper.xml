@@ -5,10 +5,10 @@
     <insert id="insert" parameterType="com.zhonghe.adapter.model.StockTake">
         INSERT IGNORE INTO at_stock_take (
             FID, FBillType, FDate, FOrgID, FOrgNumber, FOrgName,
-            FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate
+            FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, mark
         ) VALUES (
         #{FID}, #{FBillType}, #{FDate}, #{FOrgID}, #{FOrgNumber}, #{FOrgName},
-        #{FRemark}, #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}
+        #{FRemark}, #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}, #{mark}
         )
     </insert>
 
@@ -16,12 +16,12 @@
     <insert id="batchInsert" parameterType="java.util.List">
         INSERT IGNORE INTO at_stock_take (
         FID, FBillType, FDate, FOrgID, FOrgNumber, FOrgName,
-        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate
+        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, mark
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
             #{item.FID}, #{item.FBillType}, #{item.FDate}, #{item.FOrgID}, #{item.FOrgNumber}, #{item.FOrgName},
-            #{item.FRemark}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}
+            #{item.FRemark}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}, #{item.mark}
             )
         </foreach>
     </insert>

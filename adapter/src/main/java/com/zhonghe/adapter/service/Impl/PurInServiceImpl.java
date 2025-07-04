@@ -51,9 +51,6 @@ public class PurInServiceImpl implements PurInService {
 
     @Override
     public void getPurIn(Integer currentPage, Integer pageSize,String start, String end) {
-//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//        String startT = sdf.format(startTime);
-//        String endT = sdf.format(endTime);
         for (int i = 1; ; i++) {
         ApiRequest request = new ApiRequest(currentPage, pageSize);
         request.setStart(start);

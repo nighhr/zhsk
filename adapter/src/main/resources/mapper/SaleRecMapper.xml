@@ -7,12 +7,12 @@
             FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
             FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
             FSetTypeName, FMemberID, FPayMoney, FRemark, FCreateBy,
-            FCreateDate, FUpdateBy, FUpdateDate
+            FCreateDate, FUpdateBy, FUpdateDate, mark
         ) VALUES (
         #{fid}, #{fBillNo}, #{fSalesNo}, #{fOrgId}, #{fOrgNumber}, #{fOrgName},
         #{fDate}, #{fSaleType}, #{fSaleTypeName}, #{fSrcEntryId}, #{fSetType},
         #{fSetTypeName}, #{fMemberId}, #{fPayMoney}, #{fRemark}, #{fCreateBy},
-        #{fCreateDate}, #{fUpdateBy}, #{fUpdateDate}
+        #{fCreateDate}, #{fUpdateBy}, #{fUpdateDate}, #{mark}
         )
     </insert>
 
@@ -21,14 +21,14 @@
         FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
         FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
         FSetTypeName, FMemberID, FPayMoney, FRemark, FCreateBy,
-        FCreateDate, FUpdateBy, FUpdateDate
+        FCreateDate, FUpdateBy, FUpdateDate, mark
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
             #{item.fid}, #{item.fBillNo}, #{item.fSalesNo}, #{item.fOrgId}, #{item.fOrgNumber}, #{item.fOrgName},
             #{item.fDate}, #{item.fSaleType}, #{item.fSaleTypeName}, #{item.fSrcEntryId}, #{item.fSetType},
             #{item.fSetTypeName}, #{item.fMemberId}, #{item.fPayMoney}, #{item.fRemark}, #{item.fCreateBy},
-            #{item.fCreateDate}, #{item.fUpdateBy}, #{item.fUpdateDate}
+            #{item.fCreateDate}, #{item.fUpdateBy}, #{item.fUpdateDate}, #{item.mark}
             )
         </foreach>
     </insert>

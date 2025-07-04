@@ -25,4 +25,5 @@ public class SaleRec {
     private Date fCreateDate; // 创建时间
     private String fUpdateBy; // 修改人
     private Date fUpdateDate; // 修改时间
+    private Boolean mark = false;
 }

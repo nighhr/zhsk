@@ -27,4 +27,5 @@ public class ServiceCost {
     private Date FCreateDate; // 创建时间
     private String FUpdateBy; // 修改人
     private Date FUpdateDate; // 修改时间
+    private Boolean mark = false;
 }

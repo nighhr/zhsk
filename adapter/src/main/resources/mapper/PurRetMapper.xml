@@ -7,11 +7,11 @@
         INSERT IGNORE INTO at_pur_ret (
             FID, FBillType, FFactoryType, FDepID, FDepNumber, FDepName,
             FDate, FSupplierID, FSupplierNumber, FSupplierName, FReason,
-            FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate
+            FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, #{mark}
         ) VALUES (
         #{FID}, #{FBillType}, #{FFactoryType}, #{FDepID}, #{FDepNumber}, #{FDepName},
         #{FDate}, #{FSupplierID}, #{FSupplierNumber}, #{FSupplierName}, #{FReason},
-        #{FRemark}, #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}
+        #{FRemark}, #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}, #{mark}
         )
     </insert>
 
@@ -20,13 +20,13 @@
         INSERT IGNORE INTO at_pur_ret (
         FID, FBillType, FFactoryType, FDepID, FDepNumber, FDepName,
         FDate, FSupplierID, FSupplierNumber, FSupplierName, FReason,
-        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate
+        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, mark
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
             #{item.FID}, #{item.FBillType}, #{item.FFactoryType}, #{item.FDepID}, #{item.FDepNumber}, #{item.FDepName},
             #{item.FDate}, #{item.FSupplierID}, #{item.FSupplierNumber}, #{item.FSupplierName}, #{item.FReason},
-            #{item.FRemark}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}
+            #{item.FRemark}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}, #{item.mark}
             )
         </foreach>
     </insert>

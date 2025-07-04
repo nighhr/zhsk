@@ -7,11 +7,11 @@
         INSERT IGNORE INTO at_service_card (
             FID, FBillNo, FBillType, FDate, FOrgID, FOrgNumber, FOrgName,
             FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate,
-            FPayID, FPayWay, FPayDate, FPayMoney, FCycleID
+            FPayID, FPayWay, FPayDate, FPayMoney, FCycleID, mark
         ) VALUES (
         #{FID}, #{FBillNo}, #{FBillType}, #{FDate}, #{FOrgID}, #{FOrgNumber}, #{FOrgName},
         #{FRemark}, #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate},
-        #{FPayID}, #{FPayWay}, #{FPayDate}, #{FPayMoney}, #{FCycleID}
+        #{FPayID}, #{FPayWay}, #{FPayDate}, #{FPayMoney}, #{FCycleID}, #{mark}
         )
     </insert>
 
@@ -20,13 +20,13 @@
         INSERT IGNORE INTO at_service_card (
         FID, FBillNo, FBillType, FDate, FOrgID, FOrgNumber, FOrgName,
         FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate,
-        FPayID, FPayWay, FPayDate, FPayMoney, FCycleID
+        FPayID, FPayWay, FPayDate, FPayMoney, FCycleID, mark
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
             #{item.FID}, #{item.FBillNo}, #{item.FBillType}, #{item.FDate}, #{item.FOrgID}, #{item.FOrgNumber}, #{item.FOrgName},
             #{item.FRemark}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate},
-            #{item.FPayID}, #{item.FPayWay}, #{item.FPayDate}, #{item.FPayMoney}, #{item.FCycleID}
+            #{item.FPayID}, #{item.FPayWay}, #{item.FPayDate}, #{item.FPayMoney}, #{item.FCycleID}, #{item.mark}
             )
         </foreach>
     </insert>

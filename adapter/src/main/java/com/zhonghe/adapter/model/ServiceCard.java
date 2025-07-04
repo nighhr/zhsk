@@ -26,6 +26,7 @@ public class ServiceCard {
     private Date FPayDate; // 支付时间
     private BigDecimal FPayMoney; // 支付金额
     private String FCycleID; // 缴款单号
+    private Boolean mark = false;
 
     private List<ServiceCardEntry> serviceCardEntrylist;
 }

@@ -22,6 +22,7 @@ public class Sale {
     private Date FCreateDate;
     private String FUpdateBy;
     private Date FUpdateDate;
+    private Boolean mark = false;
 
     private List<SaleLine> entries;
 }

@@ -24,6 +24,7 @@ public class PurIn {
     private Object FBillType;
     private Object sync_flag;
     private Object sync_time;
+    
     private List<PurInLine> FEntry;
 
 }
