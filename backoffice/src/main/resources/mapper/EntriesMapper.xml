@@ -4,6 +4,7 @@
 
     <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.Entries">
         <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="task_id" property="taskId" jdbcType="BIGINT"/>
         <result column="summary" property="summary" jdbcType="VARCHAR"/>
         <result column="direction" property="direction" jdbcType="VARCHAR"/>
         <result column="amount" property="amount" jdbcType="VARCHAR"/>
@@ -12,20 +13,21 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, summary, direction, amount, supplier_related, department_accounting
+        id, task_id, summary, direction, amount, supplier_related, department_accounting
     </sql>
 
     <insert id="insert" parameterType="com.zhonghe.backoffice.model.Entries" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO task_voucher_entries (
-            summary, direction, amount, supplier_related, department_accounting
+            task_id, summary, direction, amount, supplier_related, department_accounting
         ) VALUES (
-                     #{summary}, #{direction}, #{amount}, #{supplierRelated}, #{departmentAccounting}
+                     #{taskId}, #{summary}, #{direction}, #{amount}, #{supplierRelated}, #{departmentAccounting}
                  )
     </insert>
 
     <update id="update" parameterType="com.zhonghe.backoffice.model.Entries">
         UPDATE task_voucher_entries
         SET
+            task_id = #{taskId},
             summary = #{summary},
             direction = #{direction},
             amount = #{amount},

@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class Entries {
     private Long id; // 自增主键
+    private Long taskId;
     private String summary; // 摘要
     private String direction; // 借贷方向
     private String amount; // 本位币金额
