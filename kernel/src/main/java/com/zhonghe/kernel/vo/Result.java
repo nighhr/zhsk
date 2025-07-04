@@ -20,7 +20,7 @@ public class Result<T> {
     // 成功静态方法
     public static <T> Result<T> fail(T data) {
         Result<T> result = new Result<>();
-        result.setCode(200);
+        result.setCode(201);
         result.setMessage("fail");
         result.setData(data);
         return result;

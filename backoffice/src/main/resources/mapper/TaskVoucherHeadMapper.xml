@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.TaskVoucherHeadMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.TaskVoucherHead">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="task_id" property="taskId" jdbcType="BIGINT"/>
+        <result column="db_name" property="dbName" jdbcType="VARCHAR"/>
+        <result column="account_name" property="accountName" jdbcType="VARCHAR"/>
+        <result column="voucher_key" property="voucherKey" jdbcType="VARCHAR"/>
+        <result column="voucher_word" property="voucherWord" jdbcType="VARCHAR"/>
+        <result column="voucher_date" property="voucherDate" jdbcType="VARCHAR"/>
+        <result column="business_date" property="businessDate" jdbcType="VARCHAR"/>
+        <result column="attachment_count" property="attachmentCount" jdbcType="INTEGER"/>
+        <result column="creator" property="creator" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, task_id, db_name, account_name, voucher_key, voucher_word, voucher_date,
+        business_date, attachment_count, creator, create_time, update_time
+    </sql>
+
+    <!-- 插入新记录 -->
+    <insert id="insert" parameterType="com.zhonghe.backoffice.model.TaskVoucherHead" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO task_voucher_head
+        (task_id, db_name, account_name, voucher_key, voucher_word, voucher_date,
+         business_date, attachment_count, creator, create_time, update_time)
+        VALUES
+            (#{taskId}, #{dbName}, #{accountName}, #{voucherKey}, #{voucherWord}, #{voucherDate},
+             #{businessDate}, #{attachmentCount}, #{creator}, #{createTime}, #{updateTime})
+    </insert>
+
+    <!-- 选择性插入 -->
+    <insert id="insertSelective" parameterType="com.zhonghe.backoffice.model.TaskVoucherHead" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO task_voucher_head
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">task_id,</if>
+            <if test="dbName != null">db_name,</if>
+            <if test="accountName != null">account_name,</if>
+            <if test="voucherKey != null">voucher_key,</if>
+            <if test="voucherWord != null">voucher_word,</if>
+            <if test="voucherDate != null">voucher_date,</if>
+            <if test="businessDate != null">business_date,</if>
+            <if test="attachmentCount != null">attachment_count,</if>
+            <if test="creator != null">creator,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">#{taskId},</if>
+            <if test="dbName != null">#{dbName},</if>
+            <if test="accountName != null">#{accountName},</if>
+            <if test="voucherKey != null">#{voucherKey},</if>
+            <if test="voucherWord != null">#{voucherWord},</if>
+            <if test="voucherDate != null">#{voucherDate},</if>
+            <if test="businessDate != null">#{businessDate},</if>
+            <if test="attachmentCount != null">#{attachmentCount},</if>
+            <if test="creator != null">#{creator},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO task_voucher_head
+        (task_id, db_name, account_name, voucher_key, voucher_word, voucher_date,
+        business_date, attachment_count, creator, create_time, update_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.taskId}, #{item.dbName}, #{item.accountName}, #{item.voucherKey},
+            #{item.voucherWord}, #{item.voucherDate}, #{item.businessDate},
+            #{item.attachmentCount}, #{item.creator}, #{item.createTime}, #{item.updateTime})
+        </foreach>
+    </insert>
+
+    <!-- 根据主键查询 -->
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task_voucher_head
+        WHERE id = #{id}
+    </select>
+
+    <!-- 更新全部字段 -->
+    <update id="updateByPrimaryKey" parameterType="com.zhonghe.backoffice.model.TaskVoucherHead">
+        UPDATE task_voucher_head
+        SET
+            task_id = #{taskId},
+            db_name = #{dbName},
+            account_name = #{accountName},
+            voucher_key = #{voucherKey},
+            voucher_word = #{voucherWord},
+            voucher_date = #{voucherDate},
+            business_date = #{businessDate},
+            attachment_count = #{attachmentCount},
+            creator = #{creator},
+            update_time = #{updateTime}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 选择性更新 -->
+    <update id="updateByPrimaryKeySelective" parameterType="com.zhonghe.backoffice.model.TaskVoucherHead">
+        UPDATE task_voucher_head
+        <set>
+            <if test="taskId != null">task_id = #{taskId},</if>
+            <if test="dbName != null">db_name = #{dbName},</if>
+            <if test="accountName != null">account_name = #{accountName},</if>
+            <if test="voucherKey != null">voucher_key = #{voucherKey},</if>
+            <if test="voucherWord != null">voucher_word = #{voucherWord},</if>
+            <if test="voucherDate != null">voucher_date = #{voucherDate},</if>
+            <if test="businessDate != null">business_date = #{businessDate},</if>
+            <if test="attachmentCount != null">attachment_count = #{attachmentCount},</if>
+            <if test="creator != null">creator = #{creator},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据主键删除 -->
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM task_voucher_head
+        WHERE id = #{id}
+    </delete>
+
+    <!-- 查询所有记录 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task_voucher_head
+    </select>
+
+    <!-- 根据任务ID查询 -->
+    <select id="selectByTaskId" resultMap="BaseResultMap" parameterType="java.lang.Long">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task_voucher_head
+        WHERE task_id = #{taskId}
+    </select>
+
+    <!-- 根据凭证识别主键查询 -->
+    <select id="selectByVoucherKey" resultMap="BaseResultMap" parameterType="java.lang.String">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task_voucher_head
+        WHERE voucher_key = #{voucherKey}
+    </select>
+</mapper>

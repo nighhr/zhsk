@@ -10,4 +10,5 @@ public interface DbConnectionMapper {
     int insert(DbConnection dbConnection);
     int updateByIdSelective(DbConnection dbConnection);
     DbConnection selectById(Long id);
+    List<DbConnection> selectAllAppNames();
 }

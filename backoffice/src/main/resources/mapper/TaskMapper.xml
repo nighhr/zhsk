@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.TaskMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.Task">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="task_name" property="taskName" jdbcType="VARCHAR"/>
+        <result column="source_db_id" property="sourceDbId" jdbcType="VARCHAR"/>
+        <result column="source_db" property="sourceDb" jdbcType="VARCHAR"/>
+        <result column="source_table" property="sourceTable" jdbcType="VARCHAR"/>
+        <result column="detail_table" property="detailTable" jdbcType="VARCHAR"/>
+        <result column="start_time" property="startTime" jdbcType="TIMESTAMP"/>
+        <result column="end_time" property="endTime" jdbcType="TIMESTAMP"/>
+        <result column="target_app_id" property="targetAppId" jdbcType="VARCHAR"/>
+        <result column="target_app" property="targetApp" jdbcType="VARCHAR"/>
+        <result column="task_type" property="taskType" jdbcType="VARCHAR"/>
+        <result column="execute_type" property="executeType" jdbcType="VARCHAR"/>
+        <result column="execute_time" property="executeTime" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, task_name, source_db_id, source_db, source_table, detail_table,
+        start_time, end_time, target_app_id, target_app, task_type, execute_type,
+        execute_time, status, create_time, update_time
+    </sql>
+
+    <!-- 插入任务 -->
+    <insert id="insert" parameterType="com.zhonghe.backoffice.model.Task" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO task (
+        task_name, source_db_id, source_db, source_table, detail_table,
+        start_time, end_time, target_app_id, target_app, task_type,
+        execute_type, execute_time, status, create_time, update_time
+        ) VALUES (
+        #{taskName}, #{sourceDbId}, #{sourceDb}, #{sourceTable}, #{detailTable},
+        #{startTime}, #{endTime}, #{targetAppId}, #{targetApp}, #{taskType},
+        #{executeType}, #{executeTime}, #{status},
+        <choose>
+            <when test="createTime != null">#{createTime}</when>
+            <otherwise>CURRENT_TIMESTAMP</otherwise>
+        </choose>,
+        <choose>
+            <when test="updateTime != null">#{updateTime}</when>
+            <otherwise>CURRENT_TIMESTAMP</otherwise>
+        </choose>
+        )
+    </insert>
+
+    <!-- 更新任务 -->
+    <update id="update" parameterType="com.zhonghe.backoffice.model.Task">
+        UPDATE task
+        <set>
+            <if test="taskName != null">task_name = #{taskName},</if>
+            <if test="sourceDbId != null">source_db_id = #{sourceDbId},</if>
+            <if test="sourceDb != null">source_db = #{sourceDb},</if>
+            <if test="sourceTable != null">source_table = #{sourceTable},</if>
+            <if test="detailTable != null">detail_table = #{detailTable},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="targetAppId != null">target_app_id = #{targetAppId},</if>
+            <if test="targetApp != null">target_app = #{targetApp},</if>
+            <if test="taskType != null">task_type = #{taskType},</if>
+            <if test="executeType != null">execute_type = #{executeType},</if>
+            <if test="executeTime != null">execute_time = #{executeTime},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除任务 -->
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM task WHERE id = #{id}
+    </delete>
+
+    <!-- 根据ID查询任务 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有任务 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据条件查询任务 -->
+    <select id="selectByCondition" parameterType="com.zhonghe.backoffice.model.Task" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task
+        <where>
+            <if test="taskName != null and taskName != ''">
+                AND task_name LIKE CONCAT('%', #{taskName}, '%')
+            </if>
+            <if test="sourceDbId != null and sourceDbId != ''">
+                AND source_db_id = #{sourceDbId}
+            </if>
+            <if test="sourceDb != null and sourceDb != ''">
+                AND source_db = #{sourceDb}
+            </if>
+            <if test="sourceTable != null and sourceTable != ''">
+                AND source_table = #{sourceTable}
+            </if>
+            <if test="targetAppId != null and targetAppId != ''">
+                AND target_app_id = #{targetAppId}
+            </if>
+            <if test="targetApp != null and targetApp != ''">
+                AND target_app = #{targetApp}
+            </if>
+            <if test="taskType != null and taskType != ''">
+                AND task_type = #{taskType}
+            </if>
+            <if test="executeType != null and executeType != ''">
+                AND execute_type = #{executeType}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+</mapper>

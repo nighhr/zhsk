@@ -4,6 +4,8 @@ import com.zhonghe.backoffice.mapper.DbConnectionMapper;
 import com.zhonghe.backoffice.model.DbConnection;
 import com.zhonghe.backoffice.model.DTO.DbConnectionDTO;
 import com.zhonghe.backoffice.service.DbConnectionService;
+import com.zhonghe.kernel.exception.BusinessException;
+import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,14 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.*;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -140,6 +137,101 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             return Result.fail("连接测试失败: " + e.getMessage());
         }
     }
+
+    @Override
+    public List<DbConnection> getSimpleList() {
+        return dbConnectionMapper.selectAllAppNames();
+    }
+
+    @Override
+    public List<String> getTablesByConnectionId(Long connectionId) {
+        DbConnection connection = dbConnectionMapper.selectById(connectionId);
+        if (connection == null) {
+            throw new BusinessException(ErrorCode.DB_CONNECT_ERROR,"数据库连接不存在");
+        }
+
+        // 根据连接信息获取数据库中的所有表
+        try {
+            return getDatabaseTables(connection);
+        } catch (SQLException e) {
+            throw new BusinessException(ErrorCode.DB_CONNECT_ERROR,"获取数据库表失败: " + e.getMessage());
+        }
+    }
+
+    private List<String> getDatabaseTables(DbConnection connection) throws SQLException {
+        String url = buildJdbcUrl(connection);
+        String username = connection.getUsername();
+        // TODO 加密解密需要添加
+//        String password = encryptPassword(connection.getPassword()); // 解密密码
+//        try (Connection conn = DriverManager.getConnection(url, username, password)) {
+
+        try (Connection conn = DriverManager.getConnection(url, username, connection.getPassword())) {
+            DatabaseMetaData metaData = conn.getMetaData();
+            ResultSet tables = metaData.getTables(connection.getDbName(), null, "%", new String[]{"TABLE"});
+
+            List<String> tableNames = new ArrayList<>();
+            while (tables.next()) {
+                tableNames.add(tables.getString("TABLE_NAME"));
+            }
+            return tableNames;
+        }
+    }
+    private String buildJdbcUrl(DbConnection connection) {
+        String dbType = connection.getConnectionType().toLowerCase();
+        String host = connection.getDbHost();
+        int port = connection.getDbPort();
+        String dbName = connection.getDbName();
+        String charset = connection.getCharset();
+
+        switch (dbType) {
+            case "mysql":
+                return String.format("jdbc:mysql://%s:%d/%s?useSSL=false&characterEncoding=%s&serverTimezone=UTC",
+                        host, port, dbName, charset);
+
+            case "oracle":
+                return String.format("jdbc:oracle:thin:@//%s:%d/%s",
+                        host, port, dbName);
+
+            case "postgresql":
+                return String.format("jdbc:postgresql://%s:%d/%s",
+                        host, port, dbName);
+
+            case "sqlserver":
+                // SQL Server 字符集处理
+                String sqlServerCharsetParams = buildSqlServerCharsetParams(charset);
+                return String.format("jdbc:sqlserver://%s:%d;databaseName=%s;encrypt=true;trustServerCertificate=true%s",
+                        host, port, dbName, sqlServerCharsetParams);
+
+
+            default:
+                throw new BusinessException(ErrorCode.DB_CONNECT_ERROR,"不支持的数据库类型: " + dbType);
+        }
+    }
+
+    /**
+     * 构建 SQL Server 字符集相关参数
+     */
+    private String buildSqlServerCharsetParams(String charset) {
+        StringBuilder params = new StringBuilder();
+
+        // 常见字符集映射
+        if ("UTF-8".equalsIgnoreCase(charset)) {
+            params.append(";sendStringParametersAsUnicode=true");
+            params.append(";useUnicode=true");
+        } else if ("GBK".equalsIgnoreCase(charset) || "GB2312".equalsIgnoreCase(charset)) {
+            params.append(";sendStringParametersAsUnicode=false");
+            params.append(";useUnicode=false");
+        } else {
+            // 默认处理
+            params.append(";sendStringParametersAsUnicode=true");
+        }
+
+        // 添加字符集参数
+        params.append(";characterEncoding=").append(charset);
+
+        return params.toString();
+    }
+
     private Result testMysqlConnection(DbConnection dbConnection) {
         String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=UTC&characterEncoding=%s",
                 dbConnection.getDbHost(),

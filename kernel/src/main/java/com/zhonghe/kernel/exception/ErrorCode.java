@@ -34,10 +34,11 @@ public enum ErrorCode {
     ORDER_ACCESS_REJECT(302, "您无权访问该订单"),
 
     // 客户错误 (03)
-    CUSTOMER_NOT_FOUND(301, "客户不存在"),
+    CUSTOMER_NOT_FOUND(401, "客户不存在"),
 
     // 系统错误
-    INTERNAL_ERROR(500, "系统内部错误");
+    INTERNAL_ERROR(500, "系统内部错误"),
+    DB_CONNECT_ERROR(501, "数据库连接错误");
 
     private final int code;
     private final String message;

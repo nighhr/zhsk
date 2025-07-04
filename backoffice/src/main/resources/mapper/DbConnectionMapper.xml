@@ -93,4 +93,7 @@
         FROM db_connections
         WHERE id = #{id} AND is_deleted = 0
     </select>
+    <select id = "selectAllAppNames" resultMap="BaseResultMap">
+        SELECT id,DISTINCT connectionName FROM db_connections AND is_deleted = 0
+    </select>
 </mapper>

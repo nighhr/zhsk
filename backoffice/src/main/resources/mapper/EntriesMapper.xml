@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.EntriesMapper">
+
+    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.Entries">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="summary" property="summary" jdbcType="VARCHAR"/>
+        <result column="direction" property="direction" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="VARCHAR"/>
+        <result column="supplier_related" property="supplierRelated" jdbcType="TINYINT"/>
+        <result column="department_accounting" property="departmentAccounting" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, summary, direction, amount, supplier_related, department_accounting
+    </sql>
+
+    <insert id="insert" parameterType="com.zhonghe.backoffice.model.Entries" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO task_voucher_entries (
+            summary, direction, amount, supplier_related, department_accounting
+        ) VALUES (
+                     #{summary}, #{direction}, #{amount}, #{supplierRelated}, #{departmentAccounting}
+                 )
+    </insert>
+
+    <update id="update" parameterType="com.zhonghe.backoffice.model.Entries">
+        UPDATE task_voucher_entries
+        SET
+            summary = #{summary},
+            direction = #{direction},
+            amount = #{amount},
+            supplier_related = #{supplierRelated},
+            department_accounting = #{departmentAccounting}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM task_voucher_entries WHERE id = #{id}
+    </delete>
+
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task_voucher_entries
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task_voucher_entries
+    </select>
+</mapper>

@@ -10,6 +10,7 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import javax.sql.DataSource;
@@ -49,5 +50,11 @@ public class BackOfficeDataSourceConfig {
     public SqlSessionTemplate backofficeSqlSessionTemplate(
             @Qualifier("backofficeSqlSessionFactory") SqlSessionFactory factory) {
         return new SqlSessionTemplate(factory);
+    }
+
+    @Bean
+    public JdbcTemplate backofficeJdbcTemplate(
+            @Qualifier("backofficeDataSource") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
     }
 }

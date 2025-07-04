@@ -8,6 +8,8 @@ import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/backoffice/db")
@@ -46,5 +48,19 @@ public class DbConnectionController {
     @PostMapping("/test-connection")
     public Result<String> testConnection(@RequestBody DbConnection dbConnection) {
         return dbConnectionService.testConnection(dbConnection);
+    }
+
+    @GetMapping("/simpleList")
+    public Result<List<DbConnection>> getSimpleList() {
+        return Result.success(dbConnectionService.getSimpleList());
+    }
+
+    /**
+     * 根据连接ID获取数据库中的所有表
+     */
+    @GetMapping("/tables/{connectionId}")
+    public Result<List<String>> listTables(@PathVariable Long connectionId) {
+        List<String> tables = dbConnectionService.getTablesByConnectionId(connectionId);
+        return Result.success(tables);
     }
 }
