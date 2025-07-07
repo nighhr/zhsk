@@ -38,5 +38,8 @@ public interface DeptMapper {
          * @return 影响的行数
          */
         int batchInsert(List<Department> departmentList);
+
+        List<Department> selectList(Map<String, Object> params);
+        long selectCount(Map<String, Object> params);
     }
 

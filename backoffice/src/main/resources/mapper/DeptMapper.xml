@@ -14,6 +14,10 @@
         <result property="updateDate" column="update_date" />
     </resultMap>
 
+    <sql id="Base_Column_List">
+        hc_id, code, name, area_id, type, parent_id, parent_ids, create_date, update_date
+    </sql>
+
     <!-- 插入部门 -->
     <insert id="insertDepartment" parameterType="com.zhonghe.backoffice.model.Department">
         INSERT IGNORE INTO department (
@@ -98,4 +102,27 @@
             )
         </foreach>
     </insert>
+
+    <select id="selectList" resultMap="departmentResultMap" parameterType="map">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM department
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY create_date DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectCount" resultType="long" parameterType="map">
+        SELECT COUNT(1)
+        FROM department
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+    </select>
 </mapper>
