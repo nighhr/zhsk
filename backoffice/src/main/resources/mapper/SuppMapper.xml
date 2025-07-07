@@ -13,6 +13,10 @@
         <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
     </resultMap>
 
+    <sql id="Base_Column_List">
+        id, hc_id, no, name, status, data_type, business_category, create_date, update_date
+    </sql>
+
     <insert id="insert" parameterType="com.zhonghe.backoffice.model.Supplier" useGeneratedKeys="true" keyProperty="HCid">
         INSERT IGNORE INTO supplier
         (no, name, status, data_type, business_category, create_date, update_date)
@@ -96,4 +100,29 @@
             )
         </foreach>
     </insert>
+
+
+
+    <select id="selectListByName" resultMap="BaseResultMap" parameterType="map">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM supplier
+        <where>
+            <if test="name != null and name != ''">
+                name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY create_date DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectCountByName" resultType="long" parameterType="map">
+        SELECT COUNT(1)
+        FROM supplier
+        <where>
+            <if test="name != null and name != ''">
+                name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+    </select>
 </mapper>

@@ -23,4 +23,8 @@ public interface SuppMapper {
     long count(Map<String, Object> params);
 
     int batchInsert(@Param("list") List<Supplier> suppliers);
+
+    List<Supplier> selectListByName(Map<String, Object> params);
+
+    long selectCountByName(Map<String, Object> params);
 }

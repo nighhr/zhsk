@@ -5,8 +5,10 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.SuppClient;
 import com.zhonghe.backoffice.mapper.SuppMapper;
+import com.zhonghe.backoffice.model.Department;
 import com.zhonghe.backoffice.model.Supplier;
 import com.zhonghe.backoffice.service.SuppService;
+import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -57,5 +60,28 @@ public class SuppServiceImpl implements SuppService {
 
 
         return Result.success(insertData.size());
+    }
+
+    @Override
+    public PageResult<Supplier> listSupplierByName(Map<String, Object> params) {
+        // 处理分页参数
+        int page = params.get("page") == null ? 1 : Integer.parseInt(params.get("page").toString());
+        int pageSize = params.get("pageSize") == null ? 10 : Integer.parseInt(params.get("pageSize").toString());
+        int offset = (page - 1) * pageSize;
+
+        params.put("offset", offset);
+        params.put("pageSize", pageSize);
+
+        // 查询数据列表
+        List<Supplier> supplierList = suppMapper.selectListByName(params);
+        // 查询总数
+        long total = suppMapper.selectCountByName(params);
+
+        PageResult<Supplier> pageResult = new PageResult<>();
+        pageResult.setList(supplierList);
+        pageResult.setTotal(total);
+        pageResult.setPageSize(pageSize);
+        pageResult.setPage(offset);
+        return pageResult;
     }
 }

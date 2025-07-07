@@ -80,7 +80,7 @@ public class DeptServiceImpl implements DeptService {
         pageResult.setTotal(total);
         pageResult.setPageSize(pageSize);
         pageResult.setPage(offset);
-        return new PageResult<>();
+        return pageResult;
     }
 
 
