@@ -9,6 +9,7 @@ import com.zhonghe.backoffice.mapper.StockMapper;
 import com.zhonghe.backoffice.model.Stock;
 import com.zhonghe.backoffice.model.Supplier;
 import com.zhonghe.backoffice.service.StockService;
+import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class StockServiceImpl implements StockService {
 
     @Autowired
     private StockMapper stockMapper;
+
     @Override
     public Result<Integer> getStock() {
         ArrayList<Stock> insertData = new ArrayList<>();
@@ -56,5 +59,29 @@ public class StockServiceImpl implements StockService {
             }
         }
         return Result.success(insertData.size());
+    }
+
+    @Override
+    public PageResult<Stock> listStockByName(Map<String, Object> params) {
+        // 处理分页参数
+        int page = params.get("page") == null ? 1 : Integer.parseInt(params.get("page").toString());
+        int pageSize = params.get("pageSize") == null ? 10 : Integer.parseInt(params.get("pageSize").toString());
+        int offset = (page - 1) * pageSize;
+
+        params.put("offset", offset);
+        params.put("pageSize", pageSize);
+
+        // 查询数据列表
+        List<Stock> stockList = stockMapper.selectListByName(params);
+        // 查询总数
+        long total = stockMapper.selectCountByName(params);
+
+        PageResult<Stock> pageResult = new PageResult<>();
+        pageResult.setList(stockList);
+        pageResult.setTotal(total);
+        pageResult.setPageSize(pageSize);
+        pageResult.setPage(page);
+        return pageResult;
+
     }
 }

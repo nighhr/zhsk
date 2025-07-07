@@ -14,4 +14,6 @@ public interface StockMapper {
     List<Stock> selectList(Map<String, Object> params);
     long count(Map<String, Object> params);
     int batchInsert(@Param("list") List<Stock> stocks);
+    List<Stock> selectListByName(Map<String, Object> params);
+    long selectCountByName(Map<String, Object> params);
 }
