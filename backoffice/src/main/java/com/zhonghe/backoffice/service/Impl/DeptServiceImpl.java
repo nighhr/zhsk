@@ -7,6 +7,7 @@ import com.zhonghe.adapter.feign.DeptClient;
 import com.zhonghe.backoffice.mapper.DeptMapper;
 import com.zhonghe.backoffice.model.Department;
 import com.zhonghe.backoffice.service.DeptService;
+import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -57,4 +59,29 @@ public class DeptServiceImpl implements DeptService {
 
         return Result.success(insertData.size());
     }
+
+    @Override
+    public PageResult<Department> listDepartment(Map<String, Object> params) {
+        // 处理分页参数
+        int page = params.get("page") == null ? 1 : Integer.parseInt(params.get("page").toString());
+        int pageSize = params.get("pageSize") == null ? 10 : Integer.parseInt(params.get("pageSize").toString());
+        int offset = (page - 1) * pageSize;
+
+        params.put("offset", offset);
+        params.put("pageSize", pageSize);
+
+        // 查询数据列表
+        List<Department> departmentList = deptMapper.selectList(params);
+        // 查询总数
+        long total = deptMapper.selectCount(params);
+
+        PageResult<Department> pageResult = new PageResult<>();
+        pageResult.setList(departmentList);
+        pageResult.setTotal(total);
+        pageResult.setPageSize(pageSize);
+        pageResult.setPage(offset);
+        return new PageResult<>();
+    }
+
+
 }

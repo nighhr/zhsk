@@ -127,4 +127,29 @@
         </where>
         ORDER BY create_time DESC
     </select>
+    <select id="selectTaskList" resultType="com.zhonghe.backoffice.model.Task">
+        SELECT
+        id, task_name, source_db_id, source_db, source_table,
+        detail_table, target_app_id,
+        target_app, task_type, execute_type, execute_time,
+        status, create_time, update_time
+        FROM task
+        <where>
+            <if test="params.taskName != null and params.taskName != ''">
+                AND task_name LIKE CONCAT('%', #{params.taskName}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{params.offset}, #{params.pageSize}
+    </select>
+
+    <select id="selectTaskCount" resultType="long">
+        SELECT COUNT(*)
+        FROM task
+        <where>
+            <if test="params.taskName != null and params.taskName != ''">
+                AND task_name LIKE CONCAT('%', #{params.taskName}, '%')
+            </if>
+        </where>
+    </select>
 </mapper>

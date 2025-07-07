@@ -1,5 +1,6 @@
 package com.zhonghe.backoffice.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.zhonghe.backoffice.model.enums.ExecuteTypeEnum;
 import com.zhonghe.backoffice.model.enums.TaskTypeEnum;
 import lombok.Data;
@@ -22,6 +23,8 @@ public class Task {
     private ExecuteTypeEnum executeType; // MANUAL/FIXED_TIME/FIXED_INTERVAL
     private String executeTime; // 执行时间或间隔
     private String status;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date createTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date updateTime;
 }
