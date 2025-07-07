@@ -63,15 +63,8 @@ public interface GoodsMapper {
     */
    List<Goods> selectAll();
 
-   /**
-    * 条件查询商品
-    * @param condition 查询条件Map
-    *        - code: 商品编码
-    *        - name: 商品名称
-    *        - brandName: 品牌名称
-    *        - kindName: 分类名称
-    * @return 商品列表
-    */
-   List<Goods> selectByCondition(@Param("condition") Map<String, Object> condition);
 
+    List<Goods> selectListByName(Map<String, Object> params);
+
+   long selectCountByName(Map<String, Object> params);
 }

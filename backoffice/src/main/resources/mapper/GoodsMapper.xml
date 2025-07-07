@@ -32,6 +32,13 @@
         <result column="deleted" property="deleted" jdbcType="BOOLEAN"/>
     </resultMap>
 
+    <sql id="Base_Column_List">
+        id, hcid, code, name, bar_code, provider_no, provider_number, provider_name,
+        brand_id, brand_number, brand_name, producer, modal_id, kind_id, kind_name,
+        kind_number, unit, medium_unit, max_unit, medium_unit_num, max_unit_num,
+        company, company_name, company_number, create_date, update_date, deleted
+    </sql>
+
     <insert id="batchInsert" parameterType="list" useGeneratedKeys="true" keyProperty="id">
         INSERT IGNORE INTO goods
         (
@@ -154,24 +161,30 @@
         SELECT * FROM goods WHERE deleted = 0
     </select>
 
-    <!-- 条件查询 -->
-    <select id="selectByCondition" parameterType="map" resultMap="BaseResultMap">
-        SELECT * FROM goods
+
+
+    <select id="selectListByName" resultMap="BaseResultMap" parameterType="map">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM goods
         <where>
-            deleted = 0
-            <if test="code != null and code != ''">
-                AND code LIKE CONCAT('%', #{code}, '%')
-            </if>
+            deleted = false
             <if test="name != null and name != ''">
                 AND name LIKE CONCAT('%', #{name}, '%')
             </if>
-            <if test="brandName != null and brandName != ''">
-                AND brand_name LIKE CONCAT('%', #{brandName}, '%')
-            </if>
-            <if test="kindName != null and kindName != ''">
-                AND kind_name LIKE CONCAT('%', #{kindName}, '%')
-            </if>
         </where>
         ORDER BY create_date DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectCountByName" resultType="long" parameterType="map">
+        SELECT COUNT(1)
+        FROM goods
+        <where>
+            deleted = false
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
     </select>
 </mapper>

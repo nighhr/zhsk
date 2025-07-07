@@ -7,6 +7,7 @@ import com.zhonghe.adapter.feign.GoodClient;
 import com.zhonghe.backoffice.mapper.GoodsMapper;
 import com.zhonghe.backoffice.model.Goods;
 import com.zhonghe.backoffice.service.GoodsService;
+import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
@@ -34,16 +35,6 @@ public class GoodsServiceImpl implements GoodsService {
 
     private static final int BATCH_SIZE = 500; // 每批处理量
 
-    @Override
-    public Result<List<Goods>> searchItem(Map<String, Object> params) {
-        int page = params.get("page") == null ? 1 : Integer.parseInt(params.get("page").toString());
-        int pageSize = params.get("pageSize") == null ? 10 : Integer.parseInt(params.get("pageSize").toString());
-
-        int offset = (page - 1) * pageSize;
-        params.put("offset", offset);
-        params.put("pageSize", pageSize);
-        return Result.success(goodsMapper.selectByCondition(params));
-    }
 
     @Override
     public Result<Integer> getGoods() {
@@ -99,5 +90,28 @@ public class GoodsServiceImpl implements GoodsService {
 
         return Result.success(totalCount);
 
+    }
+
+    @Override
+    public PageResult<Goods> listGoodsByName(Map<String, Object> params) {
+        // 处理分页参数
+        int page = params.get("page") == null ? 1 : Integer.parseInt(params.get("page").toString());
+        int pageSize = params.get("pageSize") == null ? 10 : Integer.parseInt(params.get("pageSize").toString());
+        int offset = (page - 1) * pageSize;
+
+        params.put("offset", offset);
+        params.put("pageSize", pageSize);
+
+        // 查询数据列表
+        List<Goods> goodsList = goodsMapper.selectListByName(params);
+        // 查询总数
+        long total = goodsMapper.selectCountByName(params);
+
+        PageResult<Goods> pageResult = new PageResult<>();
+        pageResult.setList(goodsList);
+        pageResult.setTotal(total);
+        pageResult.setPageSize(pageSize);
+        pageResult.setPage(page);  // 注意这里应该是page而不是offset
+        return pageResult;
     }
 }
