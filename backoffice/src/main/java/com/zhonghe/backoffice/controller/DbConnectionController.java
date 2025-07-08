@@ -63,4 +63,19 @@ public class DbConnectionController {
         List<String> tables = dbConnectionService.getTablesByConnectionId(connectionId);
         return Result.success(tables);
     }
+
+    @GetMapping("/columns/{dbId}")
+    public Result<List<String>> listColumns(@PathVariable Long dbId) throws Exception {
+        return Result.success(dbConnectionService.getAllTableNames(dbId));
+    }
+
+    /**
+     * 根据表名获取所有表字段(合并且排除ID字段)
+     * @param tableNames 表名数组
+     * @return 合并后的字段列表(不包含ID字段)
+     */
+    @GetMapping("/fields")
+    public Result<List<String>> getTableFields(@RequestParam("tableNames") String[] tableNames) {
+        return Result.success(dbConnectionService.getTableFields(tableNames));
+    }
 }

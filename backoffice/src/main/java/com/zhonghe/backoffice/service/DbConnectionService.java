@@ -23,4 +23,13 @@ public interface DbConnectionService {
     List<DbConnection> getSimpleList();
 
     List<String> getTablesByConnectionId(Long connectionId);
+    /**
+     * 根据数据库名获取所有表名
+     * @param databaseId 数据库id
+     * @return 表名列表
+     * @throws Exception 如果获取过程中出现错误
+     */
+    List<String> getAllTableNames(Long databaseId) throws Exception;
+
+    List<String> getTableFields(String[] tableNames);
 }

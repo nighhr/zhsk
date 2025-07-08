@@ -94,6 +94,39 @@
         WHERE id = #{id} AND is_deleted = 0
     </select>
     <select id = "selectAllAppNames" resultMap="BaseResultMap">
-        SELECT id,DISTINCT connectionName FROM db_connections AND is_deleted = 0
+        SELECT id, connection_name
+        FROM db_connections
+        WHERE is_deleted = 0
     </select>
+    <!-- MySQL版本 -->
+    <select id="getFieldsByTableName" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = (SELECT DATABASE())
+        AND TABLE_NAME = #{tableName}
+        AND COLUMN_NAME NOT IN ('id', 'ID', 'Id')  <!-- 排除不同大小写的ID字段 -->
+        ORDER BY ORDINAL_POSITION
+    </select>
+
+    <!-- Oracle版本(备用) -->
+    <!--
+    <select id="getFieldsByTableName" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT COLUMN_NAME
+        FROM USER_TAB_COLUMNS
+        WHERE TABLE_NAME = #{tableName}
+        AND COLUMN_NAME NOT IN ('ID', 'Id', 'id')
+        ORDER BY COLUMN_ID
+    </select>
+    -->
+
+    <!-- SQL Server版本(备用) -->
+    <!--
+    <select id="getFieldsByTableName" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = #{tableName}
+        AND COLUMN_NAME NOT IN ('ID', 'Id', 'id')
+        ORDER BY ORDINAL_POSITION
+    </select>
+    -->
 </mapper>

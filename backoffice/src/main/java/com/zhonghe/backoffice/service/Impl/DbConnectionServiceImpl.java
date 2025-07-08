@@ -8,6 +8,7 @@ import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +17,11 @@ import org.springframework.util.StringUtils;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
+@Slf4j
 public class DbConnectionServiceImpl implements DbConnectionService {
 
     @Autowired
@@ -157,6 +160,78 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             throw new BusinessException(ErrorCode.DB_CONNECT_ERROR,"获取数据库表失败: " + e.getMessage());
         }
     }
+
+    @Override
+    public List<String> getAllTableNames(Long databaseId) throws Exception {
+        List<String> tableNames = new ArrayList<>();
+        Connection connection = null;
+        ResultSet resultSet = null;
+
+        // 根据ID获取数据库连接信息
+        DbConnection dbConnection = dbConnectionMapper.selectById(databaseId);
+        if (dbConnection == null) {
+            throw new IllegalArgumentException("数据库连接配置不存在，ID: " + databaseId);
+        }
+
+        try {
+            // 1. 构建正确的JDBC URL
+            String jdbcUrl = buildJdbcUrl(dbConnection);
+
+            // 2. 获取数据库连接
+            connection = DriverManager.getConnection(
+                    jdbcUrl,
+                    dbConnection.getUsername(),
+                    dbConnection.getPassword()
+            );
+
+            // 3. 获取数据库元数据
+            DatabaseMetaData metaData = connection.getMetaData();
+
+            // 4. 获取指定数据库的所有表
+            resultSet = metaData.getTables(dbConnection.getDbName(), null, null, new String[]{"TABLE"});
+
+            // 5. 遍历结果集获取表名
+            while (resultSet.next()) {
+                String tableName = resultSet.getString("TABLE_NAME");
+                tableNames.add(tableName);
+            }
+
+            return tableNames;
+
+        } finally {
+            // 6. 关闭资源
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    log.error("关闭ResultSet失败", e);
+                }
+            }
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    log.error("关闭Connection失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public List<String> getTableFields(String[] tableNames) {
+        Set<String> fieldSet = new HashSet<>();
+
+        // 查询每个表的字段信息，排除ID字段并去重
+        for (String tableName : tableNames) {
+            List<String> fields = dbConnectionMapper.getFieldsByTableName(tableName).stream()
+                    .filter(field -> !"id".equalsIgnoreCase(field))
+                    .collect(Collectors.toList());
+            fieldSet.addAll(fields);
+        }
+
+        return new ArrayList<>(fieldSet);
+    }
+
 
     private List<String> getDatabaseTables(DbConnection connection) throws SQLException {
         String url = buildJdbcUrl(connection);

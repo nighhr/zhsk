@@ -1,6 +1,8 @@
 package com.zhonghe.backoffice.mapper;
 
 import com.zhonghe.backoffice.model.DbConnection;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -11,4 +13,6 @@ public interface DbConnectionMapper {
     int updateByIdSelective(DbConnection dbConnection);
     DbConnection selectById(Long id);
     List<DbConnection> selectAllAppNames();
+
+    List<String> getFieldsByTableName(String tableName);
 }
