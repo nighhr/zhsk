@@ -32,9 +32,11 @@ public enum ErrorCode {
     // 订单错误 (02)
     ORDER_NOT_FOUND(301, "订单不存在"),
     ORDER_ACCESS_REJECT(302, "您无权访问该订单"),
+    CUSTOMER_NOT_FOUND(303, "客户不存在"),
 
-    // 客户错误 (03)
-    CUSTOMER_NOT_FOUND(401, "客户不存在"),
+    // 任务中心错误 (03)
+    VOUCHER_HEAD_NULL(401,"任务没有设置凭证头"),
+    ORDER_LIST_NULL(402,"目标日期内没有订单"),
 
     // 系统错误
     INTERNAL_ERROR(500, "系统内部错误"),

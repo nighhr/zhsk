@@ -13,6 +13,8 @@ import com.zhonghe.backoffice.model.Task;
 import com.zhonghe.backoffice.model.TaskVoucherHead;
 import com.zhonghe.backoffice.model.VoucherSubject;
 import com.zhonghe.backoffice.service.TaskService;
+import com.zhonghe.kernel.exception.BusinessException;
+import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.PageResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,7 +23,10 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -140,9 +145,10 @@ public class TaskServiceImpl implements TaskService {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String start = sdf.format(startTime);
         String end = sdf.format(endTime);
-        Integer i = handleExecution(task, start, end);
+        List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
 
-        return i;
+
+        return 0;
     }
 
     @Override
@@ -173,11 +179,239 @@ public class TaskServiceImpl implements TaskService {
         );
     }
 
-
-    public Integer handleExecution(Task task, String start, String end) {
+    public List<GLAccvouch> handleExecution(Task task, String start, String end) {
         String sourceTable = task.getSourceTable();
         String detailTable = task.getDetailTable();
 
+        // 1. 提前计算会计期间
+        int currentPeriod = Calendar.getInstance().get(Calendar.MONTH) + 1;
+        LocalDate today = LocalDate.now();
+        // 获取当前年月 (YYYYMM)
+        Integer iYPeriod = Integer.valueOf(today.format(DateTimeFormatter.ofPattern("yyyyMM")));
+        // 获取当前年份 (YYYY)
+        Integer iyear = Integer.valueOf(today.format(DateTimeFormatter.ofPattern("yyyy")));
+
+        // 2. 同步数据（提取为独立方法）
+        syncSourceData(sourceTable, start, end);
+
+        // 3. 获取凭证头信息
+        TaskVoucherHead taskVoucherHead = getTaskVoucherHead(task.getId());
+
+        // 4. 查询主表数据
+        List<Map<String, Object>> results = queryMainTableData(sourceTable, start, end);
+        Set<String> mainColumn = results.get(0).keySet();
+
+        // 5. 处理分录
+        List<GLAccvouch> sendData = processEntries(
+                task.getId(), sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear
+        );
+
+        return sendData;
+    }
+
+    // 验证科目表名
+    private String validateSubjectTable(Long entryId) {
+        String idStr = entryId.toString();
+        if (!Pattern.matches("^\\d+$", idStr)) {
+            throw new IllegalArgumentException("Invalid subject table ID: " + idStr);
+        }
+
+        String tableName = "at_voucher_subject_" + idStr;
+        if (!tableName.startsWith("at_voucher_subject_")) {
+            throw new IllegalArgumentException("Invalid subject table name: " + tableName);
+        }
+        return tableName;
+    }
+
+    // 构建基础SQL
+    private String buildBaseSelectSQL(Entries entries, String sourceTable, String detailTable) {
+        StringBuilder sql = new StringBuilder("SELECT SUM(")
+                .append(entries.getAmount())
+                .append(") AS total ");
+
+        sql.append(" FROM ").append(sourceTable).append(" a");
+
+        if (detailTable != null) {
+            sql.append(" LEFT JOIN ").append(detailTable).append(" b")
+                    .append(" ON a.FID = b.FID ");
+        }
+
+        sql.append(" WHERE a.mark = '0' ");
+        return sql.toString();
+    }
+
+    // 构建完整SQL
+    private String buildFullSQL(
+            String baseSelect, Map<String, Object> subject,
+            Set<String> mainColumn, Entries entries
+    ) {
+        StringBuilder finalSql = new StringBuilder(baseSelect);
+        List<String> groupByFields = new ArrayList<>();
+
+        // 添加选择字段和条件
+        for (String field : subject.keySet()) {
+            if ("subject_list".equals(field)) break;
+
+            if ("subject_code".equals(field)) {
+                finalSql.append(", ").append(subject.get(field)).append(" AS subject_code");
+                continue;
+            }
+
+            String tablePrefix = mainColumn.contains(field) ? "a." : "b.";
+            finalSql.append(" AND ").append(tablePrefix).append(field)
+                    .append(" = '").append(subject.get(field)).append("'");
+        }
+
+        // 添加分组字段
+        if (entries.getSupplierRelated()) {
+            finalSql.append(", a.FSupplierName");
+            groupByFields.add("a.FSupplierName");
+        }
+        if (entries.getDepartmentAccounting()) {
+            finalSql.append(", a.FDepName");
+            groupByFields.add("a.FDepName");
+        }
+
+        // 添加GROUP BY子句
+        if (!groupByFields.isEmpty()) {
+            finalSql.append(" GROUP BY ").append(String.join(", ", groupByFields));
+        }
+
+        return finalSql.toString();
+    }
+
+    // 创建凭证对象
+    private GLAccvouch createGLAccvouch(
+            Entries entries, TaskVoucherHead taskVoucherHead,
+            Map<String, Object> queryData, int currentPeriod,
+            BigDecimal ZERO, Double ZERO_DOUBLE, Integer iYPeriod, Integer iyear
+    ) {
+        GLAccvouch glAccvouch = new GLAccvouch();
+
+        // 设置基础字段
+        glAccvouch.setIperiod(currentPeriod);
+        glAccvouch.setIYPeriod(iYPeriod);
+        glAccvouch.setIyear(iyear);
+        glAccvouch.setIdoc(0);
+        glAccvouch.setIbook(0);
+        glAccvouch.setCsign(taskVoucherHead.getVoucherWord());
+        glAccvouch.setCcode(queryData.get("subject_code").toString());
+        glAccvouch.setNfrat(ZERO_DOUBLE);
+        glAccvouch.setNdS(ZERO_DOUBLE);
+        glAccvouch.setNcS(ZERO_DOUBLE);
+        glAccvouch.setBFlagOut(false);
+        glAccvouch.setDbillDate(new Date());
+        glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
+
+        // 设置金额方向
+        Object total = queryData.get("total");
+        BigDecimal amount = convertToBigDecimal(total);
+
+        if ("借".equals(entries.getDirection())) {
+            glAccvouch.setMd(amount);
+            glAccvouch.setMc(ZERO);
+        } else {
+            glAccvouch.setMd(ZERO);
+            glAccvouch.setMc(amount);
+        }
+        glAccvouch.setMdF(ZERO);
+        glAccvouch.setMcF(ZERO);
+
+        // 设置其他字段
+        glAccvouch.setCdigest(entries.getSummary());
+        glAccvouch.setCbill(taskVoucherHead.getCreator());
+
+        return glAccvouch;
+    }
+
+    // 安全转换BigDecimal
+    private BigDecimal convertToBigDecimal(Object value) {
+        if (value instanceof BigDecimal) {
+            return (BigDecimal) value;
+        } else if (value instanceof Number) {
+            return BigDecimal.valueOf(((Number) value).doubleValue());
+        } else if (value instanceof String) {
+            try {
+                return new BigDecimal((String) value);
+            } catch (NumberFormatException e) {
+                return BigDecimal.ZERO;
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
+    // 处理分录逻辑
+    private List<GLAccvouch> processEntries(
+            Long taskId, String sourceTable, String detailTable,
+            Set<String> mainColumn, TaskVoucherHead taskVoucherHead, int currentPeriod, Integer iYPeriod, Integer iyear
+    ) {
+        List<GLAccvouch> sendData = new ArrayList<>();
+        List<Entries> entriesList = entriesMapper.selectByTaskId(taskId);
+
+        // 预编译常量（避免在循环中重复创建）
+        BigDecimal ZERO = BigDecimal.ZERO;
+        Double ZERO_DOUBLE = 0.0;
+
+        for (Entries entries : entriesList) {
+            // 1. 验证科目表
+            String subjectTable = validateSubjectTable(entries.getId());
+
+            // 2. 批量获取科目条件
+            List<Map<String, Object>> subjects = jdbcTemplate.queryForList(
+                    "SELECT * FROM " + subjectTable
+            );
+
+            // 3. 预构建基础SQL
+            String baseSelect = buildBaseSelectSQL(entries, sourceTable, detailTable);
+
+            for (Map<String, Object> subject : subjects) {
+                // 4. 构建完整SQL
+                String fullSql = buildFullSQL(
+                        baseSelect, subject, mainColumn, entries
+                );
+
+                // 5. 执行查询
+                List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
+
+                // 6. 创建凭证
+                for (Map<String, Object> queryData : queryResults) {
+                    GLAccvouch glAccvouch = createGLAccvouch(
+                            entries, taskVoucherHead, queryData, currentPeriod, ZERO, ZERO_DOUBLE, iYPeriod, iyear
+                    );
+                    sendData.add(glAccvouch);
+                }
+            }
+        }
+        return sendData;
+    }
+
+    // 查询主表数据
+    private List<Map<String, Object>> queryMainTableData(String sourceTable, String start, String end) {
+        // 使用白名单校验表名
+        if (!sourceTable.startsWith("at_")) {
+            throw new IllegalArgumentException("Invalid source table: " + sourceTable);
+        }
+
+        String sql = "SELECT * FROM " + sourceTable + " WHERE (FDate BETWEEN ? AND ?)";
+        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, start, end);
+
+        if (results.isEmpty()) {
+            throw new BusinessException(ErrorCode.ORDER_LIST_NULL, ErrorCode.ORDER_LIST_NULL.getMessage());
+        }
+        return results;
+    }
+
+    // 获取凭证头信息
+    private TaskVoucherHead getTaskVoucherHead(Long taskId) {
+        List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
+        if (taskVoucherHeads.isEmpty()) {
+            throw new BusinessException(ErrorCode.VOUCHER_HEAD_NULL, ErrorCode.VOUCHER_HEAD_NULL.getMessage());
+        }
+        return taskVoucherHeads.get(0);
+    }
+
+    // 同步源数据
+    private void syncSourceData(String sourceTable, String start, String end) {
         // 分页查询参数
         int pageSize = 500;
         int currentPage = 1;
@@ -186,142 +420,32 @@ public class TaskServiceImpl implements TaskService {
         switch (sourceTable) {
             case "at_pur_in":
                 purInService.getPurIn(currentPage, pageSize, start, end);
+                break;
             case "at_pur_ret":
                 purRetService.getPurRet(currentPage, pageSize, start, end);
+                break;
             case "at_sale":
                 saleService.getSale(currentPage, pageSize, start, end);
+                break;
             case "at_sale_rec":
                 saleRecService.getSaleRec(currentPage, pageSize, start, end);
+                break;
             case "at_service_card":
                 serviceCardService.getServiceCard(currentPage, pageSize, start, end);
+                break;
             case "at_service_cost":
                 serviceCostService.getServiceCost(currentPage, pageSize, start, end);
+                break;
             case "at_stock_take":
                 stockTakeService.getStockTake(currentPage, pageSize, start, end);
+                break;
             case "at_store_tran":
                 storeTranService.getStoreTran(currentPage, pageSize, start, end);
+                break;
         }
 
-        List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(task.getId());
-        TaskVoucherHead taskVoucherHead = taskVoucherHeads.get(0);
-        List<GLAccvouch> sendData = new ArrayList<>();
-        StringBuilder selectMainByTime = new StringBuilder("SELECT * FROM ").append(sourceTable);
-        selectMainByTime.append(" WHERE (FDate BETWEEN ? AND ?)");
-
-        // 执行SQL查询
-        List<Map<String, Object>> results = jdbcTemplate.queryForList(
-                selectMainByTime.toString(),
-                start,
-                end
-        );
-        Set<String> mainColumn = results.get(0).keySet();
-
-        //查询分录
-        for (Entries entries : entriesMapper.selectByTaskId(task.getId())) {
-
-            StringBuilder finalSql = new StringBuilder("SELECT SUM(b." + entries.getAmount() + ") AS total ");
-            StringBuilder selectSql = new StringBuilder(" FROM ").append(sourceTable).append(" a")
-                    .append(" LEFT JOIN ").append(detailTable).append(" b")
-                    .append(" ON ").append("a.FID = ").append("b.FID ")
-                    .append(" WHERE ").append("a.mark = '0' ");
-
-
-            // 查询分录中所有科目代码条件
-            StringBuilder subjectsBuilder = new StringBuilder("SELECT * FROM ").append("at_voucher_subject_" + entries.getId());
-
-            // 执行SQL查询
-            List<Map<String, Object>> subjects = jdbcTemplate.queryForList(
-                    subjectsBuilder.toString()
-            );
-
-            for (Map<String, Object> subject : subjects) {
-
-                for (String s : subject.keySet()) {
-                    if (s.equals("subject_list")) break;
-                    if (s.equals("subject_code")) {
-                        finalSql.append("," + subject.get(s) + " AS subject_code");
-                    }
-                    if (mainColumn.contains(s)) {
-                        selectSql.append("and a." + s + " = " + subject.get(s));
-                    } else {
-                        selectSql.append("and b." + s + " = " + subject.get(s));
-                    }
-
-                }
-                if (entries.getSupplierRelated()) {
-                    finalSql.append(", a.FSupplierName");
-                    selectSql.append("GROUP BY a.FSupplierName");
-                    if (entries.getDepartmentAccounting()) {
-                        finalSql.append(", a.FDepName");
-                        selectSql.append(",  a.FDepName");
-                    }
-                }
-                if (entries.getDepartmentAccounting()) {
-                    finalSql.append(", a.FDepName");
-                    selectSql.append("GROUP BY FDepName");
-                    if (entries.getSupplierRelated()) {
-                        finalSql.append(", a.FSupplierName");
-                        selectSql.append(", a.FSupplierName");
-                    }
-                }
-                finalSql.append(selectSql);
-                List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(
-                        finalSql.toString()
-                );
-                for (Map<String, Object> queryData : queryForList) {
-                    GLAccvouch glAccvouch = new GLAccvouch();
-
-                    // month(1-12)
-                    Calendar calendar = Calendar.getInstance();
-                    int month = calendar.get(Calendar.MONTH) + 1;
-                    //必填字段
-                    glAccvouch.setIperiod(month); // 会计期间
-                    glAccvouch.setIdoc(0); // 附单据数
-                    glAccvouch.setIbook(0); // 记账标志
-                    glAccvouch.setCsign(taskVoucherHead.getVoucherWord()); //凭证字
-                    glAccvouch.setCcode(queryData.get("subject_code").toString()); //科目代码
-                    glAccvouch.setNfrat(Double.valueOf("0")); //税率
-                    glAccvouch.setNdS(Double.valueOf("0")); //数量借方
-                    glAccvouch.setNcS(Double.valueOf("0"));//数量贷方
-                    glAccvouch.setBFlagOut(false);//公司对帐是否导出过对帐单
-                    glAccvouch.setDbillDate(new Date()); //制单日期
-                    glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount()); //附单据数
-
-                    if (entries.getDirection().equals("借")) {
-                        if (queryData.get("total") instanceof BigDecimal) {
-                            BigDecimal md = (BigDecimal) queryData.get("total");
-                            glAccvouch.setMd(md);//借方金额
-                            glAccvouch.setMc(BigDecimal.ZERO); //贷方金额
-                            glAccvouch.setMdF(BigDecimal.ZERO);
-                            glAccvouch.setMcF(BigDecimal.ZERO);
-                        }
-
-                    } else {
-                        if (queryData.get("total") instanceof BigDecimal) {
-                            BigDecimal mc = (BigDecimal) queryData.get("total");
-                            glAccvouch.setMd(BigDecimal.ZERO);//借方金额
-                            glAccvouch.setMc(mc); //贷方金额
-                            glAccvouch.setMdF(BigDecimal.ZERO);
-                            glAccvouch.setMcF(BigDecimal.ZERO);
-                        }
-                    }
-
-                    //非必填字段
-                    glAccvouch.setCdigest(entries.getSummary()); //摘要
-                    glAccvouch.setCbill(taskVoucherHead.getCreator()); // 制单人
-
-                    sendData.add(glAccvouch);
-                }
-
-
-            }
-
-
-        }
-
-
-        return sendData.size();
     }
+
 
     private void createDynamicTable(Integer ruleId, List<String> selectedFields) {
         String tableName = "at_voucher_subject_" + ruleId;
