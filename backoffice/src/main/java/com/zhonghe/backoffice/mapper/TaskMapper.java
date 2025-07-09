@@ -17,4 +17,6 @@ public interface TaskMapper {
     List<Task> selectTaskList(@Param("params") Map<String, Object> params);
 
     long selectTaskCount(@Param("params") Map<String, Object> params);
+
+    int insertOrUpdate(Task task);
 }

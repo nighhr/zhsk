@@ -11,4 +11,5 @@ public interface EntriesMapper {
     Entries selectById(Long id);
     List<Entries> selectAll();
     List<Entries> selectByTaskId(Long taskId);
+    Long insertOrUpdate(Entries entries);
 }

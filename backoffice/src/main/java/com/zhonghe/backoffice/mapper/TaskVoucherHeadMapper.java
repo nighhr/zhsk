@@ -75,4 +75,11 @@ public interface TaskVoucherHeadMapper {
      * @return 影响行数
      */
     int batchInsert(@Param("list") List<TaskVoucherHead> list);
+
+    /**
+     * 插入或更新凭证头信息（根据唯一键判断）
+     * @param record 凭证头信息
+     * @return 影响行数
+     */
+    int insertOrUpdate(TaskVoucherHead record);
 }

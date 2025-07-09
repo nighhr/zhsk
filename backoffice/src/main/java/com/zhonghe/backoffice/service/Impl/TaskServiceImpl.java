@@ -55,25 +55,30 @@ public class TaskServiceImpl implements TaskService {
     private ServiceCostService serviceCostService;
 
 
+    @Override
     public Long createTask(Task task) {
         task.setStatus("ACTIVE");
-        task.setCreateTime(new Date());
         task.setUpdateTime(new Date());
-        taskMapper.insert(task);
+        if (task.getId() == null) {
+            task.setCreateTime(new Date());
+        }
+        taskMapper.insertOrUpdate(task);
         return task.getId();
     }
 
     @Override
     public Long createVoucherHead(TaskVoucherHead taskVoucherHead) {
-        taskVoucherHead.setCreateTime(new Date());
         taskVoucherHead.setUpdateTime(new Date());
-        taskVoucherHeadMapper.insert(taskVoucherHead);
+        if (taskVoucherHead.getId() == null) {
+            taskVoucherHead.setCreateTime(new Date());
+        }
+        taskVoucherHeadMapper.insertOrUpdate(taskVoucherHead);
         return taskVoucherHead.getId();
     }
 
     @Override
     public Long createEntry(Entries entries) {
-        return entriesMapper.insert(entries);
+        return entriesMapper.insertOrUpdate(entries);
     }
 
     @Override

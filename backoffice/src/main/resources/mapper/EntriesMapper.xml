@@ -58,4 +58,20 @@
         FROM task_voucher_entries
         WHERE task_id = #{taskId}
     </select>
+    <insert id="insertOrUpdate" parameterType="com.zhonghe.backoffice.model.Entries" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO task_voucher_entries (
+            id, task_id, summary, direction, amount,
+            supplier_related, department_accounting
+        ) VALUES (
+                     #{id}, #{taskId}, #{summary}, #{direction}, #{amount},
+                     #{supplierRelated}, #{departmentAccounting}
+                 )
+            ON DUPLICATE KEY UPDATE
+                                 task_id = VALUES(task_id),
+                                 summary = VALUES(summary),
+                                 direction = VALUES(direction),
+                                 amount = VALUES(amount),
+                                 supplier_related = VALUES(supplier_related),
+                                 department_accounting = VALUES(department_accounting)
+    </insert>
 </mapper>
