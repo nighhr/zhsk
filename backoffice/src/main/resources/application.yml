@@ -37,6 +37,6 @@ ribbon:
   ConnectTimeout: 30000
 
 api:
-  base-url: http://hndbkd.top:54351
+  base-url: hcapi.hnkingdee.cn:60002
   sign-header-value: NsRm1fqs+mEW0MROZM4w5w==
 

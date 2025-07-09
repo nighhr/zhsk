@@ -15,7 +15,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        hc_id, code, name, area_id, type, parent_id, parent_ids, create_date, update_date
+        HCid, code, name, area_id, type, parent_id, parent_ids, create_date, update_date
     </sql>
 
     <!-- 插入部门 -->

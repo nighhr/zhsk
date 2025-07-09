@@ -2,6 +2,8 @@ package com.zhonghe.backoffice.service.Impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zhonghe.adapter.model.PurIn;
+import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.service.*;
 import com.zhonghe.backoffice.mapper.EntriesMapper;
 import com.zhonghe.backoffice.mapper.TaskMapper;
@@ -17,6 +19,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -114,7 +117,6 @@ public class TaskServiceImpl implements TaskService {
         if (task == null) {
             throw new RuntimeException("任务不存在");
         }
-        String sourceTable = task.getSourceTable();
 
         // 3. 安全获取 startTime 和 endTime
         if (!params.containsKey("startTime") || !params.containsKey("endTime")) {
@@ -133,8 +135,9 @@ public class TaskServiceImpl implements TaskService {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String start = sdf.format(startTime);
         String end = sdf.format(endTime);
-        handleExecution(task,start,end);
-        return 0;
+        Integer i = handleExecution(task, start, end);
+
+        return i;
     }
 
     @Override
@@ -164,27 +167,155 @@ public class TaskServiceImpl implements TaskService {
                 pageSize
         );
     }
-    public Integer handleExecution(Task task,String start, String end) {
+
+
+    public Integer handleExecution(Task task, String start, String end) {
         String sourceTable = task.getSourceTable();
+        String detailTable = task.getDetailTable();
+
+        // 分页查询参数
+        int pageSize = 500;
+        int currentPage = 1;
+
+        //同步数据
         switch (sourceTable) {
             case "at_pur_in":
-                purInService.getPurIn(1, 500, start, end);
+                purInService.getPurIn(currentPage, pageSize, start, end);
             case "at_pur_ret":
-                purRetService.getPurRet(1, 500, start, end);
+                purRetService.getPurRet(currentPage, pageSize, start, end);
             case "at_sale":
-                saleService.getSale(1, 500, start, end);
+                saleService.getSale(currentPage, pageSize, start, end);
             case "at_sale_rec":
-                saleRecService.getSaleRec(1, 500, start, end);
+                saleRecService.getSaleRec(currentPage, pageSize, start, end);
             case "at_service_card":
-                serviceCardService.getServiceCard(1, 500, start, end);
+                serviceCardService.getServiceCard(currentPage, pageSize, start, end);
             case "at_service_cost":
-                serviceCostService.getServiceCost(1, 500, start, end);
+                serviceCostService.getServiceCost(currentPage, pageSize, start, end);
             case "at_stock_take":
-                stockTakeService.getStockTake(1, 500, start, end);
+                stockTakeService.getStockTake(currentPage, pageSize, start, end);
             case "at_store_tran":
-                storeTranService.getStoreTran(1, 500, start, end);
+                storeTranService.getStoreTran(currentPage, pageSize, start, end);
         }
-        return 0;
+
+        List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(task.getId());
+        TaskVoucherHead taskVoucherHead = taskVoucherHeads.get(0);
+        List<GLAccvouch> sendData = new ArrayList<>();
+        StringBuilder selectMainByTime = new StringBuilder("SELECT * FROM ").append(sourceTable);
+        selectMainByTime.append(" WHERE (FDate BETWEEN ? AND ?)");
+
+        // 执行SQL查询
+        List<Map<String, Object>> results = jdbcTemplate.queryForList(
+                selectMainByTime.toString(),
+                start,
+                end
+        );
+        Set<String> mainColumn = results.get(0).keySet();
+
+        //查询分录
+        for (Entries entries : entriesMapper.selectByTaskId(task.getId())) {
+
+            StringBuilder finalSql = new StringBuilder("SELECT SUM(b." + entries.getAmount() + ") AS total ");
+            StringBuilder selectSql = new StringBuilder(" FROM ").append(sourceTable).append(" a")
+                    .append(" LEFT JOIN ").append(detailTable).append(" b")
+                    .append(" ON ").append("a.FID = ").append("b.FID ")
+                    .append(" WHERE ").append("a.mark = '0' ");
+
+
+            // 查询分录中所有科目代码条件
+            StringBuilder subjectsBuilder = new StringBuilder("SELECT * FROM ").append("at_voucher_subject_" + entries.getId());
+
+            // 执行SQL查询
+            List<Map<String, Object>> subjects = jdbcTemplate.queryForList(
+                    subjectsBuilder.toString()
+            );
+
+            for (Map<String, Object> subject : subjects) {
+
+                for (String s : subject.keySet()) {
+                    if (s.equals("subject_list")) break;
+                    if (s.equals("subject_code")) {
+                        finalSql.append("," + subject.get(s) + " AS subject_code");
+                    }
+                    if (mainColumn.contains(s)) {
+                        selectSql.append("and a." + s + " = " + subject.get(s));
+                    } else {
+                        selectSql.append("and b." + s + " = " + subject.get(s));
+                    }
+
+                }
+                if (entries.getSupplierRelated()) {
+                    finalSql.append(", a.FSupplierName");
+                    selectSql.append("GROUP BY a.FSupplierName");
+                    if (entries.getDepartmentAccounting()) {
+                        finalSql.append(", a.FDepName");
+                        selectSql.append(",  a.FDepName");
+                    }
+                }
+                if (entries.getDepartmentAccounting()) {
+                    finalSql.append(", a.FDepName");
+                    selectSql.append("GROUP BY FDepName");
+                    if (entries.getSupplierRelated()) {
+                        finalSql.append(", a.FSupplierName");
+                        selectSql.append(", a.FSupplierName");
+                    }
+                }
+                finalSql.append(selectSql);
+                List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(
+                        finalSql.toString()
+                );
+                for (Map<String, Object> queryData : queryForList) {
+                    GLAccvouch glAccvouch = new GLAccvouch();
+
+                    // month(1-12)
+                    Calendar calendar = Calendar.getInstance();
+                    int month = calendar.get(Calendar.MONTH) + 1;
+                    //必填字段
+                    glAccvouch.setIperiod(month); // 会计期间
+                    glAccvouch.setIdoc(0); // 附单据数
+                    glAccvouch.setIbook(0); // 记账标志
+                    glAccvouch.setCsign(taskVoucherHead.getVoucherWord()); //凭证字
+                    glAccvouch.setCcode(queryData.get("subject_code").toString()); //科目代码
+                    glAccvouch.setNfrat(Double.valueOf("0")); //税率
+                    glAccvouch.setNdS(Double.valueOf("0")); //数量借方
+                    glAccvouch.setNcS(Double.valueOf("0"));//数量贷方
+                    glAccvouch.setBFlagOut(false);//公司对帐是否导出过对帐单
+                    glAccvouch.setDbillDate(new Date()); //制单日期
+                    glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount()); //附单据数
+
+                    if (entries.getDirection().equals("借")) {
+                        if (queryData.get("total") instanceof BigDecimal) {
+                            BigDecimal md = (BigDecimal) queryData.get("total");
+                            glAccvouch.setMd(md);//借方金额
+                            glAccvouch.setMc(BigDecimal.ZERO); //贷方金额
+                            glAccvouch.setMdF(BigDecimal.ZERO);
+                            glAccvouch.setMcF(BigDecimal.ZERO);
+                        }
+
+                    } else {
+                        if (queryData.get("total") instanceof BigDecimal) {
+                            BigDecimal mc = (BigDecimal) queryData.get("total");
+                            glAccvouch.setMd(BigDecimal.ZERO);//借方金额
+                            glAccvouch.setMc(mc); //贷方金额
+                            glAccvouch.setMdF(BigDecimal.ZERO);
+                            glAccvouch.setMcF(BigDecimal.ZERO);
+                        }
+                    }
+
+                    //非必填字段
+                    glAccvouch.setCdigest(entries.getSummary()); //摘要
+                    glAccvouch.setCbill(taskVoucherHead.getCreator()); // 制单人
+
+                    sendData.add(glAccvouch);
+                }
+
+
+            }
+
+
+        }
+
+
+        return sendData.size();
     }
 
     private void createDynamicTable(Integer ruleId, List<String> selectedFields) {

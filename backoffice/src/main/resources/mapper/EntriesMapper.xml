@@ -52,4 +52,10 @@
         <include refid="Base_Column_List"/>
         FROM task_voucher_entries
     </select>
+    <select id="selectByTaskId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task_voucher_entries
+        WHERE task_id = #{taskId}
+    </select>
 </mapper>

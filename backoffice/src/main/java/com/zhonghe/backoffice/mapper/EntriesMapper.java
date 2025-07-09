@@ -10,4 +10,5 @@ public interface EntriesMapper {
     Long deleteById(Long id);
     Entries selectById(Long id);
     List<Entries> selectAll();
+    List<Entries> selectByTaskId(Long taskId);
 }

@@ -35,5 +35,5 @@ wechat:
   appsecret: 9af1d9aca4a3c1a3c8156c0a429b34b3
 
 api:
-  base-url: http://hndbkd.top:54351
+  base-url: hcapi.hnkingdee.cn:60002
   sign-header-value: NsRm1fqs+mEW0MROZM4w5w==
