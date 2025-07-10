@@ -153,39 +153,5 @@
         </where>
     </select>
 
-    <insert id="insertOrUpdate" parameterType="com.zhonghe.backoffice.model.Task" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO task (
-        task_name, source_db_id, source_db, source_table, detail_table,
-        start_time, end_time, target_app_id, target_app, task_type,
-        execute_type, execute_time, status, create_time, update_time
-        ) VALUES (
-        #{taskName}, #{sourceDbId}, #{sourceDb}, #{sourceTable}, #{detailTable},
-        #{startTime}, #{endTime}, #{targetAppId}, #{targetApp}, #{taskType},
-        #{executeType}, #{executeTime}, #{status},
-        <choose>
-            <when test="createTime != null">#{createTime}</when>
-            <otherwise>CURRENT_TIMESTAMP</otherwise>
-        </choose>,
-        <choose>
-            <when test="updateTime != null">#{updateTime}</when>
-            <otherwise>CURRENT_TIMESTAMP</otherwise>
-        </choose>
-        )
-        ON DUPLICATE KEY UPDATE
-        task_name = VALUES(task_name),
-        source_db_id = VALUES(source_db_id),
-        source_db = VALUES(source_db),
-        source_table = VALUES(source_table),
-        detail_table = VALUES(detail_table),
-        start_time = VALUES(start_time),
-        end_time = VALUES(end_time),
-        target_app_id = VALUES(target_app_id),
-        target_app = VALUES(target_app),
-        task_type = VALUES(task_type),
-        execute_type = VALUES(execute_type),
-        execute_time = VALUES(execute_time),
-        status = VALUES(status),
-        update_time = VALUES(update_time)
-    </insert>
 
 </mapper>

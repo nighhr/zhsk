@@ -76,8 +76,10 @@ public class TaskServiceImpl implements TaskService {
         task.setUpdateTime(new Date());
         if (task.getId() == null) {
             task.setCreateTime(new Date());
+            taskMapper.insert(task);
+        }else {
+            taskMapper.update(task);
         }
-        taskMapper.insertOrUpdate(task);
         return task.getId();
     }
 
@@ -182,7 +184,7 @@ public class TaskServiceImpl implements TaskService {
                     int toIndex = Math.min(fromIndex + batchSize, totalRecords);
                     List<GLAccvouch> batch = glAccvouches.subList(fromIndex, toIndex);
 
-                    // 优化4: 使用MyBatis批量插入
+                    // 使用MyBatis批量插入
                     glAccvouchMapper.batchInsert(batch);
 
                     // 可选：进度日志（每10批记录一次）
