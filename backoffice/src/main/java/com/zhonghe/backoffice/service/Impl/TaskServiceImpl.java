@@ -3,7 +3,7 @@ package com.zhonghe.backoffice.service.Impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
-import com.zhonghe.adapter.model.PurIn;
+import java.util.stream.IntStream;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.service.*;
 import com.zhonghe.backoffice.mapper.*;
@@ -12,6 +12,7 @@ import com.zhonghe.backoffice.service.TaskService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.PageResult;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 @Service
+@Slf4j
 public class TaskServiceImpl implements TaskService {
     @Autowired
     private TaskMapper taskMapper;
@@ -155,10 +157,39 @@ public class TaskServiceImpl implements TaskService {
         String end = sdf.format(endTime);
         List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
 
+        // 预分配ID范围（减少DB查询）
+        int totalRecords = glAccvouches.size();
         int inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
-        glAccvouches.forEach(gl -> gl.setInoId(inoIdMax+1));
-        AtomicInteger counter = new AtomicInteger(1);
-        glAccvouches.forEach(item -> item.setInid(counter.getAndIncrement()));
+        int baseInoId = inoIdMax + 1;  // 基础ID
+
+        // 并行流处理ID分配（利用多核CPU）
+        AtomicInteger inidCounter = new AtomicInteger(1);
+        glAccvouches.parallelStream().forEach(item -> {
+            item.setInoId(baseInoId);      // 所有记录使用相同的inoId
+            item.setInid(inidCounter.getAndIncrement()); // 自增inid
+        });
+
+        // 分批插入（避免超大事务）
+        int batchSize = 1000; // 根据数据库性能调整（500-2000）
+        int totalBatches = (totalRecords + batchSize - 1) / batchSize;
+
+// 使用并行流处理批次（根据CPU核心数调整并行度）
+        int parallelism = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+        IntStream.range(0, totalBatches)
+                .parallel()
+                .forEach(batchIndex -> {
+                    int fromIndex = batchIndex * batchSize;
+                    int toIndex = Math.min(fromIndex + batchSize, totalRecords);
+                    List<GLAccvouch> batch = glAccvouches.subList(fromIndex, toIndex);
+
+                    // 优化4: 使用MyBatis批量插入
+                    glAccvouchMapper.batchInsert(batch);
+
+                    // 可选：进度日志（每10批记录一次）
+                    if (batchIndex % 10 == 0) {
+                        log.info("已处理批次: {}/{}", batchIndex, totalBatches);
+                    }
+                });
         glAccvouchMapper.batchInsert(glAccvouches);
         return 0;
     }
