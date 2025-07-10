@@ -68,7 +68,7 @@ public class TaskController {
         return Result.success(taskService.createSubject(params));
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/deleteSubject")
     public Result<Boolean> deleteSubject(
             @RequestParam Integer entriesId,
             @RequestParam Integer id) {
