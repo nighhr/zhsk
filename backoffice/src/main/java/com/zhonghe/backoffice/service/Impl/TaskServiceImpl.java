@@ -9,6 +9,7 @@ import com.zhonghe.adapter.service.*;
 import com.zhonghe.backoffice.mapper.EntriesMapper;
 import com.zhonghe.backoffice.mapper.TaskMapper;
 import com.zhonghe.backoffice.mapper.TaskVoucherHeadMapper;
+import com.zhonghe.backoffice.mapper.VoucherSubjectMapper;
 import com.zhonghe.backoffice.model.Entries;
 import com.zhonghe.backoffice.model.Task;
 import com.zhonghe.backoffice.model.TaskVoucherHead;
@@ -62,6 +63,8 @@ public class TaskServiceImpl implements TaskService {
     private ServiceCostService serviceCostService;
     @Autowired
     private GLAccvouchMapper glAccvouchMapper;
+    @Autowired
+    private VoucherSubjectMapper voucherSubjectMapper;
 
 
     @Override
@@ -186,6 +189,18 @@ public class TaskServiceImpl implements TaskService {
                 pageSize
         );
     }
+
+    @Override
+    public void deleteEntriesMapping(Long id) {
+        entriesMapper.deleteById(id);
+    }
+
+    @Override
+    public boolean deleteSubject(Integer entriesId, Integer id) {
+        int affectedRows = voucherSubjectMapper.deleteSubject(entriesId, id);
+        return affectedRows > 0;
+    }
+
 
     public List<GLAccvouch> handleExecution(Task task, String start, String end) {
         String sourceTable = task.getSourceTable();

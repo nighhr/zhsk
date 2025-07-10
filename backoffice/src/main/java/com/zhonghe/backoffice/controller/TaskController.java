@@ -57,9 +57,23 @@ public class TaskController {
         return Result.success(taskService.createEntry(entries));
     }
 
+    @DeleteMapping("/entriesDelete/{id}")
+    public Result<Void> deleteEntriesMapping(@PathVariable Long id) {
+        taskService.deleteEntriesMapping(id);
+        return Result.success(null);
+    }
+
     @PostMapping("/createSubject")
     public Result<Integer> createSubject(@RequestBody Map<String, Object> params) {
         return Result.success(taskService.createSubject(params));
+    }
+
+    @DeleteMapping("/delete")
+    public Result<Boolean> deleteSubject(
+            @RequestParam Integer entriesId,
+            @RequestParam Integer id) {
+        boolean success = taskService.deleteSubject(entriesId, id);
+        return Result.success(success);
     }
 
     //手动执行任务

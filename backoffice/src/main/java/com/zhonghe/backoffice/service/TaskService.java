@@ -21,4 +21,8 @@ public interface TaskService {
     Integer manualExecution(Map<String, Object> params);
 
     PageResult<Task> getTaskList(Map<String, Object> params);
+
+    void deleteEntriesMapping(Long id);
+
+    boolean deleteSubject(Integer entriesId, Integer subjectId);
 }

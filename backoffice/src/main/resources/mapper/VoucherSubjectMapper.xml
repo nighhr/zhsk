@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.backoffice.mapper.VoucherSubjectMapper">
+
+    <!-- 根据 entriesId 和 subjectId 删除动态科目记录 -->
+    <delete id="deleteSubject">
+        <!-- 动态表名处理 -->
+        <choose>
+            <!-- 如果 entriesId 不为空，使用 entriesId 对应的动态表 -->
+            <when test="entriesId != null">
+                DELETE FROM at_voucher_subject_${entriesId}
+                WHERE id = #{id}
+            </when>
+            <!-- 如果 entriesId 为空，可能需要其他处理方式 -->
+            <otherwise>
+                <!-- 这里可以根据实际需求处理，比如抛异常或不做任何操作 -->
+                SELECT 1 FROM DUAL WHERE 1=0
+            </otherwise>
+        </choose>
+    </delete>
+
+</mapper>
