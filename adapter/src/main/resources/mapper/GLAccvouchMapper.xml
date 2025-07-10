@@ -40,10 +40,8 @@
     <select id="selectInoIdMaxByMonth" resultType="java.lang.Integer">
         SELECT MAX(ino_id) AS max_inid
         FROM GL_accvouch
-        WHERE iyperiod = 201501
-          and iyear = 2015
-        --         WHERE iyperiod = MONTH(GETDATE())
---           and iyear = YEAR(GETDATE())
-
+        WHERE
+            iyperiod = CONVERT(CHAR(6), GETDATE(), 112)
+          AND iyear = YEAR(GETDATE())
     </select>
 </mapper>
