@@ -2,6 +2,7 @@ package com.zhonghe.backoffice.service.Impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
 import com.zhonghe.adapter.model.PurIn;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.service.*;
@@ -26,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 @Service
@@ -58,6 +60,8 @@ public class TaskServiceImpl implements TaskService {
     private StockTakeService stockTakeService;
     @Autowired
     private ServiceCostService serviceCostService;
+    @Autowired
+    private GLAccvouchMapper glAccvouchMapper;
 
 
     @Override
@@ -147,7 +151,11 @@ public class TaskServiceImpl implements TaskService {
         String end = sdf.format(endTime);
         List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
 
-
+        int inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
+        glAccvouches.forEach(gl -> gl.setInoId(inoIdMax+1));
+        AtomicInteger counter = new AtomicInteger(1);
+        glAccvouches.forEach(item -> item.setInid(counter.getAndIncrement()));
+        glAccvouchMapper.batchInsert(glAccvouches);
         return 0;
     }
 
@@ -264,12 +272,12 @@ public class TaskServiceImpl implements TaskService {
 
         // 添加分组字段
         if (entries.getSupplierRelated()) {
-            finalSql.append(", a.FSupplierName");
-            groupByFields.add("a.FSupplierName");
+            finalSql.append(", a.FSupplierNumber");
+            groupByFields.add("a.FSupplierNumber");
         }
         if (entries.getDepartmentAccounting()) {
-            finalSql.append(", a.FDepName");
-            groupByFields.add("a.FDepName");
+            finalSql.append(", a.FDepNumber");
+            groupByFields.add("a.FDepNumber");
         }
 
         // 添加GROUP BY子句
