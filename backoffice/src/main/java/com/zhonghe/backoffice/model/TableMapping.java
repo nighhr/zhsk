@@ -13,7 +13,7 @@ import java.util.List;
 public class TableMapping {
     private Integer id;
     private String ruleName; //映射名称
-    private String type; // 映射描述
+    private String type; // 映射类型
     private Boolean isActive;
     private String description; // 映射描述
     private String creator;

@@ -95,4 +95,9 @@
         FROM table_mapping
         WHERE id = #{id}
     </select>
+    <select id="selectTableMappingListByType" resultType="com.zhonghe.backoffice.model.TableMapping">
+        SELECT id, rule_name, type, is_active, description, creator, create_time, updater, update_time
+        FROM table_mapping
+        WHERE type = #{type}
+    </select>
 </mapper>

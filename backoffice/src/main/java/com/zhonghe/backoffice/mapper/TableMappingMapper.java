@@ -28,5 +28,8 @@ public interface TableMappingMapper {
     int deleteTableMapping(Integer id);
 
     TableMapping selectTableMappingById(Integer id);
+
+    List<TableMapping> selectTableMappingListByType(String type);
+
 }
 

@@ -75,6 +75,11 @@
         FROM value_mapping
         WHERE source_value = #{sourceValue}
     </select>
+    <select id="selectMappingByColumnId" resultType="com.zhonghe.backoffice.model.ValueMapping">
+        SELECT <include refid="Base_Column_List"/>
+        FROM value_mapping
+        WHERE column_mapping_id = #{columnMappingId}
+    </select>
 
     <delete id="deleteByColumnMappingId">
         DELETE FROM value_mapping WHERE column_mapping_id = #{id}

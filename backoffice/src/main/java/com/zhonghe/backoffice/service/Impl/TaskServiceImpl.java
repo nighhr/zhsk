@@ -6,14 +6,8 @@ import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
 import com.zhonghe.adapter.model.PurIn;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.service.*;
-import com.zhonghe.backoffice.mapper.EntriesMapper;
-import com.zhonghe.backoffice.mapper.TaskMapper;
-import com.zhonghe.backoffice.mapper.TaskVoucherHeadMapper;
-import com.zhonghe.backoffice.mapper.VoucherSubjectMapper;
-import com.zhonghe.backoffice.model.Entries;
-import com.zhonghe.backoffice.model.Task;
-import com.zhonghe.backoffice.model.TaskVoucherHead;
-import com.zhonghe.backoffice.model.VoucherSubject;
+import com.zhonghe.backoffice.mapper.*;
+import com.zhonghe.backoffice.model.*;
 import com.zhonghe.backoffice.service.TaskService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
@@ -23,6 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -65,6 +60,12 @@ public class TaskServiceImpl implements TaskService {
     private GLAccvouchMapper glAccvouchMapper;
     @Autowired
     private VoucherSubjectMapper voucherSubjectMapper;
+    @Autowired
+    private TableMappingMapper tableMappingMapper;
+    @Autowired
+    private ColumnMappingMapper columnMappingMapper;
+    @Autowired
+    private ValueMappingMapper valueMappingMapper;
 
 
     @Override
@@ -326,6 +327,68 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setDbillDate(new Date());
         glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
 
+        if (entries.getSupplierRelated()) {
+            // 1. 查询所有类型为1-供应商的表映射
+            List<TableMapping> tableMappings = tableMappingMapper.selectTableMappingListByType("1");
+            if (!tableMappings.isEmpty()) {
+                // 取第一个表映射
+                TableMapping tableMapping = tableMappings.get(0);
+
+                // 2. 获取该表下的所有列映射
+                List<ColumnMapping> columnMappings = columnMappingMapper.selectByTableMappingId(tableMapping.getId());
+
+                // 3. 遍历列映射规则
+                for (ColumnMapping columnMapping : columnMappings) {
+                    // 获取源列名和目标列名
+                    String sourceCol = columnMapping.getSourceColumnName();
+                    String targetCol = columnMapping.getTargetColumnName();
+
+                    // 4. 从queryData获取源数据值
+                    Object sourceValue = queryData.get(sourceCol);
+                    if (sourceValue == null) continue;
+
+                    // 5. 查询该列的值映射规则
+                    List<ValueMapping> valueMappings = valueMappingMapper.selectMappingByColumnId(columnMapping.getId());
+
+                    // 6. 应用值映射转换
+                    Object targetValue = applyValueMapping(sourceValue.toString(), valueMappings);
+
+                    // 7. 设置到目标对象
+                    setFieldValue(glAccvouch, targetCol, targetValue);
+                }
+            }
+        }
+        if (entries.getDepartmentAccounting()){
+            List<TableMapping> tableMappings = tableMappingMapper.selectTableMappingListByType("2");
+            if (!tableMappings.isEmpty()) {
+                // 取第一个表映射
+                TableMapping tableMapping = tableMappings.get(0);
+
+                // 2. 获取该表下的所有列映射
+                List<ColumnMapping> columnMappings = columnMappingMapper.selectByTableMappingId(tableMapping.getId());
+
+                // 3. 遍历列映射规则
+                for (ColumnMapping columnMapping : columnMappings) {
+                    // 获取源列名和目标列名
+                    String sourceCol = columnMapping.getSourceColumnName();
+                    String targetCol = columnMapping.getTargetColumnName();
+
+                    // 4. 从queryData获取源数据值
+                    Object sourceValue = queryData.get(sourceCol);
+                    if (sourceValue == null) continue;
+
+                    // 5. 查询该列的值映射规则
+                    List<ValueMapping> valueMappings = valueMappingMapper.selectMappingByColumnId(columnMapping.getId());
+
+                    // 6. 应用值映射转换
+                    Object targetValue = applyValueMapping(sourceValue.toString(), valueMappings);
+
+                    // 7. 设置到目标对象
+                    setFieldValue(glAccvouch, targetCol, targetValue);
+                }
+            }
+        }
+
         // 设置金额方向
         Object total = queryData.get("total");
         BigDecimal amount = convertToBigDecimal(total);
@@ -540,4 +603,80 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Failed to convert list to JSON", e);
         }
     }
+    /**
+     * 应用值映射规则
+     * @param sourceValue 源数据值
+     * @param valueMappings 值映射规则列表
+     * @return 映射后的值（未匹配时返回原值）
+     */
+    private Object applyValueMapping(String sourceValue, List<ValueMapping> valueMappings) {
+        if (valueMappings == null || valueMappings.isEmpty()) {
+            return sourceValue;
+        }
+
+        // 查找匹配的映射规则
+        for (ValueMapping vm : valueMappings) {
+            if (sourceValue.equals(vm.getSourceValue())) {
+                return vm.getTargetValue();
+            }
+        }
+
+        // 无匹配时返回原始值
+        return sourceValue;
+    }
+
+    /**
+     * 通过反射设置字段值
+     * @param targetObj 目标对象（glAccvouch）
+     * @param fieldName 字段名（targetColumnName）
+     * @param value 要设置的值
+     */
+    private void setFieldValue(Object targetObj, String fieldName, Object value) {
+        try {
+            // 获取字段的setter方法名（如setUserName）
+            String setterName = "set" +
+                    fieldName.substring(0, 1).toUpperCase() +
+                    fieldName.substring(1);
+
+            // 遍历查找匹配的方法
+            for (Method method : targetObj.getClass().getMethods()) {
+                if (method.getName().equals(setterName)) {
+                    // 获取参数类型进行类型转换
+                    Class<?> paramType = method.getParameterTypes()[0];
+                    Object convertedValue = convertType(value, paramType);
+
+                    // 调用setter方法
+                    method.invoke(targetObj, convertedValue);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            // 实际项目中应记录日志
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 类型转换方法
+     */
+    private Object convertType(Object value, Class<?> targetType) {
+        if (value == null) return null;
+
+        if (targetType == String.class) {
+            return value.toString();
+        } else if (targetType == Integer.class || targetType == int.class) {
+            return Integer.parseInt(value.toString());
+        } else if (targetType == Double.class || targetType == double.class) {
+            return Double.parseDouble(value.toString());
+        } else if (targetType == Date.class) {
+            // 实际项目中使用更健壮的日期解析
+            return new Date(); // 示例简化
+        } else if (targetType == Boolean.class || targetType == boolean.class) {
+            return Boolean.parseBoolean(value.toString());
+        }
+
+        // 其他类型转换需求可在此扩展
+        return value;
+    }
 }
+
