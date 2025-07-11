@@ -3,6 +3,41 @@
 
 <mapper namespace="com.zhonghe.adapter.mapper.U8.GLAccvouchMapper">
 
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.U8.GLAccvouch">
+        INSERT INTO GL_Accvouch (
+            iId, iperiod, csign, isignseq, inoId, inid, dbillDate, idoc, cbill, ccheck,
+            cbook, ibook, ccashier, iflag, ctext1, ctext2, cdigest, ccode, cexchName,
+            md, mc, md_F, mc_F, nfrat, nd_S, nc_S, csettle, cn_Id, dtDate, cdeptId,
+            cpersonId, ccusId, csupId, citemId, citemClass, cname, ccodeEqual, iflagbank,
+            iflagPerson, bdelete, coutaccset, ioutyear, coutsysname, coutsysver, doutbilldate,
+            ioutperiod, coutsign, coutno_Id, doutdate, coutbillsign, coutid, bvouchedit,
+            bvouchAddordele, bvouchmoneyhold, bvalueedit, bcodeedit, ccodecontrol, bPCSedit,
+            bDeptedit, bItemedit, bCusSupInput, cDefine1, cDefine2, cDefine3, cDefine4,
+            cDefine5, cDefine6, cDefine7, cDefine8, cDefine9, cDefine10, cDefine11, cDefine12,
+            cDefine13, cDefine14, cDefine15, cDefine16, dReceive, cWLDZFlag, dWLDZTime,
+            bFlagOut, iBGOverFlag, cBGAuditor, dBGAuditTime, cBGAuditOpinion, bWHBgFlag,
+            ssxznum, cErrReason, bGAuditRemark, cBudgetBuffer, iBGControlResult, nCVouchID,
+            dauditDate, rowGuid, cBankReconNo, iyear, iYPeriod, wllqDate, wllqPeriod,
+            tvouchtime, cblueoutno_Id, ccodeexchEqual, cpzchcode, iprice
+        ) VALUES (
+                     #{iId}, #{iperiod}, #{csign}, #{isignseq}, #{inoId}, #{inid}, #{dbillDate}, #{idoc}, #{cbill}, #{ccheck},
+                     #{cbook}, #{ibook}, #{ccashier}, #{iflag}, #{ctext1}, #{ctext2}, #{cdigest}, #{ccode}, #{cexchName},
+                     #{md}, #{mc}, #{mdF}, #{mcF}, #{nfrat}, #{ndS}, #{ncS}, #{csettle}, #{cnId}, #{dtDate}, #{cdeptId},
+                     #{cpersonId}, #{ccusId}, #{csupId}, #{citemId}, #{citemClass}, #{cname}, #{ccodeEqual}, #{iflagbank},
+                     #{iflagPerson}, #{bdelete}, #{coutaccset}, #{ioutyear}, #{coutsysname}, #{coutsysver}, #{doutbilldate},
+                     #{ioutperiod}, #{coutsign}, #{coutnoId}, #{doutdate}, #{coutbillsign}, #{coutid}, #{bvouchedit},
+                     #{bvouchAddordele}, #{bvouchmoneyhold}, #{bvalueedit}, #{bcodeedit}, #{ccodecontrol}, #{bPCSedit},
+                     #{bDeptedit}, #{bItemedit}, #{bCusSupInput}, #{cDefine1}, #{cDefine2}, #{cDefine3}, #{cDefine4},
+                     #{cDefine5}, #{cDefine6}, #{cDefine7}, #{cDefine8}, #{cDefine9}, #{cDefine10}, #{cDefine11}, #{cDefine12},
+                     #{cDefine13}, #{cDefine14}, #{cDefine15}, #{cDefine16}, #{dReceive}, #{cWLDZFlag}, #{dWLDZTime},
+                     #{bFlagOut}, #{iBGOverFlag}, #{cBGAuditor}, #{dBGAuditTime}, #{cBGAuditOpinion}, #{bWHBgFlag},
+                     #{ssxznum}, #{cErrReason}, #{bGAuditRemark}, #{cBudgetBuffer}, #{iBGControlResult}, #{nCVouchID},
+                     #{dauditDate}, #{rowGuid}, #{cBankReconNo}, #{iyear}, #{iYPeriod}, #{wllqDate}, #{wllqPeriod},
+                     #{tvouchtime}, #{cblueoutnoId}, #{ccodeexchEqual}, #{cpzchcode}, #{iprice}
+                 )
+    </insert>
+
+
     <select id="selectGLAccvouchById" parameterType="int" resultType="com.zhonghe.adapter.model.U8.GLAccvouch">
         SELECT * FROM GL_accvouch WHERE [i_id] = #{iId}
     </select>

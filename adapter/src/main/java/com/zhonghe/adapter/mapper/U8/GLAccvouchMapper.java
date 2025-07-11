@@ -9,6 +9,8 @@ import java.util.List;
 @Mapper
 public interface GLAccvouchMapper {
 
+    int insert(GLAccvouch glAccvouch);
+
     GLAccvouch selectGLAccvouchById(int iId);
 
     int insertFull(GLAccvouch glAccvouch);

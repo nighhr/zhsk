@@ -2,8 +2,17 @@ package com.zhonghe.backoffice.service.Impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zhonghe.adapter.mapper.InsertionErrorLogMapper;
 import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import com.zhonghe.adapter.model.InsertionErrorLog;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.service.*;
 import com.zhonghe.backoffice.mapper.*;
@@ -32,16 +41,12 @@ import java.util.regex.Pattern;
 public class TaskServiceImpl implements TaskService {
     @Autowired
     private TaskMapper taskMapper;
-
     @Autowired
     private TaskVoucherHeadMapper taskVoucherHeadMapper;
-
     @Autowired
     private EntriesMapper entriesMapper;
-
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
     @Autowired
     private PurInService purInService;
     @Autowired
@@ -68,7 +73,18 @@ public class TaskServiceImpl implements TaskService {
     private ColumnMappingMapper columnMappingMapper;
     @Autowired
     private ValueMappingMapper valueMappingMapper;
+    @Autowired
+    private InsertionErrorLogMapper errorLogMapper;
 
+    // 添加映射规则缓存
+    private final Map<String, List<TableMapping>> tableMappingCache = new ConcurrentHashMap<>();
+    private final Map<Long, List<ColumnMapping>> columnMappingCache = new ConcurrentHashMap<>();
+    private final Map<Long, Map<String, String>> valueMappingCache = new ConcurrentHashMap<>();
+
+    // 预定义常量减少对象创建
+    private static final BigDecimal ZERO = BigDecimal.ZERO;
+    private static final Double ZERO_DOUBLE = 0.0;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
     public Long createTask(Task task) {
@@ -77,7 +93,7 @@ public class TaskServiceImpl implements TaskService {
         if (task.getId() == null) {
             task.setCreateTime(new Date());
             taskMapper.insert(task);
-        }else {
+        } else {
             taskMapper.update(task);
         }
         return task.getId();
@@ -108,7 +124,6 @@ public class TaskServiceImpl implements TaskService {
         createDynamicTable(ruleId, subjectList);
 
         for (int i = 0; i < dynamicFields.size(); i++) {
-            // 每一行的值
             HashMap<String, String> stringStringHashMap = dynamicFields.get(i);
 
             VoucherSubject voucherSubject = new VoucherSubject();
@@ -123,7 +138,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Integer manualExecution(Map<String, Object> params) {
-        // 1. 安全获取 taskId 并校验
         if (params == null || !params.containsKey("taskId")) {
             throw new IllegalArgumentException("参数中缺少 taskId");
         }
@@ -134,13 +148,11 @@ public class TaskServiceImpl implements TaskService {
             throw new IllegalArgumentException("taskId 格式错误");
         }
 
-        // 2. 查询任务
         Task task = taskMapper.selectById(taskId);
         if (task == null) {
             throw new RuntimeException("任务不存在");
         }
 
-        // 3. 安全获取 startTime 和 endTime
         if (!params.containsKey("startTime") || !params.containsKey("endTime")) {
             throw new IllegalArgumentException("参数中缺少 startTime 或 endTime");
         }
@@ -153,52 +165,100 @@ public class TaskServiceImpl implements TaskService {
             throw new IllegalArgumentException("startTime 或 endTime 格式错误");
         }
 
-        // 4. 格式化时间
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String start = sdf.format(startTime);
         String end = sdf.format(endTime);
+
+        // 获取凭证头列表
+        List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
+        String voucherKey = taskVoucherHeads.isEmpty() ? "id" : taskVoucherHeads.get(0).getVoucherKey();
+
         List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
 
-        // 预分配ID范围（减少DB查询）
         int totalRecords = glAccvouches.size();
-        int inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
-        int baseInoId = inoIdMax + 1;  // 基础ID
+        if (totalRecords == 0) {
+            log.info("没有需要处理的凭证数据");
+            return 0;
+        }
 
-        // 并行流处理ID分配（利用多核CPU）
+        int inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
+        int baseInoId = inoIdMax + 1;
+
+        // 使用原子计数器分配ID
         AtomicInteger inidCounter = new AtomicInteger(1);
-        glAccvouches.parallelStream().forEach(item -> {
-            item.setInoId(baseInoId);      // 所有记录使用相同的inoId
-            item.setInid(inidCounter.getAndIncrement()); // 自增inid
+        glAccvouches.forEach(item -> {
+            item.setInoId(baseInoId);
+            item.setInid(inidCounter.getAndIncrement());
         });
 
-        // 分批插入（避免超大事务）
-        int batchSize = 1000; // 根据数据库性能调整（500-2000）
+        // 批量插入错误日志
+        List<InsertionErrorLog> errorLogs = Collections.synchronizedList(new ArrayList<>());
+        int batchSize = 1000;
         int totalBatches = (totalRecords + batchSize - 1) / batchSize;
 
-// 使用并行流处理批次（根据CPU核心数调整并行度）
-        int parallelism = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
-        IntStream.range(0, totalBatches)
-                .parallel()
-                .forEach(batchIndex -> {
-                    int fromIndex = batchIndex * batchSize;
-                    int toIndex = Math.min(fromIndex + batchSize, totalRecords);
-                    List<GLAccvouch> batch = glAccvouches.subList(fromIndex, toIndex);
+        IntStream.range(0, totalBatches).forEach(batchIndex -> {
+            int fromIndex = batchIndex * batchSize;
+            int toIndex = Math.min(fromIndex + batchSize, totalRecords);
+            List<GLAccvouch> batch = glAccvouches.subList(fromIndex, toIndex);
 
-                    // 使用MyBatis批量插入
-                    glAccvouchMapper.batchInsert(batch);
+            try {
+                glAccvouchMapper.batchInsert(batch);
+            } catch (Exception e) {
+                handleBatchInsertFailure(batch, e, errorLogs, voucherKey);
+            }
+        });
 
-                    // 可选：进度日志（每10批记录一次）
-                    if (batchIndex % 10 == 0) {
-                        log.info("已处理批次: {}/{}", batchIndex, totalBatches);
-                    }
-                });
-        glAccvouchMapper.batchInsert(glAccvouches);
+        if (!errorLogs.isEmpty()) {
+            try {
+                errorLogMapper.batchInsertErrors(errorLogs);
+            } catch (Exception ex) {
+                log.error("保存错误日志失败: {}", ex.getMessage());
+            }
+        }
         return 0;
+    }
+
+    private void handleBatchInsertFailure(List<GLAccvouch> batch, Exception batchEx,
+                                          List<InsertionErrorLog> errorLogs, String voucherKey) {
+        log.error("批量插入失败: {}", batchEx.getMessage());
+
+        for (GLAccvouch item : batch) {
+            try {
+                glAccvouchMapper.insert(item);
+            } catch (Exception itemEx) {
+                InsertionErrorLog errorLog = createErrorLog(item, itemEx, voucherKey);
+                errorLogs.add(errorLog);
+                log.error("记录插入失败: inid={}, fieldA={}, error={}",
+                        item.getInid(), getFieldValue(item, voucherKey).toString(), itemEx.getMessage());
+            }
+        }
+    }
+
+    private InsertionErrorLog createErrorLog(GLAccvouch item, Exception ex, String voucherKey) {
+        InsertionErrorLog errorLog = new InsertionErrorLog();
+        errorLog.setFieldA(getFieldValue(item, voucherKey).toString());
+        errorLog.setErrorMessage(ex.getMessage());
+        errorLog.setStackTrace(getStackTraceAsString(ex));
+        errorLog.setErrorTime(new Date());
+
+        try {
+            errorLog.setRecordData(OBJECT_MAPPER.writeValueAsString(item));
+        } catch (JsonProcessingException e) {
+            errorLog.setRecordData("序列化失败: " + e.getMessage());
+        }
+
+        return errorLog;
+    }
+
+    private String getStackTraceAsString(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return sw.toString();
     }
 
     @Override
     public PageResult<Task> getTaskList(Map<String, Object> params) {
-        // 处理分页参数
         int page = params.get("page") == null ? 1 : Integer.parseInt(params.get("page").toString());
         int pageSize = params.get("pageSize") == null ? 10 : Integer.parseInt(params.get("pageSize").toString());
         int offset = (page - 1) * pageSize;
@@ -206,16 +266,9 @@ public class TaskServiceImpl implements TaskService {
         params.put("offset", offset);
         params.put("pageSize", pageSize);
 
-        // 查询数据列表
         List<Task> taskList = taskMapper.selectTaskList(params);
-
-        // 查询总数
         long total = taskMapper.selectTaskCount(params);
 
-        // 计算总页数
-//        int pages = (int) Math.ceil((double) total / pageSize);
-
-        // 封装返回结果
         return new PageResult<>(
                 taskList,
                 total,
@@ -235,38 +288,34 @@ public class TaskServiceImpl implements TaskService {
         return affectedRows > 0;
     }
 
-
     public List<GLAccvouch> handleExecution(Task task, String start, String end) {
         String sourceTable = task.getSourceTable();
         String detailTable = task.getDetailTable();
 
-        // 1. 提前计算会计期间
         int currentPeriod = Calendar.getInstance().get(Calendar.MONTH) + 1;
         LocalDate today = LocalDate.now();
-        // 获取当前年月 (YYYYMM)
         Integer iYPeriod = Integer.valueOf(today.format(DateTimeFormatter.ofPattern("yyyyMM")));
-        // 获取当前年份 (YYYY)
         Integer iyear = Integer.valueOf(today.format(DateTimeFormatter.ofPattern("yyyy")));
 
-        // 2. 同步数据（提取为独立方法）
         syncSourceData(sourceTable, start, end);
 
-        // 3. 获取凭证头信息
-        TaskVoucherHead taskVoucherHead = getTaskVoucherHead(task.getId());
+        List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(task.getId());
+        if (taskVoucherHeads.isEmpty()) {
+            throw new BusinessException(ErrorCode.VOUCHER_HEAD_NULL, ErrorCode.VOUCHER_HEAD_NULL.getMessage());
+        }
+        TaskVoucherHead taskVoucherHead = taskVoucherHeads.get(0);
 
-        // 4. 查询主表数据
         List<Map<String, Object>> results = queryMainTableData(sourceTable, start, end);
+        if (results.isEmpty()) {
+            return Collections.emptyList();
+        }
         Set<String> mainColumn = results.get(0).keySet();
 
-        // 5. 处理分录
-        List<GLAccvouch> sendData = processEntries(
+        return processEntries(
                 task.getId(), sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear
         );
-
-        return sendData;
     }
 
-    // 验证科目表名
     private String validateSubjectTable(Long entryId) {
         String idStr = entryId.toString();
         if (!Pattern.matches("^\\d+$", idStr)) {
@@ -280,7 +329,6 @@ public class TaskServiceImpl implements TaskService {
         return tableName;
     }
 
-    // 构建基础SQL
     private String buildBaseSelectSQL(Entries entries, String sourceTable, String detailTable) {
         StringBuilder sql = new StringBuilder("SELECT SUM(")
                 .append(entries.getAmount())
@@ -297,7 +345,6 @@ public class TaskServiceImpl implements TaskService {
         return sql.toString();
     }
 
-    // 构建完整SQL
     private String buildFullSQL(
             String baseSelect, Map<String, Object> subject,
             Set<String> mainColumn, Entries entries
@@ -305,7 +352,6 @@ public class TaskServiceImpl implements TaskService {
         StringBuilder finalSql = new StringBuilder(baseSelect);
         List<String> groupByFields = new ArrayList<>();
 
-        // 添加选择字段和条件
         for (String field : subject.keySet()) {
             if ("subject_list".equals(field)) break;
 
@@ -319,7 +365,6 @@ public class TaskServiceImpl implements TaskService {
                     .append(" = '").append(subject.get(field)).append("'");
         }
 
-        // 添加分组字段
         if (entries.getSupplierRelated()) {
             finalSql.append(", a.FSupplierNumber");
             groupByFields.add("a.FSupplierNumber");
@@ -329,7 +374,6 @@ public class TaskServiceImpl implements TaskService {
             groupByFields.add("a.FDepNumber");
         }
 
-        // 添加GROUP BY子句
         if (!groupByFields.isEmpty()) {
             finalSql.append(" GROUP BY ").append(String.join(", ", groupByFields));
         }
@@ -337,7 +381,6 @@ public class TaskServiceImpl implements TaskService {
         return finalSql.toString();
     }
 
-    // 创建凭证对象
     private GLAccvouch createGLAccvouch(
             Entries entries, TaskVoucherHead taskVoucherHead,
             Map<String, Object> queryData, int currentPeriod,
@@ -345,7 +388,6 @@ public class TaskServiceImpl implements TaskService {
     ) {
         GLAccvouch glAccvouch = new GLAccvouch();
 
-        // 设置基础字段
         glAccvouch.setIperiod(currentPeriod);
         glAccvouch.setIYPeriod(iYPeriod);
         glAccvouch.setIyear(iyear);
@@ -360,69 +402,14 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setDbillDate(new Date());
         glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
 
+        // 使用缓存处理映射
         if (entries.getSupplierRelated()) {
-            // 1. 查询所有类型为1-供应商的表映射
-            List<TableMapping> tableMappings = tableMappingMapper.selectTableMappingListByType("1");
-            if (!tableMappings.isEmpty()) {
-                // 取第一个表映射
-                TableMapping tableMapping = tableMappings.get(0);
-
-                // 2. 获取该表下的所有列映射
-                List<ColumnMapping> columnMappings = columnMappingMapper.selectByTableMappingId(tableMapping.getId());
-
-                // 3. 遍历列映射规则
-                for (ColumnMapping columnMapping : columnMappings) {
-                    // 获取源列名和目标列名
-                    String sourceCol = columnMapping.getSourceColumnName();
-                    String targetCol = columnMapping.getTargetColumnName();
-
-                    // 4. 从queryData获取源数据值
-                    Object sourceValue = queryData.get(sourceCol);
-                    if (sourceValue == null) continue;
-
-                    // 5. 查询该列的值映射规则
-                    List<ValueMapping> valueMappings = valueMappingMapper.selectMappingByColumnId(columnMapping.getId());
-
-                    // 6. 应用值映射转换
-                    Object targetValue = applyValueMapping(sourceValue.toString(), valueMappings);
-
-                    // 7. 设置到目标对象
-                    setFieldValue(glAccvouch, targetCol, targetValue);
-                }
-            }
+            processMapping("1", queryData, glAccvouch);
         }
-        if (entries.getDepartmentAccounting()){
-            List<TableMapping> tableMappings = tableMappingMapper.selectTableMappingListByType("2");
-            if (!tableMappings.isEmpty()) {
-                // 取第一个表映射
-                TableMapping tableMapping = tableMappings.get(0);
-
-                // 2. 获取该表下的所有列映射
-                List<ColumnMapping> columnMappings = columnMappingMapper.selectByTableMappingId(tableMapping.getId());
-
-                // 3. 遍历列映射规则
-                for (ColumnMapping columnMapping : columnMappings) {
-                    // 获取源列名和目标列名
-                    String sourceCol = columnMapping.getSourceColumnName();
-                    String targetCol = columnMapping.getTargetColumnName();
-
-                    // 4. 从queryData获取源数据值
-                    Object sourceValue = queryData.get(sourceCol);
-                    if (sourceValue == null) continue;
-
-                    // 5. 查询该列的值映射规则
-                    List<ValueMapping> valueMappings = valueMappingMapper.selectMappingByColumnId(columnMapping.getId());
-
-                    // 6. 应用值映射转换
-                    Object targetValue = applyValueMapping(sourceValue.toString(), valueMappings);
-
-                    // 7. 设置到目标对象
-                    setFieldValue(glAccvouch, targetCol, targetValue);
-                }
-            }
+        if (entries.getDepartmentAccounting()) {
+            processMapping("2", queryData, glAccvouch);
         }
 
-        // 设置金额方向
         Object total = queryData.get("total");
         BigDecimal amount = convertToBigDecimal(total);
 
@@ -436,14 +423,53 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setMdF(ZERO);
         glAccvouch.setMcF(ZERO);
 
-        // 设置其他字段
         glAccvouch.setCdigest(entries.getSummary());
         glAccvouch.setCbill(taskVoucherHead.getCreator());
 
         return glAccvouch;
     }
 
-    // 安全转换BigDecimal
+    // 添加映射处理逻辑
+    private void processMapping(String type, Map<String, Object> queryData, GLAccvouch glAccvouch) {
+        // 使用缓存获取表映射
+        List<TableMapping> tableMappings = tableMappingCache.computeIfAbsent(type,
+                k -> tableMappingMapper.selectTableMappingListByType(type));
+
+        if (tableMappings.isEmpty()) return;
+
+        TableMapping tableMapping = tableMappings.get(0);
+
+        // 使用缓存获取列映射
+        List<ColumnMapping> columnMappings = columnMappingCache.computeIfAbsent(Long.valueOf(tableMapping.getId()),
+                k -> columnMappingMapper.selectByTableMappingId(tableMapping.getId()));
+
+        for (ColumnMapping columnMapping : columnMappings) {
+            String sourceCol = columnMapping.getSourceColumnName();
+            String targetCol = columnMapping.getTargetColumnName();
+
+            Object sourceValue = queryData.get(sourceCol);
+            if (sourceValue == null) continue;
+
+            // 使用缓存获取值映射
+            Map<String, String> valueMap = valueMappingCache.computeIfAbsent(Long.valueOf(columnMapping.getId()),
+                    k -> {
+                        List<ValueMapping> mappings = valueMappingMapper.selectMappingByColumnId(columnMapping.getId());
+                        Map<String, String> map = new HashMap<>();
+                        for (ValueMapping vm : mappings) {
+                            map.put(vm.getSourceValue(), vm.getTargetValue());
+                        }
+                        return map;
+                    });
+
+            String targetValue = valueMap.get(sourceValue.toString());
+            if (targetValue != null) {
+                setFieldValue(glAccvouch, targetCol, targetValue);
+            } else {
+                setFieldValue(glAccvouch, targetCol, sourceValue);
+            }
+        }
+    }
+
     private BigDecimal convertToBigDecimal(Object value) {
         if (value instanceof BigDecimal) {
             return (BigDecimal) value;
@@ -459,83 +485,54 @@ public class TaskServiceImpl implements TaskService {
         return BigDecimal.ZERO;
     }
 
-    // 处理分录逻辑
+    // 使用并行流处理分录
     private List<GLAccvouch> processEntries(
             Long taskId, String sourceTable, String detailTable,
             Set<String> mainColumn, TaskVoucherHead taskVoucherHead, int currentPeriod, Integer iYPeriod, Integer iyear
     ) {
-        List<GLAccvouch> sendData = new ArrayList<>();
+        List<GLAccvouch> sendData = Collections.synchronizedList(new ArrayList<>());
         List<Entries> entriesList = entriesMapper.selectByTaskId(taskId);
+        if (entriesList.isEmpty()) return sendData;
 
-        // 预编译常量（避免在循环中重复创建）
-        BigDecimal ZERO = BigDecimal.ZERO;
-        Double ZERO_DOUBLE = 0.0;
-
-        for (Entries entries : entriesList) {
-            // 1. 验证科目表
+        // 使用并行流处理分录
+        entriesList.parallelStream().forEach(entries -> {
             String subjectTable = validateSubjectTable(entries.getId());
+            List<Map<String, Object>> subjects = jdbcTemplate.queryForList("SELECT * FROM " + subjectTable);
+            if (subjects.isEmpty()) return;
 
-            // 2. 批量获取科目条件
-            List<Map<String, Object>> subjects = jdbcTemplate.queryForList(
-                    "SELECT * FROM " + subjectTable
-            );
-
-            // 3. 预构建基础SQL
             String baseSelect = buildBaseSelectSQL(entries, sourceTable, detailTable);
 
             for (Map<String, Object> subject : subjects) {
-                // 4. 构建完整SQL
-                String fullSql = buildFullSQL(
-                        baseSelect, subject, mainColumn, entries
-                );
-
-                // 5. 执行查询
+                String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries);
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
 
-                // 6. 创建凭证
                 for (Map<String, Object> queryData : queryResults) {
                     GLAccvouch glAccvouch = createGLAccvouch(
                             entries, taskVoucherHead, queryData, currentPeriod, ZERO, ZERO_DOUBLE, iYPeriod, iyear
                     );
-                    sendData.add(glAccvouch);
+                    synchronized (sendData) {
+                        sendData.add(glAccvouch);
+                    }
                 }
             }
-        }
+        });
+
         return sendData;
     }
 
-    // 查询主表数据
     private List<Map<String, Object>> queryMainTableData(String sourceTable, String start, String end) {
-        // 使用白名单校验表名
         if (!sourceTable.startsWith("at_")) {
             throw new IllegalArgumentException("Invalid source table: " + sourceTable);
         }
 
         String sql = "SELECT * FROM " + sourceTable + " WHERE (FDate BETWEEN ? AND ?)";
-        List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, start, end);
-
-        if (results.isEmpty()) {
-            throw new BusinessException(ErrorCode.ORDER_LIST_NULL, ErrorCode.ORDER_LIST_NULL.getMessage());
-        }
-        return results;
+        return jdbcTemplate.queryForList(sql, start, end);
     }
 
-    // 获取凭证头信息
-    private TaskVoucherHead getTaskVoucherHead(Long taskId) {
-        List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
-        if (taskVoucherHeads.isEmpty()) {
-            throw new BusinessException(ErrorCode.VOUCHER_HEAD_NULL, ErrorCode.VOUCHER_HEAD_NULL.getMessage());
-        }
-        return taskVoucherHeads.get(0);
-    }
-
-    // 同步源数据
     private void syncSourceData(String sourceTable, String start, String end) {
-        // 分页查询参数
         int pageSize = 500;
         int currentPage = 1;
 
-        //同步数据
         switch (sourceTable) {
             case "at_pur_in":
                 purInService.getPurIn(currentPage, pageSize, start, end);
@@ -562,23 +559,18 @@ public class TaskServiceImpl implements TaskService {
                 storeTranService.getStoreTran(currentPage, pageSize, start, end);
                 break;
         }
-
     }
-
 
     private void createDynamicTable(Integer ruleId, List<String> selectedFields) {
         String tableName = "at_voucher_subject_" + ruleId;
-
-        // 删除已存在的表(如果存在)
         jdbcTemplate.execute("DROP TABLE IF EXISTS " + tableName);
 
-        // 构建创建表SQL
         StringBuilder sql = new StringBuilder();
         sql.append("CREATE TABLE ").append(tableName).append(" (")
                 .append("id INT PRIMARY KEY AUTO_INCREMENT, ")
                 .append("rule_id INT NOT NULL COMMENT '分录id', ")
                 .append("subject_list JSON COMMENT '字段列表', ");
-        // 添加选中字段
+
         for (String field : selectedFields) {
             sql.append("`").append(field).append("` VARCHAR(200) COMMENT '").append("', ");
         }
@@ -592,106 +584,52 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void insertDynamicTable(VoucherSubject voucherSubject) {
-        // 动态表名
         String tableName = "at_voucher_subject_" + voucherSubject.getRuleId();
-
-        // 1. 构建SQL字段部分
         StringBuilder sqlFields = new StringBuilder("INSERT INTO " + tableName + " (rule_id, subject_list");
         StringBuilder sqlValues = new StringBuilder(") VALUES (?, ?");
-
-        // 参数列表
         List<Object> params = new ArrayList<>();
         params.add(voucherSubject.getRuleId());
 
-        // 添加subject_list JSON（排除subject_code）
         List<String> fieldsForJson = new ArrayList<>();
         for (String field : voucherSubject.getDynamicFields().keySet()) {
             if (!"subject_code".equals(field)) {
                 fieldsForJson.add(field);
             }
         }
-        String subjectListJson = convertListToJson(fieldsForJson);
-        params.add(subjectListJson);
 
-        // 2. 添加动态字段
+        try {
+            String subjectListJson = OBJECT_MAPPER.writeValueAsString(fieldsForJson);
+            params.add(subjectListJson);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON转换失败", e);
+        }
+
         for (Map.Entry<String, String> entry : voucherSubject.getDynamicFields().entrySet()) {
             sqlFields.append(", ").append(entry.getKey());
             sqlValues.append(", ?");
             params.add(entry.getValue());
         }
 
-        // 3. 组合完整SQL
         String sql = sqlFields.toString() + sqlValues.toString() + ")";
-
-        // 执行SQL
         jdbcTemplate.update(sql, params.toArray());
     }
 
-    // 辅助方法：将List转换为JSON字符串
-    private String convertListToJson(List<String> list) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(list);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to convert list to JSON", e);
-        }
-    }
-    /**
-     * 应用值映射规则
-     * @param sourceValue 源数据值
-     * @param valueMappings 值映射规则列表
-     * @return 映射后的值（未匹配时返回原值）
-     */
-    private Object applyValueMapping(String sourceValue, List<ValueMapping> valueMappings) {
-        if (valueMappings == null || valueMappings.isEmpty()) {
-            return sourceValue;
-        }
-
-        // 查找匹配的映射规则
-        for (ValueMapping vm : valueMappings) {
-            if (sourceValue.equals(vm.getSourceValue())) {
-                return vm.getTargetValue();
-            }
-        }
-
-        // 无匹配时返回原始值
-        return sourceValue;
-    }
-
-    /**
-     * 通过反射设置字段值
-     * @param targetObj 目标对象（glAccvouch）
-     * @param fieldName 字段名（targetColumnName）
-     * @param value 要设置的值
-     */
     private void setFieldValue(Object targetObj, String fieldName, Object value) {
         try {
-            // 获取字段的setter方法名（如setUserName）
-            String setterName = "set" +
-                    fieldName.substring(0, 1).toUpperCase() +
-                    fieldName.substring(1);
-
-            // 遍历查找匹配的方法
+            String setterName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
             for (Method method : targetObj.getClass().getMethods()) {
                 if (method.getName().equals(setterName)) {
-                    // 获取参数类型进行类型转换
                     Class<?> paramType = method.getParameterTypes()[0];
                     Object convertedValue = convertType(value, paramType);
-
-                    // 调用setter方法
                     method.invoke(targetObj, convertedValue);
                     break;
                 }
             }
         } catch (Exception e) {
-            // 实际项目中应记录日志
-            e.printStackTrace();
+            log.error("设置字段值失败: {}={}", fieldName, value, e);
         }
     }
 
-    /**
-     * 类型转换方法
-     */
     private Object convertType(Object value, Class<?> targetType) {
         if (value == null) return null;
 
@@ -702,14 +640,23 @@ public class TaskServiceImpl implements TaskService {
         } else if (targetType == Double.class || targetType == double.class) {
             return Double.parseDouble(value.toString());
         } else if (targetType == Date.class) {
-            // 实际项目中使用更健壮的日期解析
-            return new Date(); // 示例简化
+            return new Date();
         } else if (targetType == Boolean.class || targetType == boolean.class) {
             return Boolean.parseBoolean(value.toString());
         }
-
-        // 其他类型转换需求可在此扩展
         return value;
     }
-}
 
+    public Object getFieldValue(Object obj, String fieldName) {
+        try {
+            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            Class<?> clazz = obj.getClass();
+            Field field = clazz.getDeclaredField(fieldName);
+            MethodHandle mh = lookup.unreflectGetter(field);
+            return mh.invoke(obj);
+        } catch (Throwable e) {
+            log.error("获取字段值失败: {}", fieldName, e);
+            return null;
+        }
+    }
+}

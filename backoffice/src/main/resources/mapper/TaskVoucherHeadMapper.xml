@@ -178,9 +178,9 @@
         </trim>
         ON DUPLICATE KEY UPDATE
         <trim suffixOverrides=",">
-            <if test="taskId != null">task_id = VALUES(task_id),</if>
             <if test="dbName != null">db_name = VALUES(db_name),</if>
             <if test="accountName != null">account_name = VALUES(account_name),</if>
+            <if test="voucherKey != null">voucher_key = VALUES(voucher_key),</if>
             <if test="voucherWord != null">voucher_word = VALUES(voucher_word),</if>
             <if test="voucherDate != null">voucher_date = VALUES(voucher_date),</if>
             <if test="businessDate != null">business_date = VALUES(business_date),</if>

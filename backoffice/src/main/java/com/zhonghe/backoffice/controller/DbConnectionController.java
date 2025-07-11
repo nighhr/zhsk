@@ -26,7 +26,7 @@ public class DbConnectionController {
     }
 
     @PostMapping("/create")
-    public DbConnection createConnection(@RequestBody DbConnection dbConnection) {
+    public DbConnection createConnection(@RequestBody DbConnection dbConnection) throws Exception {
         //todo 获取当前用户信息
 //        dbConnection.setCreator(currentUser.getUsername());
 //        dbConnection.setUpdater(currentUser.getUsername());
@@ -34,7 +34,7 @@ public class DbConnectionController {
     }
 
     @PutMapping("/update")
-    public DbConnection updateConnection(@RequestBody DbConnection dbConnection) {
+    public DbConnection updateConnection(@RequestBody DbConnection dbConnection) throws Exception {
         //todo 获取当前用户信息
 //        dbConnection.setUpdater(currentUser.getUsername());
         return dbConnectionService.updateConnection(dbConnection);

@@ -1,5 +1,6 @@
 package com.zhonghe.backoffice.service.Impl;
 
+import com.zhonghe.adapter.utils.PasswordUtils;
 import com.zhonghe.backoffice.mapper.DbConnectionMapper;
 import com.zhonghe.backoffice.model.DbConnection;
 import com.zhonghe.backoffice.model.DTO.DbConnectionDTO;
@@ -66,7 +67,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
      * @param dbConnection 连接信息
      * @return 创建后的连接信息(包含ID)
      */
-    public DbConnection createConnection(DbConnection dbConnection) {
+    public DbConnection createConnection(DbConnection dbConnection) throws Exception {
         Date now = new Date();
         // 设置审计字段
         dbConnection.setCreateTime(now);
@@ -75,7 +76,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
 
         // 密码加密处理
         if (StringUtils.hasText(dbConnection.getPassword())) {
-            dbConnection.setPassword(encryptPassword(dbConnection.getPassword()));
+            dbConnection.setPassword(PasswordUtils.encryptDBPassword(dbConnection.getPassword()));
         }
 
         dbConnectionMapper.insert(dbConnection);
@@ -88,13 +89,13 @@ public class DbConnectionServiceImpl implements DbConnectionService {
      * @param dbConnection 连接信息
      * @return 更新后的连接信息
      */
-    public DbConnection updateConnection(DbConnection dbConnection) {
+    public DbConnection updateConnection(DbConnection dbConnection) throws Exception {
         Date now = new Date();
         dbConnection.setUpdateTime(now);
 
         // 密码处理
         if (StringUtils.hasText(dbConnection.getPassword())) {
-            dbConnection.setPassword(encryptPassword(dbConnection.getPassword()));
+            dbConnection.setPassword(PasswordUtils.decryptDBPassword(dbConnection.getPassword()));
         } else {
             // 不更新密码
             dbConnection.setPassword(null);

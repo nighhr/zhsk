@@ -12,9 +12,9 @@ import java.util.List;
 public interface DbConnectionService {
     PageResult<DbConnection> getDbConnectionList(DbConnectionDTO dto);
 
-    DbConnection createConnection(DbConnection dbConnection);
+    DbConnection createConnection(DbConnection dbConnection) throws Exception;
 
-    DbConnection updateConnection(DbConnection dbConnection);
+    DbConnection updateConnection(DbConnection dbConnection) throws Exception;
 
     void deleteConnection(Long id);
 
