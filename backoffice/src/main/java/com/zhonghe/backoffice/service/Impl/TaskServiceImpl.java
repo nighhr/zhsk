@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.text.ParseException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -156,18 +157,15 @@ public class TaskServiceImpl implements TaskService {
         if (!params.containsKey("startTime") || !params.containsKey("endTime")) {
             throw new IllegalArgumentException("参数中缺少 startTime 或 endTime");
         }
-        Date startTime;
-        Date endTime;
+        String start;
+        String end;
         try {
-            startTime = (Date) params.get("startTime");
-            endTime = (Date) params.get("endTime");
+            start = params.get("startTime").toString();
+            end = params.get("endTime").toString();
         } catch (ClassCastException e) {
             throw new IllegalArgumentException("startTime 或 endTime 格式错误");
         }
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String start = sdf.format(startTime);
-        String end = sdf.format(endTime);
 
         // 获取凭证头列表
         List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
