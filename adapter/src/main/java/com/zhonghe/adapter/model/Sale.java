@@ -11,6 +11,8 @@ public class Sale {
     private String FBillNo;
     private Integer FSalesType;
     private Date FDate;
+    //1:直营门店, 2:加盟门店, 6:测试门店, 9:物流中心
+    private String FOrgType;
     private String FOrgID;
     private String FOrgNumber;
     private String FOrgName;

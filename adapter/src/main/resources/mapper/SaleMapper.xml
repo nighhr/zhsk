@@ -4,7 +4,7 @@
 
     <insert id="insert" parameterType="com.zhonghe.adapter.model.Sale">
         INSERT IGNORE INTO at_sale (
-        FID, FBillNo, FSalesType, FDate, FOrgID, FOrgNumber, FOrgName,
+        FID, FBillNo, FSalesType, FDate, FOrgID, FOrgNumber, FOrgName,FOrgType
         FGuideID, FGuideNumber, FGuideName, FRemark, FCreateBy, FCreateDate,
         FUpdateBy, FUpdateDate, mark
     ) VALUES (
@@ -16,7 +16,7 @@
 
     <insert id="batchInsert" parameterType="java.util.List">
         INSERT IGNORE INTO at_sale (
-        FID, FBillNo, FSalesType, FDate, FOrgID, FOrgNumber, FOrgName,
+        FID, FBillNo, FSalesType, FDate, FOrgID, FOrgNumber, FOrgName,FOrgType
         FGuideID, FGuideNumber, FGuideName, FRemark, FCreateBy, FCreateDate,
         FUpdateBy, FUpdateDate, mark
         ) VALUES
