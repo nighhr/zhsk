@@ -8,6 +8,7 @@
         <result property="name" column="name" />
         <result property="areaId" column="area_id" />
         <result property="type" column="type" />
+        <result property="dataSource" column="data_source" />
         <result property="parentId" column="parent_id" />
         <result property="parentIds" column="parent_ids" />
         <result property="createDate" column="create_date" />
@@ -15,16 +16,16 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        HCid, code, name, area_id, type, parent_id, parent_ids, create_date, update_date
+        HCid, code, name, area_id, type,data_source, parent_id, parent_ids, create_date, update_date
     </sql>
 
     <!-- 插入部门 -->
     <insert id="insertDepartment" parameterType="com.zhonghe.backoffice.model.Department">
         INSERT IGNORE INTO department (
-            HCid, code, name, area_id, type,
+            HCid, code, name, area_id, type,data_source,
             parent_id, parent_ids, create_date, update_date
         ) VALUES (
-                     #{HCid}, #{code}, #{name}, #{areaId}, #{type},
+                     #{HCid}, #{code}, #{name}, #{areaId}, #{type},#{data_source},
                      #{parentId}, #{parentIds}, #{createDate}, #{updateDate}
                  )
     </insert>
@@ -41,6 +42,7 @@
                               name = #{name},
                               area_id = #{areaId},
                               type = #{type},
+                              data_source = #{data_source},
                               parent_id = #{parentId},
                               parent_ids = #{parentIds},
                               update_date = #{updateDate}
@@ -49,7 +51,7 @@
 
     <!-- 删除部门 -->
     <delete id="deleteDepartment" parameterType="long">
-        DELETE FROM department WHERE HCid = #{HCid}
+        DELETE FROM department WHERE id = #{id}
     </delete>
 
     <!-- 查询所有部门 -->
@@ -92,12 +94,12 @@
 
     <insert id="batchInsert" parameterType="list">
         INSERT IGNORE INTO department (
-        HCid, code, name, area_id, type,
+        HCid, code, name, area_id, type,data_source,
         parent_id, parent_ids, create_date, update_date
         ) VALUES
         <foreach collection="list" item="dept" separator=",">
             (
-            #{dept.HCid}, #{dept.code}, #{dept.name}, #{dept.areaId}, #{dept.type},
+            #{dept.HCid}, #{dept.code}, #{dept.name}, #{dept.areaId}, #{dept.type},#{dept.dataSource},
             #{dept.parentId}, #{dept.parentIds}, #{dept.createDate}, #{dept.updateDate}
             )
         </foreach>

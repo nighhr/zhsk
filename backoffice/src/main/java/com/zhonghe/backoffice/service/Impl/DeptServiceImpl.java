@@ -4,6 +4,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.DeptClient;
+import com.zhonghe.adapter.feign.OrgClient;
 import com.zhonghe.backoffice.mapper.DeptMapper;
 import com.zhonghe.backoffice.model.Department;
 import com.zhonghe.backoffice.service.DeptService;
@@ -24,6 +25,8 @@ public class DeptServiceImpl implements DeptService {
 
     private final DeptClient deptClient;
 
+    private final OrgClient orgClient;
+
     @Autowired
     private DeptMapper deptMapper;
 
@@ -43,6 +46,7 @@ public class DeptServiceImpl implements DeptService {
                 if (deptList.size() == 0) {
                     break;
                 } else {
+                    deptList.forEach(department -> department.setDataSource("部门"));
                     deptMapper.batchInsert(deptList);
                     insertData.addAll(deptList);
                     current_page++;
@@ -81,6 +85,40 @@ public class DeptServiceImpl implements DeptService {
         pageResult.setPageSize(pageSize);
         pageResult.setPage(offset);
         return pageResult;
+    }
+
+    @Override
+    public Result<Integer> getStore() {
+        ArrayList<Department> insertData = new ArrayList<>();
+        int current_page = 1;
+        for (int i = 1; ; i++) {
+            ApiRequest request = new ApiRequest(current_page, 200);
+            String responseString = orgClient.queryOrgInRaw(request);
+            JSONObject parse = JSONUtil.parseObj(responseString);
+
+            if ("OK".equals(parse.getStr("OFlag"))) {
+                // 获取Data数组并转换为模型列表
+                JSONArray dataArray = parse.getJSONArray("Data");
+                List<Department> deptList = JSONUtil.toList(dataArray, Department.class);
+                if (deptList.size() == 0) {
+                    break;
+                } else {
+                    deptList.forEach(department -> department.setDataSource("门店"));
+                    deptMapper.batchInsert(deptList);
+                    insertData.addAll(deptList);
+                    current_page++;
+                }
+
+            } else {
+                // 处理错误情况
+                String errorMessage = parse.getStr("Message");
+                System.err.println("请求失败: " + errorMessage);
+                break;
+            }
+        }
+
+
+        return Result.success(insertData.size());
     }
 
 

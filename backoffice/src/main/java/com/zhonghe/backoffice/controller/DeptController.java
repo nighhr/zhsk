@@ -43,4 +43,12 @@ public class DeptController {
     public Result<Integer> getDeptData() {
         return deptService.getDepts();
     }
+
+    /**
+     *  HC门店拉取接口
+     * */
+    @GetMapping("/getStore")
+    public Result<Integer> getStoreData() {
+        return deptService.getStore();
+    }
 }

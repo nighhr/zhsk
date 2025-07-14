@@ -24,6 +24,9 @@ public class Department {
     @JsonProperty("type")
     private String type; // 类型
 
+    @JsonProperty("data_source")
+    private String dataSource; // 数据来源
+
     @JsonProperty("parent_id")
     private Long parentId; // 上级机构id
 

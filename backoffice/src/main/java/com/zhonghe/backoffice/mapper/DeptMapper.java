@@ -18,7 +18,7 @@ public interface DeptMapper {
         int updateDepartment(Department department);
 
         // 删除部门
-        int deleteDepartment(Long HCid);
+        int deleteDepartment(Long id);
 
         // 查询所有部门
         List<Department> selectAllDepartments();

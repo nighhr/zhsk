@@ -11,5 +11,7 @@ public interface DeptService {
     Result<Integer> getDepts();
 
     PageResult<Department> listDepartment(Map<String, Object> params);
+
+    Result<Integer> getStore();
 }
 
