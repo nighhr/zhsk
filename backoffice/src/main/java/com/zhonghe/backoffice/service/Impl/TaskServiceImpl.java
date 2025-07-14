@@ -610,19 +610,6 @@ public class TaskServiceImpl implements TaskService {
         List<Object> params = new ArrayList<>();
         params.add(voucherSubject.getRuleId());
 
-        List<String> fieldsForJson = new ArrayList<>();
-        for (String field : voucherSubject.getDynamicFields().keySet()) {
-            if (!"subject_code".equals(field)) {
-                fieldsForJson.add(field);
-            }
-        }
-
-        try {
-            String subjectListJson = OBJECT_MAPPER.writeValueAsString(fieldsForJson);
-            params.add(subjectListJson);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON转换失败", e);
-        }
 
         for (Map.Entry<String, String> entry : voucherSubject.getDynamicFields().entrySet()) {
             sqlFields.append(", ").append(entry.getKey());
