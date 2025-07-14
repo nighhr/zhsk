@@ -14,8 +14,6 @@ public class VoucherSubject {
     private Integer ruleId;
 
     private String subjectCode;
-    // 选中的字段名列表(英文)
-    private List<String> selectedFields;
 
     private Map<String, String> dynamicFields; // 存储 name, sex 等
 

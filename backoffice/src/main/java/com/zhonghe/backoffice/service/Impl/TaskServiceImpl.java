@@ -586,10 +586,10 @@ public class TaskServiceImpl implements TaskService {
         jdbcTemplate.execute("DROP TABLE IF EXISTS " + tableName);
 
         StringBuilder sql = new StringBuilder();
+
         sql.append("CREATE TABLE ").append(tableName).append(" (")
                 .append("id INT PRIMARY KEY AUTO_INCREMENT, ")
-                .append("rule_id INT NOT NULL COMMENT '分录id', ")
-                .append("subject_list JSON COMMENT '字段列表', ");
+                .append("rule_id INT NOT NULL COMMENT '分录id', ");
 
         for (String field : selectedFields) {
             sql.append("`").append(field).append("` VARCHAR(200) COMMENT '").append("', ");
@@ -605,8 +605,8 @@ public class TaskServiceImpl implements TaskService {
 
     private void insertDynamicTable(VoucherSubject voucherSubject) {
         String tableName = "at_voucher_subject_" + voucherSubject.getRuleId();
-        StringBuilder sqlFields = new StringBuilder("INSERT INTO " + tableName + " (rule_id, subject_list");
-        StringBuilder sqlValues = new StringBuilder(") VALUES (?, ?");
+        StringBuilder sqlFields = new StringBuilder("INSERT INTO " + tableName + " (rule_id");
+        StringBuilder sqlValues = new StringBuilder(") VALUES (?");
         List<Object> params = new ArrayList<>();
         params.add(voucherSubject.getRuleId());
 
