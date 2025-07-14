@@ -9,8 +9,8 @@ import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -46,15 +46,29 @@ public class TaskController {
         return Result.success(taskService.createTask(task));
     }
 
+    @GetMapping("/{id}")
+    public Result<Task> getTaskById(@PathVariable Long id) {
+        return Result.success(taskService.getTaskById(id));
+    }
 
     @PostMapping("/createVoucherHead")
     public Result<Long> createVoucherHead(@RequestBody TaskVoucherHead taskVoucherHead) {
         return Result.success(taskService.createVoucherHead(taskVoucherHead));
     }
 
+    @GetMapping("/voucherHead/{id}")
+    public Result<TaskVoucherHead> getVoucherHeadById(@PathVariable Long id) {
+        return Result.success(taskService.getVoucherHeadById(id));
+    }
+
     @PostMapping("/createEntries")
     public Result<Long> createEntry(@RequestBody Entries entries) {
         return Result.success(taskService.createEntry(entries));
+    }
+
+    @GetMapping("/entry/{id}")
+    public Result<Entries> getEntryById(@PathVariable Long id) {
+        return Result.success(taskService.getEntryById(id));
     }
 
     @DeleteMapping("/entriesDelete/{id}")
@@ -74,6 +88,11 @@ public class TaskController {
             @RequestParam Integer id) {
         boolean success = taskService.deleteSubject(entriesId, id);
         return Result.success(success);
+    }
+
+    @GetMapping("/subject/{ruleId}")
+    public Result<List<Map<String,Object>>> getSubjectByRuleId(@PathVariable Long RuleId) {
+        return Result.success(taskService.getSubjectByRuleId(RuleId));
     }
 
     //手动执行任务

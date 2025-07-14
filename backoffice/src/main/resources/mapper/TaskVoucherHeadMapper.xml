@@ -77,7 +77,7 @@
     </insert>
 
     <!-- 根据主键查询 -->
-    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    <select id="selectById" resultMap="BaseResultMap" parameterType="java.lang.Long">
         SELECT
         <include refid="Base_Column_List"/>
         FROM task_voucher_head

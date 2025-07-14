@@ -26,7 +26,7 @@ public interface TaskVoucherHeadMapper {
      * @param id 主键ID
      * @return 凭证头信息
      */
-    TaskVoucherHead selectByPrimaryKey(Long id);
+    TaskVoucherHead selectById(Long id);
 
     /**
      * 根据主键更新

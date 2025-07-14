@@ -6,6 +6,7 @@ import com.zhonghe.backoffice.model.TaskVoucherHead;
 import com.zhonghe.kernel.vo.PageResult;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,4 +26,12 @@ public interface TaskService {
     void deleteEntriesMapping(Long id);
 
     boolean deleteSubject(Integer entriesId, Integer subjectId);
+
+    Task getTaskById(Long id);
+
+    TaskVoucherHead getVoucherHeadById(Long Id);
+
+    Entries getEntryById(Long id);
+
+    List<Map<String, Object>> getSubjectByRuleId(Long ruleId);
 }

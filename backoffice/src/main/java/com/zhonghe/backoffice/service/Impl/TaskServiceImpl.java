@@ -286,6 +286,28 @@ public class TaskServiceImpl implements TaskService {
         return affectedRows > 0;
     }
 
+    @Override
+    public Task getTaskById(Long id) {
+        return taskMapper.selectById(id);
+    }
+
+    @Override
+    public TaskVoucherHead getVoucherHeadById(Long id) {
+        return taskVoucherHeadMapper.selectById(id);
+    }
+
+    @Override
+    public Entries getEntryById(Long id) {
+        return entriesMapper.selectById(id);
+    }
+
+    @Override
+    public List<Map<String, Object>> getSubjectByRuleId(Long ruleId) {
+        String tableName = "at_voucher_subject_" + ruleId;
+        List<Map<String, Object>> subjects = jdbcTemplate.queryForList("SELECT * FROM " + tableName);
+        return subjects;
+    }
+
     public List<GLAccvouch> handleExecution(Task task, String start, String end) {
         String sourceTable = task.getSourceTable();
         String detailTable = task.getDetailTable();
