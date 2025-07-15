@@ -19,4 +19,17 @@
         )
     </foreach>
 </insert>
+    <select id="selectByTaskId" resultType="com.zhonghe.adapter.model.InsertionErrorLog">
+        SELECT
+            id,
+            field_a AS fieldA,
+            task_id AS taskId,
+            error_message AS errorMessage,
+            stack_trace AS stackTrace,
+            record_data AS recordData,
+            error_time AS errorTime,
+            created_at AS createdAt
+        FROM insertion_error_log
+        WHERE task_id = #{taskId}
+    </select>
 </mapper>

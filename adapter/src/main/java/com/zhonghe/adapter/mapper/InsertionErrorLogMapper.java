@@ -9,4 +9,6 @@ import java.util.List;
 @Mapper
 public interface InsertionErrorLogMapper {
     void batchInsertErrors(@Param("list") List<InsertionErrorLog> errorLogs);
+
+    List<InsertionErrorLog> selectByTaskId(Long taskId);
 }

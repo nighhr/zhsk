@@ -9,6 +9,7 @@ public class InsertionErrorLog {
     private Long id;
     private String errorMessage;
     private String stackTrace;
+    private Long taskId;
     private String fieldA;  // 特定字段A
     private Date errorTime;
     private String recordData;  // 可选：存储整个记录数据
