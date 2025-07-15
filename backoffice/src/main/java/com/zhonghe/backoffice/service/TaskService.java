@@ -1,9 +1,12 @@
 package com.zhonghe.backoffice.service;
 
+import com.zhonghe.adapter.model.InsertionErrorLog;
+import com.zhonghe.backoffice.model.DTO.TaskDTO;
 import com.zhonghe.backoffice.model.Entries;
 import com.zhonghe.backoffice.model.Task;
 import com.zhonghe.backoffice.model.TaskVoucherHead;
 import com.zhonghe.kernel.vo.PageResult;
+import com.zhonghe.kernel.vo.Result;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -27,11 +30,15 @@ public interface TaskService {
 
     boolean deleteSubject(Integer entriesId, Integer subjectId);
 
-    Task getTaskById(Long id);
+    TaskDTO getTaskById(Long id);
 
     TaskVoucherHead getVoucherHeadById(Long Id);
 
     Entries getEntryById(Long id);
 
     List<Map<String, Object>> getSubjectByRuleId(Long ruleId);
+
+    List<InsertionErrorLog> getErrorLogsByTaskId(Long taskId);
+
+    Boolean changeTaskStatus(Long taskId);
 }

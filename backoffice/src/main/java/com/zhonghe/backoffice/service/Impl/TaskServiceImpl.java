@@ -9,28 +9,27 @@ import java.io.StringWriter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
-import java.text.ParseException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import com.zhonghe.adapter.model.InsertionErrorLog;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.service.*;
 import com.zhonghe.backoffice.mapper.*;
 import com.zhonghe.backoffice.model.*;
+import com.zhonghe.backoffice.model.DTO.TaskDTO;
 import com.zhonghe.backoffice.service.TaskService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.PageResult;
+import com.zhonghe.kernel.vo.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -75,7 +74,7 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private ValueMappingMapper valueMappingMapper;
     @Autowired
-    private InsertionErrorLogMapper errorLogMapper;
+    private InsertionErrorLogMapper insertionErrorLogMapper;
 
     // 添加映射规则缓存
     private final Map<String, List<TableMapping>> tableMappingCache = new ConcurrentHashMap<>();
@@ -89,7 +88,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Long createTask(Task task) {
-        task.setStatus("ACTIVE");
+        task.setStatus(true);
         task.setUpdateTime(new Date());
         if (task.getId() == null) {
             task.setCreateTime(new Date());
@@ -105,6 +104,9 @@ public class TaskServiceImpl implements TaskService {
         taskVoucherHead.setUpdateTime(new Date());
         if (taskVoucherHead.getId() == null) {
             taskVoucherHead.setCreateTime(new Date());
+        }
+        if (taskVoucherHead.getTaskId()==null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"taskId不能为空");
         }
         taskVoucherHeadMapper.insertOrUpdate(taskVoucherHead);
         return taskVoucherHead.getId();
@@ -202,13 +204,13 @@ public class TaskServiceImpl implements TaskService {
             try {
                 glAccvouchMapper.batchInsert(batch);
             } catch (Exception e) {
-                handleBatchInsertFailure(batch, e, errorLogs, voucherKey);
+                handleBatchInsertFailure(batch, e, errorLogs, taskId,voucherKey);
             }
         });
 
         if (!errorLogs.isEmpty()) {
             try {
-                errorLogMapper.batchInsertErrors(errorLogs);
+                insertionErrorLogMapper.batchInsertErrors(errorLogs);
             } catch (Exception ex) {
                 log.error("保存错误日志失败: {}", ex.getMessage());
             }
@@ -217,14 +219,14 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void handleBatchInsertFailure(List<GLAccvouch> batch, Exception batchEx,
-                                          List<InsertionErrorLog> errorLogs, String voucherKey) {
+                                          List<InsertionErrorLog> errorLogs, Long taskId,String voucherKey) {
         log.error("批量插入失败: {}", batchEx.getMessage());
 
         for (GLAccvouch item : batch) {
             try {
                 glAccvouchMapper.insert(item);
             } catch (Exception itemEx) {
-                InsertionErrorLog errorLog = createErrorLog(item, itemEx, voucherKey);
+                InsertionErrorLog errorLog = createErrorLog(item, itemEx, taskId,voucherKey);
                 errorLogs.add(errorLog);
                 log.error("记录插入失败: inid={}, fieldA={}, error={}",
                         item.getInid(), getFieldValue(item, voucherKey).toString(), itemEx.getMessage());
@@ -232,9 +234,10 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    private InsertionErrorLog createErrorLog(GLAccvouch item, Exception ex, String voucherKey) {
+    private InsertionErrorLog createErrorLog(GLAccvouch item, Exception ex, Long taskId,String voucherKey) {
         InsertionErrorLog errorLog = new InsertionErrorLog();
         errorLog.setFieldA(getFieldValue(item, voucherKey).toString());
+        errorLog.setTaskId(taskId);
         errorLog.setErrorMessage(ex.getMessage());
         errorLog.setStackTrace(getStackTraceAsString(ex));
         errorLog.setErrorTime(new Date());
@@ -287,8 +290,15 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task getTaskById(Long id) {
-        return taskMapper.selectById(id);
+    public TaskDTO getTaskById(Long id) {
+        TaskDTO taskDTO = new TaskDTO();
+        Task task = taskMapper.selectById(id);
+        BeanUtils.copyProperties(task,taskDTO);
+        List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(id);
+        List<Entries> entries = entriesMapper.selectByTaskId(id);
+        taskDTO.setVoucherHeadList(taskVoucherHeads);
+        taskDTO.setEntriesList(entries);
+        return taskDTO;
     }
 
     @Override
@@ -306,6 +316,24 @@ public class TaskServiceImpl implements TaskService {
         String tableName = "at_voucher_subject_" + ruleId;
         List<Map<String, Object>> subjects = jdbcTemplate.queryForList("SELECT * FROM " + tableName);
         return subjects;
+    }
+
+    @Override
+    public List<InsertionErrorLog> getErrorLogsByTaskId(Long taskId) {
+        return insertionErrorLogMapper.selectByTaskId(taskId);
+    }
+
+    @Override
+    public Boolean changeTaskStatus(Long taskId) {
+        Task task = taskMapper.selectById(taskId);
+        if(task==null){
+            new RuntimeException("任务不存在");
+        }
+
+        // 更新状态和更新时间
+        task.setStatus(!task.getStatus());
+        taskMapper.update(task);
+        return task.getStatus();
     }
 
     public List<GLAccvouch> handleExecution(Task task, String start, String end) {
@@ -339,13 +367,10 @@ public class TaskServiceImpl implements TaskService {
     private String validateSubjectTable(Long entryId) {
         String idStr = entryId.toString();
         if (!Pattern.matches("^\\d+$", idStr)) {
-            throw new IllegalArgumentException("Invalid subject table ID: " + idStr);
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"Invalid subject table ID: " + idStr);
         }
 
         String tableName = "at_voucher_subject_" + idStr;
-        if (!tableName.startsWith("at_voucher_subject_")) {
-            throw new IllegalArgumentException("Invalid subject table name: " + tableName);
-        }
         return tableName;
     }
 

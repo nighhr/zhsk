@@ -1,5 +1,7 @@
 package com.zhonghe.backoffice.controller;
 
+import com.zhonghe.adapter.model.InsertionErrorLog;
+import com.zhonghe.backoffice.model.DTO.TaskDTO;
 import com.zhonghe.backoffice.model.Entries;
 import com.zhonghe.backoffice.model.Task;
 import com.zhonghe.backoffice.model.TaskVoucherHead;
@@ -47,7 +49,7 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public Result<Task> getTaskById(@PathVariable Long id) {
+    public Result<TaskDTO> getTaskById(@PathVariable Long id) {
         return Result.success(taskService.getTaskById(id));
     }
 
@@ -56,20 +58,12 @@ public class TaskController {
         return Result.success(taskService.createVoucherHead(taskVoucherHead));
     }
 
-    @GetMapping("/voucherHead/{id}")
-    public Result<TaskVoucherHead> getVoucherHeadById(@PathVariable Long id) {
-        return Result.success(taskService.getVoucherHeadById(id));
-    }
 
     @PostMapping("/createEntries")
     public Result<Long> createEntry(@RequestBody Entries entries) {
         return Result.success(taskService.createEntry(entries));
     }
 
-    @GetMapping("/entry/{id}")
-    public Result<Entries> getEntryById(@PathVariable Long id) {
-        return Result.success(taskService.getEntryById(id));
-    }
 
     @DeleteMapping("/entriesDelete/{id}")
     public Result<Void> deleteEntriesMapping(@PathVariable Long id) {
@@ -99,5 +93,29 @@ public class TaskController {
     @PostMapping("/manualExecution")
     public Result<Integer> manualExecution(@RequestBody Map<String, Object> params) {
         return Result.success(taskService.manualExecution(params));
+    }
+
+    /**
+     * 获取指定任务的错误日志
+     * @param taskId 任务ID
+     * @return 分页的错误日志列表
+     */
+    @GetMapping("/getErrorLogs")
+    public Result<List<InsertionErrorLog>> getErrorLogsByTaskId(
+            @RequestParam Long taskId
+            ) {
+        List<InsertionErrorLog> pageResult = taskService.getErrorLogsByTaskId(taskId);
+        return Result.success(pageResult);
+    }
+
+    /**
+     * 变更任务状态
+     */
+    @GetMapping("/changeTaskStatus")
+    public Result<Boolean> changeTaskStatus(
+            @RequestParam Long taskId
+    ) {
+
+        return Result.success(taskService.changeTaskStatus(taskId));
     }
 }
