@@ -2,8 +2,10 @@ package com.zhonghe.backoffice.scheduler;
 
 import com.zhonghe.backoffice.mapper.TaskMapper;
 import com.zhonghe.backoffice.model.Task;
+import com.zhonghe.backoffice.model.enums.ExecuteTypeEnum;
 import com.zhonghe.backoffice.scheduler.jobs.TaskExecutionJob;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.*;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +38,29 @@ public class TaskSchedulerService {
         }
     }
 
+
+    /**
+     * 删除已存在的任务
+     */
+    private void deleteTaskIfExists(Long taskId) throws SchedulerException {
+        JobKey jobKey = new JobKey(getJobName(taskId), "TASK_GROUP");
+        if (scheduler.checkExists(jobKey)) {
+            scheduler.deleteJob(jobKey);
+        }
+    }
+
+    /**
+     * 创建新的定时任务
+     */
+    private void createNewScheduledTask(Task task) throws SchedulerException {
+        JobDetail jobDetail = buildJobDetail(task);
+        Trigger trigger = buildTrigger(task);
+        scheduler.scheduleJob(jobDetail, trigger);
+    }
+
+    private String getJobName(Long taskId) {
+        return "task_" + taskId;
+    }
     /**
      * 安排定时任务
      */

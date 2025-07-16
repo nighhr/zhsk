@@ -8,6 +8,7 @@ import com.zhonghe.backoffice.model.TaskVoucherHead;
 import com.zhonghe.backoffice.service.TaskService;
 import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
+import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +45,7 @@ public class TaskController {
     }
 
     @PostMapping("/createTask")
-    public Result<Long> createTask(@RequestBody Task task) {
+    public Result<Long> createTask(@RequestBody Task task) throws SchedulerException {
         return Result.success(taskService.createTask(task));
     }
 
