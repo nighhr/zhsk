@@ -18,4 +18,6 @@ public interface TaskMapper {
 
     long selectTaskCount(@Param("params") Map<String, Object> params);
 
+    List<Task> selectListByExecuteType(String executeType);
+
 }

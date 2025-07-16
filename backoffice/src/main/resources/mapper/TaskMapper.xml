@@ -152,6 +152,13 @@
             </if>
         </where>
     </select>
+    <select id="selectListByExecuteType" resultType="com.zhonghe.backoffice.model.Task">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM task
+        WHERE execute_type = #{executeType}
+        and status = 1
+    </select>
 
 
 </mapper>

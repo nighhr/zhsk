@@ -9,6 +9,6 @@ import java.util.List;
 
 @Data
 public class TaskDTO extends Task {
-    List<TaskVoucherHead> voucherHeadList;
+    TaskVoucherHead voucherHead;
     List<Entries> entriesList;
 }

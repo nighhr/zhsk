@@ -12,7 +12,22 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/backoffice-changelog-master.yaml
     default-schema: aite
-
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    properties:
+      org:
+        quartz:
+          jobStore:
+            tablePrefix: QRTZ_
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            useProperties: true
+          scheduler:
+            instanceName: BackofficeScheduler
+            instanceId: AUTO
+          threadPool:
+            threadCount: 5
 mybatis:
   mapper-locations:
     - classpath*:mapper/*.xml

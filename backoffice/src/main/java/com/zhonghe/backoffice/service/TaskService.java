@@ -7,6 +7,7 @@ import com.zhonghe.backoffice.model.Task;
 import com.zhonghe.backoffice.model.TaskVoucherHead;
 import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
+import org.quartz.SchedulerException;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface TaskService {
-    Long createTask(Task task);
+    Long createTask(Task task) throws SchedulerException;
 
     Long createVoucherHead(TaskVoucherHead taskVoucherHead);
 

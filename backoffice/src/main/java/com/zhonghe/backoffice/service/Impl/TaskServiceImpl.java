@@ -17,12 +17,15 @@ import com.zhonghe.adapter.service.*;
 import com.zhonghe.backoffice.mapper.*;
 import com.zhonghe.backoffice.model.*;
 import com.zhonghe.backoffice.model.DTO.TaskDTO;
+import com.zhonghe.backoffice.model.enums.ExecuteTypeEnum;
+import com.zhonghe.backoffice.scheduler.TaskSchedulerService;
 import com.zhonghe.backoffice.service.TaskService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -75,6 +78,8 @@ public class TaskServiceImpl implements TaskService {
     private ValueMappingMapper valueMappingMapper;
     @Autowired
     private InsertionErrorLogMapper insertionErrorLogMapper;
+    @Autowired
+    private TaskSchedulerService taskSchedulerService;
 
     // 添加映射规则缓存
     private final Map<String, List<TableMapping>> tableMappingCache = new ConcurrentHashMap<>();
@@ -87,7 +92,7 @@ public class TaskServiceImpl implements TaskService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
-    public Long createTask(Task task) {
+    public Long createTask(Task task) throws SchedulerException {
         task.setStatus(true);
         task.setUpdateTime(new Date());
         if (task.getId() == null) {
@@ -95,6 +100,12 @@ public class TaskServiceImpl implements TaskService {
             taskMapper.insert(task);
         } else {
             taskMapper.update(task);
+        }
+        // 只有当执行类型不是MANUAL且executeTime不为空时才调度任务
+        if (task.getExecuteType() != ExecuteTypeEnum.MANUAL &&
+                task.getExecuteTime() != null &&
+                !task.getExecuteTime().isEmpty()) {
+            taskSchedulerService.scheduleTask(task);
         }
         return task.getId();
     }
@@ -296,7 +307,7 @@ public class TaskServiceImpl implements TaskService {
         BeanUtils.copyProperties(task,taskDTO);
         List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(id);
         List<Entries> entries = entriesMapper.selectByTaskId(id);
-        taskDTO.setVoucherHeadList(taskVoucherHeads);
+        taskDTO.setVoucherHead(taskVoucherHeads.isEmpty()?null:taskVoucherHeads.get(0));
         taskDTO.setEntriesList(entries);
         return taskDTO;
     }
