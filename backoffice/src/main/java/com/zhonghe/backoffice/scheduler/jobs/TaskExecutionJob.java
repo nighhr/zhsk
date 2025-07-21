@@ -6,13 +6,14 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import java.util.Map;
 
-public class TaskExecutionJob extends QuartzJobBean {
+public class TaskExecutionJob
+//        extends QuartzJobBean
+{
 
-    @Override
+//    @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
         Map<String, Object> params = (Map<String, Object>) jobDataMap.get("params");
@@ -26,6 +27,10 @@ public class TaskExecutionJob extends QuartzJobBean {
         }
         TaskService taskService = applicationContext.getBean(TaskService.class);
 
-        taskService.manualExecution(params);
+        try {
+            taskService.manualExecution(params);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

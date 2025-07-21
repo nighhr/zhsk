@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.adapter.mapper.AT.StoreTranMapper">
+
+    <insert id="insertIgnore" parameterType="com.zhonghe.adapter.model.StoreTran">
+        INSERT IGNORE INTO at_store_tran (
+        FID, FDate, FOutOrgID, FOutOrgNumber, FOutOrgName,
+        FInOrgID, FInOrgNumber, FInOrgName, FRemark,
+        FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, mark
+        ) VALUES (
+        #{FID}, #{FDate}, #{FOutOrgID}, #{FOutOrgNumber}, #{FOutOrgName},
+        #{FInOrgID}, #{FInOrgNumber}, #{FInOrgName}, #{FRemark},
+        #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}, #{mark}
+        )
+    </insert>
+
+    <insert id="batchInsertIgnore" parameterType="java.util.List">
+        INSERT IGNORE INTO at_store_tran (
+        FID, FDate, FOutOrgID, FOutOrgNumber, FOutOrgName,
+        FInOrgID, FInOrgNumber, FInOrgName, FRemark,
+        FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, mark
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.FID}, #{item.FDate}, #{item.FOutOrgID}, #{item.FOutOrgNumber}, #{item.FOutOrgName},
+            #{item.FInOrgID}, #{item.FInOrgNumber}, #{item.FInOrgName}, #{item.FRemark},
+            #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}, #{item.mark}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

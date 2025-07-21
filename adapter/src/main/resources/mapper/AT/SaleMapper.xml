@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.adapter.mapper.AT.SaleMapper">
+
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.Sale">
+        INSERT IGNORE INTO at_sale (
+        FID, FBillNo, FSalesType, FDate, FOrgID, FOrgNumber, FOrgName,FOrgType
+        FGuideID, FGuideNumber, FGuideName, FRemark, FCreateBy, FCreateDate,
+        FUpdateBy, FUpdateDate, mark
+    ) VALUES (
+        #{FID}, #{FBillNo}, #{FSalesType}, #{FDate}, #{FOrgID}, #{FOrgNumber}, #{FOrgName},
+        #{FGuideID}, #{FGuideNumber}, #{FGuideName}, #{FRemark}, #{FCreateBy}, #{FCreateDate},
+        #{FUpdateBy}, #{FUpdateDate}, #{mark}
+        )
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT IGNORE INTO at_sale (
+        FID, FBillNo, FSalesType, FDate, FOrgID, FOrgNumber, FOrgName,FOrgType
+        FGuideID, FGuideNumber, FGuideName, FRemark, FCreateBy, FCreateDate,
+        FUpdateBy, FUpdateDate, mark
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.FID}, #{item.FBillNo}, #{item.FSalesType}, #{item.FDate}, #{item.FOrgID}, #{item.FOrgNumber}, #{item.FOrgName},
+            #{item.FGuideID}, #{item.FGuideNumber}, #{item.FGuideName}, #{item.FRemark}, #{item.FCreateBy}, #{item.FCreateDate},
+            #{item.FUpdateBy}, #{item.FUpdateDate}, #{item.mark}
+            )
+        </foreach>
+    </insert>
+
+
+</mapper>

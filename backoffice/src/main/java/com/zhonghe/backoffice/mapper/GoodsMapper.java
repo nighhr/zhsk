@@ -1,11 +1,13 @@
 package com.zhonghe.backoffice.mapper;
 
 import com.zhonghe.backoffice.model.Goods;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
 
+@Mapper
 public interface GoodsMapper {
 
    /**

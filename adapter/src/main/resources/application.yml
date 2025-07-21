@@ -1,9 +1,9 @@
 spring:
   datasource:
     secondary:
-      jdbc-url: "jdbc:sqlserver://192.168.28.26:1433;databaseName=UFDATA_999_2014;encrypt=true;trustServerCertificate=true"
+      jdbc-url: "jdbc:sqlserver://192.168.28.24:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true"
       username: sa
-      password: "Aa123456"
+      password: Aa123456
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
       hikari:
         pool-name: SecondarySQLServerPool
@@ -12,7 +12,7 @@ spring:
 
 mybatis:
   secondary:
-    mapper-locations: classpath:mapper/u8/*.xml
+    mapper-locations: classpath:mapper/U8/*.xml
     type-aliases-package: com.zhonghe.adapter.model.U8
 
 logging:

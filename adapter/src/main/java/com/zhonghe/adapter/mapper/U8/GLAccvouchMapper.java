@@ -2,6 +2,7 @@ package com.zhonghe.adapter.mapper.U8;
 
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.List;
 
@@ -17,6 +18,6 @@ public interface GLAccvouchMapper {
 
     void batchInsert(List<GLAccvouch> glAccvouchList);
 
-    int selectInoIdMaxByMonth();
+    Integer selectInoIdMaxByMonth();
 
 }

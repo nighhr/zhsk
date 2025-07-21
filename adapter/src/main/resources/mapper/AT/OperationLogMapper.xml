@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhonghe.adapter.mapper.AT.OperationLogMapper">
+
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.OperationLog">
+        INSERT INTO operation_log (
+            task_id,
+            task_name,
+            primary_key_value,
+            log_time,
+            status,
+            input_detail,
+            log_detail
+        ) VALUES (
+                     #{taskId},
+                     #{taskName},
+                     #{primaryKeyValue},
+                     #{logTime},
+                     #{status},
+                     #{inputDetail},
+                     #{logDetail}
+                 )
+    </insert>
+
+    <select id="selectOperationLogList" parameterType="map" resultType="com.zhonghe.adapter.model.OperationLog">
+        SELECT
+        id,
+        task_id as taskId,
+        task_name as taskName,
+        primary_key_value as primaryKeyValue,
+        log_time as logTime,
+        status,
+        input_detail as inputDetail,
+        log_detail as logDetail
+        FROM operation_log
+        <where>
+            <if test="taskName != null and taskName != ''">
+                AND task_name LIKE CONCAT('%', #{taskName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="start != null">
+                AND log_time >= #{start}
+            </if>
+            <if test="end != null">
+                AND log_time &lt;= #{end}
+            </if>
+        </where>
+        ORDER BY log_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectOperationLogCount" parameterType="map" resultType="long">
+        SELECT COUNT(*)
+        FROM operation_log
+        <where>
+            <if test="taskName != null and taskName != ''">
+                AND task_name LIKE CONCAT('%', #{taskName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="start != null">
+                AND log_time >= #{start}
+            </if>
+            <if test="end != null">
+                AND log_time &lt;= #{end}
+            </if>
+        </where>
+    </select>
+
+</mapper>

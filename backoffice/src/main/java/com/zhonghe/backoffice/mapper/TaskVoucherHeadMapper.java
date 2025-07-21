@@ -2,10 +2,12 @@ package com.zhonghe.backoffice.mapper;
 
 
 import com.zhonghe.backoffice.model.TaskVoucherHead;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
+@Mapper
 public interface TaskVoucherHeadMapper {
     /**
      * 插入新记录

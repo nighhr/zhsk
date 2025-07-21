@@ -1,6 +1,5 @@
 package com.zhonghe.backoffice.service;
 
-import com.zhonghe.adapter.model.InsertionErrorLog;
 import com.zhonghe.backoffice.model.DTO.TaskDTO;
 import com.zhonghe.backoffice.model.Entries;
 import com.zhonghe.backoffice.model.Task;
@@ -23,7 +22,7 @@ public interface TaskService {
 
     Integer createSubject(Map<String, Object> params);
 
-    Integer manualExecution(Map<String, Object> params);
+    Integer manualExecution(Map<String, Object> params) throws Exception;
 
     PageResult<Task> getTaskList(Map<String, Object> params);
 
@@ -38,8 +37,6 @@ public interface TaskService {
     Entries getEntryById(Long id);
 
     List<Map<String, Object>> getSubjectByRuleId(Long ruleId);
-
-    List<InsertionErrorLog> getErrorLogsByTaskId(Long taskId);
 
     Boolean changeTaskStatus(Long taskId);
 }

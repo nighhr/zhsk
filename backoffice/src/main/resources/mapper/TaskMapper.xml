@@ -138,6 +138,9 @@
             <if test="params.taskName != null and params.taskName != ''">
                 AND task_name LIKE CONCAT('%', #{params.taskName}, '%')
             </if>
+            <if test="params.status != null and params.status != ''">
+                AND status = #{params.status}
+            </if>
         </where>
         ORDER BY create_time DESC
         LIMIT #{params.offset}, #{params.pageSize}
@@ -149,6 +152,9 @@
         <where>
             <if test="params.taskName != null and params.taskName != ''">
                 AND task_name LIKE CONCAT('%', #{params.taskName}, '%')
+            </if>
+            <if test="params.status != null and params.status != ''">
+                AND status = #{params.status}
             </if>
         </where>
     </select>

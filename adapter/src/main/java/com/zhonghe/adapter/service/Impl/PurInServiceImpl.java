@@ -5,8 +5,8 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.PurInClient;
-import com.zhonghe.adapter.mapper.PurInLineMapper;
-import com.zhonghe.adapter.mapper.PurInMapper;
+import com.zhonghe.adapter.mapper.AT.PurInLineMapper;
+import com.zhonghe.adapter.mapper.AT.PurInMapper;
 import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
 import com.zhonghe.adapter.model.PurIn;
 import com.zhonghe.adapter.model.PurInLine;
@@ -21,6 +21,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -79,6 +80,7 @@ public class PurInServiceImpl implements PurInService {
         }
     }
 
+//    @Transactional(transactionManager = "u8TransactionManager")
     public GLAccvouch DataPurInHandle(AiTeResponse<PurIn> purInResponse, GLAccvouchMapper glAccvouchMapper) {
         int inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
         List<GLAccvouch> glAccvouchDList = new ArrayList<>();

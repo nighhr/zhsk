@@ -15,9 +15,9 @@ import lombok.Getter;
  * */
 @Getter
 public enum ErrorCode {
+    SUCCESS(200, "成功"),
     // 通用错误
-    SUCCESS(100, "成功"),
-    PARAM_ERROR(200, "参数错误"),
+    PARAM_ERROR(101, "参数错误"),
 
     // 认证错误 (01)
     UNAUTHORIZED(201, "登录未授权"),

@@ -1,6 +1,6 @@
 package com.zhonghe.backoffice.controller;
 
-import com.zhonghe.adapter.model.InsertionErrorLog;
+import com.zhonghe.adapter.model.OperationLog;
 import com.zhonghe.backoffice.model.DTO.TaskDTO;
 import com.zhonghe.backoffice.model.Entries;
 import com.zhonghe.backoffice.model.Task;
@@ -12,6 +12,7 @@ import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ public class TaskController {
     @GetMapping("/getTaskList")
     public Result<PageResult<Task>> getTaskList(
             @RequestParam(required = false) String taskName,
+            @RequestParam(required = false) Boolean status,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer pageSize) {
 
@@ -39,6 +41,7 @@ public class TaskController {
         params.put("taskName", taskName);
         params.put("page", page);
         params.put("pageSize", pageSize);
+        params.put("status", status);
 
         PageResult<Task> pageResult = taskService.getTaskList(params);
         return Result.success(pageResult);
@@ -86,27 +89,14 @@ public class TaskController {
     }
 
     @GetMapping("/subject/{ruleId}")
-    public Result<List<Map<String,Object>>> getSubjectByRuleId(@PathVariable Long RuleId) {
-        return Result.success(taskService.getSubjectByRuleId(RuleId));
+    public Result<List<Map<String,Object>>> getSubjectByRuleId(@PathVariable Long ruleId) {
+        return Result.success(taskService.getSubjectByRuleId(ruleId));
     }
 
     //手动执行任务
     @PostMapping("/manualExecution")
-    public Result<Integer> manualExecution(@RequestBody Map<String, Object> params) {
+    public Result<Integer> manualExecution(@RequestBody Map<String, Object> params) throws Exception {
         return Result.success(taskService.manualExecution(params));
-    }
-
-    /**
-     * 获取指定任务的错误日志
-     * @param taskId 任务ID
-     * @return 分页的错误日志列表
-     */
-    @GetMapping("/getErrorLogs")
-    public Result<List<InsertionErrorLog>> getErrorLogsByTaskId(
-            @RequestParam Long taskId
-            ) {
-        List<InsertionErrorLog> pageResult = taskService.getErrorLogsByTaskId(taskId);
-        return Result.success(pageResult);
     }
 
     /**
