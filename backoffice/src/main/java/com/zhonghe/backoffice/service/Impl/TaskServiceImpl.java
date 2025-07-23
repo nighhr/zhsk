@@ -235,9 +235,7 @@ public class TaskServiceImpl implements TaskService {
 
         List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
         //合并处理部门和供应商
-//        System.out.println("glAccvouchList:" + glAccvouchList);
 //        List<GLAccvouch> glAccvouches = process(glAccvouchList);
-//        System.out.println("glAccvouches:" + glAccvouches);
         int totalRecords = glAccvouches.size();
         if (totalRecords == 0) {
             log.info("没有需要处理的凭证数据");
@@ -273,8 +271,6 @@ public class TaskServiceImpl implements TaskService {
             });
             try {
                 glAccvouchMapper.batchInsert(batch);
-//                System.out.println("md=" + batch.get(0).getMd().toPlainString());
-//                System.out.println("mc=" + batch.get(0).getMc().toPlainString());
                 //操作日志
                 saveOperationLog(taskId, task.getTaskName(), voucherKey,
                         "成功", batch, "凭证批量插入成功，数量：" + batch.size());
@@ -539,69 +535,6 @@ public class TaskServiceImpl implements TaskService {
         return glAccvouch;
     }
 
-    /**
-     * 分离处理借方(md)和贷方(mc)记录
-     * <p>
-     * 按照cdeptId(部门ID)和csupId(供应商ID)分组汇总
-     * <p>
-     * 合并处理后的借贷记录并返回
-     */
-    public static List<GLAccvouch> process(List<GLAccvouch> glAccvouches) {
-        // 处理借方(md)记录
-        List<GLAccvouch> debitRecords = glAccvouches.stream()
-                .filter(record -> record.getMd() != null && record.getMd().compareTo(BigDecimal.ZERO) != 0)
-                .collect(Collectors.groupingBy(
-                        record -> Arrays.asList( record.getCdeptId(), record.getCsupId()),
-                        Collectors.collectingAndThen(
-                                Collectors.toList(),
-                                records -> {
-                                    BigDecimal sumMd = records.stream()
-                                            .map(GLAccvouch::getMd)
-                                            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                                    GLAccvouch base = records.get(0); // 用第一个记录作为代表
-                                    GLAccvouch merged = copyBasicFields(base); // 复制原始字段
-                                    merged.setMd(sumMd);
-                                    merged.setMc(BigDecimal.ZERO);
-                                    return merged;
-                                }
-                        )
-                ))
-                .values()
-                .stream()
-                .collect(Collectors.toList());
-
-        // 处理贷方(mc)记录
-        List<GLAccvouch> creditRecords = glAccvouches.stream()
-                .filter(record -> record.getMc() != null && record.getMc().compareTo(BigDecimal.ZERO) != 0)
-                .collect(Collectors.groupingBy(
-                        record -> Arrays.asList(record.getCdeptId(), record.getCsupId()),
-                        Collectors.collectingAndThen(
-                                Collectors.toList(),
-                                records -> {
-                                    BigDecimal sumMc = records.stream()
-                                            .map(GLAccvouch::getMc)
-                                            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                                    GLAccvouch base = records.get(0); // 用第一个记录作为代表
-                                    GLAccvouch merged = copyBasicFields(base); // 复制原始字段
-                                    merged.setMd(BigDecimal.ZERO);
-                                    merged.setMc(sumMc);
-                                    return merged;
-                                }
-                        )
-                ))
-                .values()
-                .stream()
-                .collect(Collectors.toList());
-
-        // 合并借方和贷方记录
-        List<GLAccvouch> result = new ArrayList<>();
-        result.addAll(debitRecords);
-        result.addAll(creditRecords);
-
-        return result;
-    }
 
     private static GLAccvouch copyBasicFields(GLAccvouch source) {
         GLAccvouch target = new GLAccvouch();
@@ -737,7 +670,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         // 2. 查询数据（mark != 1的记录）
-        String querySql = "SELECT * FROM " + sourceTable + " WHERE mark != 1 AND FDate BETWEEN ? AND ?";
+        String querySql = "SELECT * FROM " + sourceTable + " WHERE FDate BETWEEN ? AND ?";
         List<Map<String, Object>> results = jdbcTemplate.queryForList(querySql, start, end);
 
         if (results.isEmpty()) {

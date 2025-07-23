@@ -29,7 +29,7 @@
             FID, FOrderNo, FDate, FDepID, FDepNumber, FDepName,
             FSupplierID, FSupplierNumber, FSupplierName, FRemark,
             FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, FBillType,
-            sync_flag, sync_time, mark
+            sync_flag, sync_time
         ) VALUES (
                      #{FID,jdbcType=VARCHAR},
                      #{FOrderNo,jdbcType=VARCHAR},
@@ -47,8 +47,7 @@
                      #{FUpdateDate,jdbcType=VARCHAR},
                      #{FBillType,jdbcType=VARCHAR},
                      #{sync_flag,jdbcType=TINYINT},
-                     #{sync_time,jdbcType=TIMESTAMP},
-                     #{mark,jdbcType=TINYINT}
+                     #{sync_time,jdbcType=TIMESTAMP}
                  )
     </insert>
 
@@ -58,7 +57,7 @@
         FID, FOrderNo, FDate, FDepID, FDepNumber, FDepName,
         FSupplierID, FSupplierNumber, FSupplierName, FRemark,
         FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, FBillType,
-        sync_flag, sync_time, mark
+        sync_flag, sync_time
         ) VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (
@@ -78,8 +77,7 @@
             #{item.FUpdateDate,jdbcType=VARCHAR},
             #{item.FBillType,jdbcType=VARCHAR},
             #{item.sync_flag,jdbcType=TINYINT},
-            #{item.sync_time,jdbcType=TIMESTAMP},
-            #{item.mark,jdbcType=TINYINT}
+            #{item.sync_time,jdbcType=TIMESTAMP}
             )
         </foreach>
     </insert>
