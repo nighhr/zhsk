@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -89,6 +90,8 @@ public class TaskServiceImpl implements TaskService {
     private DbConnectionService dbConnectionService;
     @Autowired
     private OperationLogMapper operationLogMapper;
+    @Autowired
+    private ServiceBoxService serviceBoxService;
 
     // 添加映射规则缓存
     private final Map<String, List<TableMapping>> tableMappingCache = new ConcurrentHashMap<>();
@@ -248,19 +251,35 @@ public class TaskServiceImpl implements TaskService {
         }
         int baseInoId = inoIdMax + 1;
 
-        // 使用原子计数器分配ID
+        // 将 glAccvouches 拆分，md == 0 优先
+        List<GLAccvouch> mdZeroList = glAccvouches.stream()
+                .filter(item -> item.getMd() != null && item.getMd().compareTo(BigDecimal.ZERO) == 0)
+                .collect(Collectors.toList());
+
+        List<GLAccvouch> otherList = glAccvouches.stream()
+                .filter(item -> item.getMd() == null || item.getMd().compareTo(BigDecimal.ZERO) != 0)
+                .collect(Collectors.toList());
+
+// 合并：md == 0 的在后面
+        List<GLAccvouch> sortedList = new ArrayList<>();
+        sortedList.addAll(otherList);
+        sortedList.addAll(mdZeroList);
+
+// 使用原子计数器分配ID
         AtomicInteger inidCounter = new AtomicInteger(1);
-        glAccvouches.forEach(item -> {
+        sortedList.forEach(item -> {
             item.setInoId(baseInoId);
             item.setInid(inidCounter.getAndIncrement());
         });
 
+        int totalRecord = sortedList.size();
         int batchSize = 1000;
-        int totalBatches = (totalRecords + batchSize - 1) / batchSize;
+        int totalBatches = (totalRecord + batchSize - 1) / batchSize;
 
         IntStream.range(0, totalBatches).map(batchIndex -> batchIndex * batchSize).forEach(fromIndex -> {
-            int toIndex = Math.min(fromIndex + batchSize, totalRecords);
-            List<GLAccvouch> batch = glAccvouches.subList(fromIndex, toIndex);
+            int toIndex = Math.min(fromIndex + batchSize, totalRecord);
+            List<GLAccvouch> batch = sortedList.subList(fromIndex, toIndex);
+
             batch.forEach(item -> {
                 if (item.getMd() != null) {
                     item.setMd(item.getMd().setScale(4, RoundingMode.HALF_UP));
@@ -269,13 +288,14 @@ public class TaskServiceImpl implements TaskService {
                     item.setMc(item.getMc().setScale(4, RoundingMode.HALF_UP));
                 }
             });
+
             try {
                 glAccvouchMapper.batchInsert(batch);
-                //操作日志
+                // 操作日志
                 saveOperationLog(taskId, task.getTaskName(), voucherKey,
                         "成功", batch, "凭证批量插入成功，数量：" + batch.size());
             } catch (Exception e) {
-                //操作日志
+                // 操作日志
                 saveOperationLog(taskId, task.getTaskName(), voucherKey,
                         "失败", batch, getStackTraceAsString(e));
             }
@@ -505,7 +525,12 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setNcS(ZERO_DOUBLE);
         glAccvouch.setBFlagOut(false);
         glAccvouch.setIsignseq(1);
-        glAccvouch.setDbillDate(new Date());
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay(); // 2025-07-23T00:00
+        // 转成 Date
+        Date zeroDate = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
+        glAccvouch.setDbillDate(zeroDate);
         glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
 
         // 使用缓存处理映射
@@ -715,6 +740,9 @@ public class TaskServiceImpl implements TaskService {
                 break;
             case "at_store_tran":
                 storeTranService.getStoreTran(currentPage, pageSize, start, end);
+                break;
+            case "at_service_box":
+                serviceBoxService.getServiceBox(currentPage, pageSize, start, end);
                 break;
         }
     }

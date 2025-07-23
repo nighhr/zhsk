@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.adapter.mapper.AT.ServiceBoxMapper">
+
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.ServiceBox">
+        INSERT IGNORE INTO at_service_box (
+      FID, FBillNo, FOrgID, FOrgNumber, FOrgName, FDate,
+      FBillNoOut, FTisQty, FQty, FPrice, FTotalPrice, FCard,
+      FMaterialID, FMaterialNumber, FMaterialName, FMaterialTypeNumber, FMaterialTypeName,
+      FUnit, FSaleBillNo, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate
+    ) VALUES (
+        #{FID}, #{FBillNo}, #{FOrgID}, #{FOrgNumber}, #{FOrgName}, #{FDate},
+        #{FBillNoOut}, #{FTisQty}, #{FQty}, #{FPrice}, #{FTotalPrice}, #{FCard},
+        #{FMaterialID}, #{FMaterialNumber}, #{FMaterialName}, #{FMaterialTypeNumber}, #{FMaterialTypeName},
+        #{FUnit}, #{FSaleBillNo}, #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}
+        )
+    </insert>
+    <!-- 批量插入，使用 INSERT IGNORE -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT IGNORE INTO at_service_box (
+        FID, FBillNo, FOrgID, FOrgNumber, FOrgName, FDate,
+        FBillNoOut, FTisQty, FQty, FPrice, FTotalPrice, FCard,
+        FMaterialID, FMaterialNumber, FMaterialName, FMaterialTypeNumber, FMaterialTypeName,
+        FUnit, FSaleBillNo, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.FID}, #{item.FBillNo}, #{item.FOrgID}, #{item.FOrgNumber}, #{item.FOrgName}, #{item.FDate},
+            #{item.FBillNoOut}, #{item.FTisQty}, #{item.FQty}, #{item.FPrice}, #{item.FTotalPrice}, #{item.FCard},
+            #{item.FMaterialID}, #{item.FMaterialNumber}, #{item.FMaterialName}, #{item.FMaterialTypeNumber}, #{item.FMaterialTypeName},
+            #{item.FUnit}, #{item.FSaleBillNo}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

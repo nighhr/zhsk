@@ -27,6 +27,8 @@ public class AiTeController {
     private StockTakeService stockTakeService;
     @Autowired
     private ServiceCostService serviceCostService;
+    @Autowired
+    private ServiceBoxService serviceBoxService;
 
     /**
      * 采购入库接口
@@ -92,6 +94,12 @@ public class AiTeController {
     public void getServiceCostData(@RequestBody ApiRequest apiRequest) {
        serviceCostService.getServiceCost(apiRequest.getCurrent_page(), apiRequest.getPage_size(), apiRequest.getStart(), apiRequest.getEnd());
     }
-
+    /**
+     * 服务消费查询接口
+     */
+    @PostMapping("/getServiceBox")
+    public void getServiceBoxData(@RequestBody ApiRequest apiRequest) {
+        serviceBoxService.getServiceBox(apiRequest.getCurrent_page(), apiRequest.getPage_size(), apiRequest.getStart(), apiRequest.getEnd());
+    }
 
 }
