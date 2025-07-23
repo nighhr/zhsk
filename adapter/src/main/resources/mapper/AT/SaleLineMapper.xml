@@ -1,35 +1,44 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="com.zhonghe.adapter.mapper.AT.SaleLineMapper">
+
     <insert id="insertSaleLine" parameterType="com.zhonghe.adapter.model.SaleLine">
         INSERT IGNORE INTO at_sale_line (
-            FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName, FMaterialTypeNumber,
-            FMaterialTypeName, FUnit, FSaleNum, FSalesPrice, FDealPrice, FRate, FDiscount,
-            FAllAmount, FStockPrice, FStockID, FStockNumber, FStockName, FBatch, FPayWay,
-            FPayWayName, FPayMoney
+            id, FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName,
+            FMaterialTypeNumber, FMaterialTypeName, FUnit, FSaleNum, FSalesPrice,
+            FDealPrice, FRate, FDiscount, FAllAmount, FStockPrice,
+            FStockID, FStockNumber, FStockName, FBatch,
+            FPayWay, FPayWayName, FPayMoney
         ) VALUES (
-        #{FID}, #{FEntryID}, #{FMaterialID}, #{FMaterialNumber}, #{FMaterialName}, #{FMaterialTypeNumber},
-        #{FMaterialTypeName}, #{FUnit}, #{FSaleNum}, #{FSalesPrice}, #{FDealPrice}, #{FRate}, #{FDiscount},
-        #{FAllAmount}, #{FStockPrice}, #{FStockID}, #{FStockNumber}, #{FStockName}, #{FBatch}, #{FPayWay},
-        #{FPayWayName}, #{FPayMoney}
+        #{id}, #{FID}, #{FEntryID}, #{FMaterialID}, #{FMaterialNumber}, #{FMaterialName},
+        #{FMaterialTypeNumber}, #{FMaterialTypeName}, #{FUnit}, #{FSaleNum}, #{FSalesPrice},
+        #{FDealPrice}, #{FRate}, #{FDiscount}, #{FAllAmount}, #{FStockPrice},
+        #{FStockID}, #{FStockNumber}, #{FStockName}, #{FBatch},
+        #{FPayWay}, #{FPayWayName}, #{FPayMoney}
         )
     </insert>
 
-    <!-- 明细表批量插入 -->
+    <!-- 批量插入 SaleLine（忽略 FEntryID 冲突） -->
     <insert id="batchInsertSaleLine" parameterType="java.util.List">
         INSERT IGNORE INTO at_sale_line (
-        FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName, FMaterialTypeNumber,
-        FMaterialTypeName, FUnit, FSaleNum, FSalesPrice, FDealPrice, FRate, FDiscount,
-        FAllAmount, FStockPrice, FStockID, FStockNumber, FStockName, FBatch, FPayWay,
-        FPayWayName, FPayMoney
-        ) VALUES
+        id, FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName,
+        FMaterialTypeNumber, FMaterialTypeName, FUnit, FSaleNum, FSalesPrice,
+        FDealPrice, FRate, FDiscount, FAllAmount, FStockPrice,
+        FStockID, FStockNumber, FStockName, FBatch,
+        FPayWay, FPayWayName, FPayMoney
+        )
+        VALUES
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.FID}, #{item.FEntryID}, #{item.FMaterialID}, #{item.FMaterialNumber}, #{item.FMaterialName}, #{item.FMaterialTypeNumber},
-            #{item.FMaterialTypeName}, #{item.FUnit}, #{item.FSaleNum}, #{item.FSalesPrice}, #{item.FDealPrice}, #{item.FRate}, #{item.FDiscount},
-            #{item.FAllAmount}, #{item.FStockPrice}, #{item.FStockID}, #{item.FStockNumber}, #{item.FStockName}, #{item.FBatch}, #{item.FPayWay},
-            #{item.FPayWayName}, #{item.FPayMoney}
+            #{item.id}, #{item.FID}, #{item.FEntryID}, #{item.FMaterialID}, #{item.FMaterialNumber}, #{item.FMaterialName},
+            #{item.FMaterialTypeNumber}, #{item.FMaterialTypeName}, #{item.FUnit}, #{item.FSaleNum}, #{item.FSalesPrice},
+            #{item.FDealPrice}, #{item.FRate}, #{item.FDiscount}, #{item.FAllAmount}, #{item.FStockPrice},
+            #{item.FStockID}, #{item.FStockNumber}, #{item.FStockName}, #{item.FBatch},
+            #{item.FPayWay}, #{item.FPayWayName}, #{item.FPayMoney}
             )
         </foreach>
     </insert>
+
 </mapper>

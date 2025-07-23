@@ -10,6 +10,8 @@ public class ApiRequest {
     private Integer page_size = 50;
     private String start;
     private String end;
+    public ApiRequest() {
+    }
     // 构造器
     public ApiRequest(Integer current_page, Integer page_size) {
         this.current_page = current_page;

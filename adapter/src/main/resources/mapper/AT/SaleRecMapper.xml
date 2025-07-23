@@ -4,31 +4,31 @@
 
     <insert id="insert" parameterType="com.zhonghe.adapter.model.SaleRec">
         INSERT IGNORE INTO at_sale_rec (
-            FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
+            ID, FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
             FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
             FSetTypeName, FMemberID, FPayMoney, FRemark, FCreateBy,
-            FCreateDate, FUpdateBy, FUpdateDate, mark
+            FCreateDate, FUpdateBy, FUpdateDate, sync_flag, sync_time
         ) VALUES (
-        #{fid}, #{fBillNo}, #{fSalesNo}, #{fOrgId}, #{fOrgNumber}, #{fOrgName},
-        #{fDate}, #{fSaleType}, #{fSaleTypeName}, #{fSrcEntryId}, #{fSetType},
-        #{fSetTypeName}, #{fMemberId}, #{fPayMoney}, #{fRemark}, #{fCreateBy},
-        #{fCreateDate}, #{fUpdateBy}, #{fUpdateDate}, #{mark}
+        #{ID}, #{FID}, #{FBillNo}, #{FSalesNo}, #{FOrgID}, #{FOrgNumber}, #{FOrgName},
+        #{FDate}, #{FSaleType}, #{FSaleTypeName}, #{FSrcEntryID}, #{FSetType},
+        #{FSetTypeName}, #{FMemberID}, #{FPayMoney}, #{FRemark}, #{FCreateBy},
+        #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}, #{sync_flag}, #{sync_time}
         )
     </insert>
 
     <insert id="batchInsert" parameterType="java.util.List">
         INSERT IGNORE INTO at_sale_rec (
-        FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
+        ID, FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
         FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
         FSetTypeName, FMemberID, FPayMoney, FRemark, FCreateBy,
-        FCreateDate, FUpdateBy, FUpdateDate, mark
+        FCreateDate, FUpdateBy, FUpdateDate, sync_flag, sync_time
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.fid}, #{item.fBillNo}, #{item.fSalesNo}, #{item.fOrgId}, #{item.fOrgNumber}, #{item.fOrgName},
-            #{item.fDate}, #{item.fSaleType}, #{item.fSaleTypeName}, #{item.fSrcEntryId}, #{item.fSetType},
-            #{item.fSetTypeName}, #{item.fMemberId}, #{item.fPayMoney}, #{item.fRemark}, #{item.fCreateBy},
-            #{item.fCreateDate}, #{item.fUpdateBy}, #{item.fUpdateDate}, #{item.mark}
+            #{item.ID}, #{item.FID}, #{item.FBillNo}, #{item.FSalesNo}, #{item.FOrgID}, #{item.FOrgNumber}, #{item.FOrgName},
+            #{item.FDate}, #{item.FSaleType}, #{item.FSaleTypeName}, #{item.FSrcEntryID}, #{item.FSetType},
+            #{item.FSetTypeName}, #{item.FMemberID}, #{item.FPayMoney}, #{item.FRemark}, #{item.FCreateBy},
+            #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}, #{item.sync_flag}, #{item.sync_time}
             )
         </foreach>
     </insert>

@@ -54,6 +54,8 @@ logging:
   level:
     org.mybatis: DEBUG
     com.zhonghe.backoffice.mapper: DEBUG
+    com.zhonghe.adapter.feign: DEBUG
+    feign.Logger: DEBUG
 
 feign:
   client:

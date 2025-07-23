@@ -10,8 +10,4 @@ public interface PurRetMapper {
     // 主表插入
     int insert(PurRet purRet);
 
-    // 主表批量插入
-    int batchInsert(List<PurRet> purRetList);
-
-
 }

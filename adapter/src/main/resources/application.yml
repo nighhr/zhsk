@@ -18,3 +18,11 @@ mybatis:
 logging:
   level:
     com.zhonghe.adapter.mapper.U8: DEBUG
+    com.zhonghe.adapter.feign: DEBUG
+
+    # 启用 Feign 底层日志
+    feign.Logger: DEBUG
+
+    # 可选：启用 HTTP 客户端日志（如果是 OkHttp 或 Apache HttpClient）
+    feign.okhttp.OkHttpClient: DEBUG
+    org.apache.http.wire: DEBUG

@@ -3,32 +3,17 @@
 <mapper namespace="com.zhonghe.adapter.mapper.AT.PurRetMapper">
 
     <!-- 主表插入 -->
-    <insert id="insert" parameterType="com.zhonghe.adapter.model.PurRet">
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.PurRet" useGeneratedKeys="true" keyProperty="id">
         INSERT IGNORE INTO at_pur_ret (
-            FID, FBillType, FFactoryType, FDepID, FDepNumber, FDepName,
-            FDate, FSupplierID, FSupplierNumber, FSupplierName, FReason,
-            FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, #{mark}
-        ) VALUES (
-        #{FID}, #{FBillType}, #{FFactoryType}, #{FDepID}, #{FDepNumber}, #{FDepName},
-        #{FDate}, #{FSupplierID}, #{FSupplierNumber}, #{FSupplierName}, #{FReason},
-        #{FRemark}, #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}, #{mark}
+        FID, FBillType, FFactoryType, FDepID, FDepNumber, FDepName, FDate,
+        FSupplierID, FSupplierNumber, FSupplierName, FReason, FRemark,
+        FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, sync_flag, sync_time
+    ) VALUES (
+        #{FID}, #{FBillType}, #{FFactoryType}, #{FDepID}, #{FDepNumber}, #{FDepName}, #{FDate},
+        #{FSupplierID}, #{FSupplierNumber}, #{FSupplierName}, #{FReason}, #{FRemark},
+        #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}, #{sync_flag}, #{sync_time}
         )
     </insert>
 
-    <!-- 主表批量插入 -->
-    <insert id="batchInsert" parameterType="java.util.List">
-        INSERT IGNORE INTO at_pur_ret (
-        FID, FBillType, FFactoryType, FDepID, FDepNumber, FDepName,
-        FDate, FSupplierID, FSupplierNumber, FSupplierName, FReason,
-        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, mark
-        ) VALUES
-        <foreach collection="list" item="item" separator=",">
-            (
-            #{item.FID}, #{item.FBillType}, #{item.FFactoryType}, #{item.FDepID}, #{item.FDepNumber}, #{item.FDepName},
-            #{item.FDate}, #{item.FSupplierID}, #{item.FSupplierNumber}, #{item.FSupplierName}, #{item.FReason},
-            #{item.FRemark}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}, #{item.mark}
-            )
-        </foreach>
-    </insert>
 
 </mapper>

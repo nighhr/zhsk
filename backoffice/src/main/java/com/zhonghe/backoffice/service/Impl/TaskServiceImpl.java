@@ -10,6 +10,7 @@ import java.io.StringWriter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +30,7 @@ import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.PageResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -203,7 +205,8 @@ public class TaskServiceImpl implements TaskService {
                     start = firstDay.format(formatter);
                 }
             }
-//            start = "2025-04-01 00:00:00";
+            //todo 时间记得注释掉
+            start = "2025-04-01 00:00:00";
 
             // 处理结束时间
             if (!params.containsKey("endTime")) {
@@ -230,11 +233,11 @@ public class TaskServiceImpl implements TaskService {
         List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
         String voucherKey = taskVoucherHeads.isEmpty() ? "id" : taskVoucherHeads.get(0).getVoucherKey();
 
-        List<GLAccvouch> glAccvouchList = handleExecution(task, start, end);
+        List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
         //合并处理部门和供应商
-        System.out.println("glAccvouchList:" + glAccvouchList);
-        List<GLAccvouch> glAccvouches = process(glAccvouchList);
-        System.out.println("glAccvouches:" + glAccvouches);
+//        System.out.println("glAccvouchList:" + glAccvouchList);
+//        List<GLAccvouch> glAccvouches = process(glAccvouchList);
+//        System.out.println("glAccvouches:" + glAccvouches);
         int totalRecords = glAccvouches.size();
         if (totalRecords == 0) {
             log.info("没有需要处理的凭证数据");
@@ -260,8 +263,18 @@ public class TaskServiceImpl implements TaskService {
         IntStream.range(0, totalBatches).map(batchIndex -> batchIndex * batchSize).forEach(fromIndex -> {
             int toIndex = Math.min(fromIndex + batchSize, totalRecords);
             List<GLAccvouch> batch = glAccvouches.subList(fromIndex, toIndex);
+            batch.forEach(item -> {
+                if (item.getMd() != null) {
+                    item.setMd(item.getMd().setScale(4, RoundingMode.HALF_UP));
+                }
+                if (item.getMc() != null) {
+                    item.setMc(item.getMc().setScale(4, RoundingMode.HALF_UP));
+                }
+            });
             try {
                 glAccvouchMapper.batchInsert(batch);
+//                System.out.println("md=" + batch.get(0).getMd().toPlainString());
+//                System.out.println("mc=" + batch.get(0).getMc().toPlainString());
                 //操作日志
                 saveOperationLog(taskId, task.getTaskName(), voucherKey,
                         "成功", batch, "凭证批量插入成功，数量：" + batch.size());
@@ -389,7 +402,7 @@ public class TaskServiceImpl implements TaskService {
         Set<String> mainColumn = results.get(0).keySet();
 
         return processEntries(
-                task.getId(), sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear
+                task.getId(), sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear,start,end
         );
     }
 
@@ -420,14 +433,22 @@ public class TaskServiceImpl implements TaskService {
 
     private String buildFullSQL(
             String baseSelect, Map<String, Object> subject,
-            Set<String> mainColumn, Entries entries
-    ) {
+            Set<String> mainColumn, Entries entries, String start, String end,
+            String sourceTable) {
         StringBuilder finalSql = new StringBuilder(baseSelect);
         List<String> groupByFields = new ArrayList<>();
 
+        // Add time validation if start and end are not empty
+        if (StringUtils.isNotBlank(start) && StringUtils.isNotBlank(end)) {
+            finalSql.append(" AND a.FDate >= '").append(start).append("'");
+            finalSql.append(" AND a.FDate <= '").append(end).append("'");
+        }
+
         for (String field : subject.keySet()) {
-            if ("subject_list".equals(field) || "id".equals(field) || "rule_id".equals(field) || "create_time".equals(field) || "update_time".equals(field))
+            if ("subject_list".equals(field) || "id".equals(field) || "rule_id".equals(field) ||
+                    "create_time".equals(field) || "update_time".equals(field)) {
                 continue;
+            }
 
             if ("subject_code".equals(field)) {
                 int index = finalSql.indexOf("AS total");
@@ -446,8 +467,14 @@ public class TaskServiceImpl implements TaskService {
             groupByFields.add("a.FSupplierNumber");
         }
         if (entries.getDepartmentAccounting()) {
-            finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
-            groupByFields.add("a.FDepNumber");
+            if (sourceTable.equals("at_sale")||sourceTable.equals("at_sale_rec")||sourceTable.equals("at_service_card")
+                    ||sourceTable.equals("at_stock_take")){
+                finalSql.insert(index + "AS total".length(), ", a.FOrgNumber");
+                groupByFields.add("a.FOrgNumber");
+            }else{
+                finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
+                groupByFields.add("a.FDepNumber");
+            }
         }
 
         if (!groupByFields.isEmpty()) {
@@ -469,7 +496,11 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setIyear(iyear);
         glAccvouch.setIdoc(0);
         glAccvouch.setIbook(0);
-        glAccvouch.setCdeptId(queryData.get("FDepNumber") == null ? null : queryData.get("FDepNumber").toString());
+        if(queryData.get("FDepNumber")!=null ){
+            glAccvouch.setCdeptId(queryData.get("FDepNumber").toString());
+        }else if (queryData.get("FOrgNumber")!=null ){
+            glAccvouch.setCdeptId(queryData.get("FOrgNumber").toString());
+        }
         glAccvouch.setCsupId(queryData.get("FSupplierNumber") == null ? null : queryData.get("FSupplierNumber").toString());
         glAccvouch.setCsign(taskVoucherHead.getVoucherWord());
         glAccvouch.setCcode(queryData.get("subject_code").toString());
@@ -477,6 +508,7 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setNdS(ZERO_DOUBLE);
         glAccvouch.setNcS(ZERO_DOUBLE);
         glAccvouch.setBFlagOut(false);
+        glAccvouch.setIsignseq(1);
         glAccvouch.setDbillDate(new Date());
         glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
 
@@ -519,7 +551,7 @@ public class TaskServiceImpl implements TaskService {
         List<GLAccvouch> debitRecords = glAccvouches.stream()
                 .filter(record -> record.getMd() != null && record.getMd().compareTo(BigDecimal.ZERO) != 0)
                 .collect(Collectors.groupingBy(
-                        record -> Arrays.asList(record.getCcode(), record.getCdeptId(), record.getCsupId()),
+                        record -> Arrays.asList( record.getCdeptId(), record.getCsupId()),
                         Collectors.collectingAndThen(
                                 Collectors.toList(),
                                 records -> {
@@ -575,6 +607,7 @@ public class TaskServiceImpl implements TaskService {
         GLAccvouch target = new GLAccvouch();
         target.setIperiod(source.getIperiod());
         target.setIYPeriod(source.getIYPeriod());
+        target.setIsignseq(source.getIsignseq());
         target.setIyear(source.getIyear());
         target.setIdoc(source.getIdoc());
         target.setIbook(source.getIbook());
@@ -614,7 +647,13 @@ public class TaskServiceImpl implements TaskService {
             String targetCol = columnMapping.getTargetColumnName();
 
             Object sourceValue = queryData.get(sourceCol);
-            if (sourceValue == null) continue;
+            if (sourceValue == null) {
+                if(queryData.get("FOrgNumber") != null){
+                    sourceValue = queryData.get("FOrgNumber");
+                }else{
+                    continue;
+                }
+            }
 
             // 使用缓存获取值映射
             Map<String, String> valueMap = valueMappingCache.computeIfAbsent(Long.valueOf(columnMapping.getId()),
@@ -654,7 +693,7 @@ public class TaskServiceImpl implements TaskService {
     // 使用并行流处理分录
     private List<GLAccvouch> processEntries(
             Long taskId, String sourceTable, String detailTable,
-            Set<String> mainColumn, TaskVoucherHead taskVoucherHead, int currentPeriod, Integer iYPeriod, Integer iyear
+            Set<String> mainColumn, TaskVoucherHead taskVoucherHead, int currentPeriod, Integer iYPeriod, Integer iyear,String start,String end
     ) throws Exception {
 
         List<GLAccvouch> sendData = Collections.synchronizedList(new ArrayList<>());
@@ -674,7 +713,7 @@ public class TaskServiceImpl implements TaskService {
             String baseSelect = buildBaseSelectSQL(entries, sourceTable, detailTable);
 
             for (Map<String, Object> subject : subjects) {
-                String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries);
+                String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries,start,end,task.getSourceTable());
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
 
                 for (Map<String, Object> queryData : queryResults) {
@@ -698,7 +737,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         // 2. 查询数据（mark != 1的记录）
-        String querySql = "SELECT * FROM " + sourceTable + " WHERE STR_TO_DATE(FDate, '%Y/%c/%d %H:%i:%s') BETWEEN ? AND ? ";
+        String querySql = "SELECT * FROM " + sourceTable + " WHERE mark != 1 AND FDate BETWEEN ? AND ?";
         List<Map<String, Object>> results = jdbcTemplate.queryForList(querySql, start, end);
 
         if (results.isEmpty()) {

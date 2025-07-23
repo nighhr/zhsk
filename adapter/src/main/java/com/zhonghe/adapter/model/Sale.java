@@ -1,6 +1,7 @@
 package com.zhonghe.adapter.model;
 
 import lombok.Data;
+
 import java.util.Date;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class Sale {
     private String FBillNo;
     private Integer FSalesType;
     private Date FDate;
-    //1:直营门店, 2:加盟门店, 6:测试门店, 9:物流中心
+    // 1:直营门店, 2:加盟门店, 6:测试门店, 9:物流中心
     private String FOrgType;
     private String FOrgID;
     private String FOrgNumber;
@@ -25,6 +26,8 @@ public class Sale {
     private String FUpdateBy;
     private Date FUpdateDate;
     private Boolean mark = false;
+    private Boolean syncFlag;
+    private Date syncTime;
 
-    private List<SaleLine> entries;
+    private List<SaleLine> FEntry;
 }

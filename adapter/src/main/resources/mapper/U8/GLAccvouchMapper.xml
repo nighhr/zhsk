@@ -64,7 +64,7 @@
         VALUES
         <foreach collection="list" item="product" separator=",">
             (
-            #{product.iperiod}, #{product.csign}, #{product.isignseq}, #{product.inoId}, #{product.inid}, '2015-01-31', #{product.idoc},
+            #{product.iperiod}, #{product.csign}, #{product.isignseq}, #{product.inoId}, #{product.inid}, #{product.dbillDate}, #{product.idoc},
             #{product.cbill}, #{product.ccheck}, #{product.cbook}, #{product.ibook}, #{product.ccashier}, #{product.iflag}, #{product.ctext1}, #{product.ctext2},
             #{product.cdigest}, #{product.ccode}, #{product.cexchName}, #{product.md}, #{product.mc}, #{product.mdF}, #{product.mcF}, #{product.nfrat}, #{product.ndS},
             #{product.ncS},#{product.iYPeriod},#{product.iyear},#{product.cdeptId},#{product.csupId}

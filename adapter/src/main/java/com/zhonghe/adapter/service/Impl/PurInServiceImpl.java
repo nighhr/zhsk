@@ -80,7 +80,7 @@ public class PurInServiceImpl implements PurInService {
         }
     }
 
-//    @Transactional(transactionManager = "u8TransactionManager")
+/*//    @Transactional(transactionManager = "u8TransactionManager")
     public GLAccvouch DataPurInHandle(AiTeResponse<PurIn> purInResponse, GLAccvouchMapper glAccvouchMapper) {
         int inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
         List<GLAccvouch> glAccvouchDList = new ArrayList<>();
@@ -200,5 +200,5 @@ public class PurInServiceImpl implements PurInService {
         DataPurInHandle(purInResponse, mapper);
         return null;
 
-    }
+    }*/
 }

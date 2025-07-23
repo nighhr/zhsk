@@ -4,6 +4,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.SaleClient;
+import com.zhonghe.adapter.feign.SaleRecClient;
 import com.zhonghe.adapter.mapper.AT.SaleRecMapper;
 import com.zhonghe.adapter.model.SaleRec;
 import com.zhonghe.adapter.service.SaleRecService;
@@ -14,16 +15,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class SaleRecServiceImpl implements SaleRecService {
 
-    private final SaleClient saleClient;
+    private final SaleRecClient saleRecClient;
 
     @Autowired
-    private SaleRecMapper saleMapper;
+    private SaleRecMapper saleRecMapper;
 
 
     @Override
@@ -32,7 +34,10 @@ public class SaleRecServiceImpl implements SaleRecService {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            String responseString = saleClient.querySaleRaw(request);
+            HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
+            objectObjectHashMap.put("current_page", currentPage);
+            objectObjectHashMap.put("page_size", pageSize);
+            String responseString = saleRecClient.querySaleRecRaw(objectObjectHashMap);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
@@ -42,7 +47,7 @@ public class SaleRecServiceImpl implements SaleRecService {
                     break;
                 } else {
                     for (SaleRec saleRec : SaleRecsList) {
-                        saleMapper.insert(saleRec);
+                        saleRecMapper.insert(saleRec);
                     }
                     currentPage++;
                 }

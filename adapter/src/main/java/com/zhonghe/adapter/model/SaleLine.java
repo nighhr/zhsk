@@ -6,7 +6,7 @@ import lombok.Data;
 public class SaleLine {
     private Long id;
     private String FID;
-    private Integer FEntryID;
+    private String FEntryID;
     private String FMaterialID;
     private String FMaterialNumber;
     private String FMaterialName;

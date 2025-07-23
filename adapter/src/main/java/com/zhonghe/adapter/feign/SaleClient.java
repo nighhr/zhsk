@@ -6,6 +6,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.HashMap;
+
 
 @FeignClient(name = "saleClient", url = "${api.base-url}", configuration = FeignConfig.class)
 public interface SaleClient {
@@ -15,5 +17,5 @@ public interface SaleClient {
             consumes = "application/json",
             produces = "application/json"
     )
-    String querySaleRaw(@RequestBody ApiRequest request);
+    String querySaleRaw(@RequestBody HashMap request);
 }
