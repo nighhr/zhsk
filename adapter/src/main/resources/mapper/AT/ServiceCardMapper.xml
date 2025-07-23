@@ -2,33 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zhonghe.adapter.mapper.AT.ServiceCardMapper">
 
-    <!-- 主表插入(忽略重复) -->
-    <insert id="insertIgnore" parameterType="com.zhonghe.adapter.model.ServiceCard">
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.ServiceCard">
         INSERT IGNORE INTO at_service_card (
-            FID, FBillNo, FBillType, FDate, FOrgID, FOrgNumber, FOrgName,
-            FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate,
-            FPayID, FPayWay, FPayDate, FPayMoney, FCycleID, mark
-        ) VALUES (
-        #{FID}, #{FBillNo}, #{FBillType}, #{FDate}, #{FOrgID}, #{FOrgNumber}, #{FOrgName},
-        #{FRemark}, #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate},
-        #{FPayID}, #{FPayWay}, #{FPayDate}, #{FPayMoney}, #{FCycleID}, #{mark}
+        ID, FID, FBillNo, FBillType, FDate,
+        FOrgID, FOrgNumber, FOrgName, FRemark,
+        FPayID, FPayWay, FPayDate, FPayMoney,
+        FCycleID, sync_flag, sync_time,
+        FCreateBy, FCreateDate, FUpdateBy, FUpdateDate
+    ) VALUES (
+        #{ID}, #{FID}, #{FBillNo}, #{FBillType}, #{FDate},
+        #{FOrgID}, #{FOrgNumber}, #{FOrgName}, #{FRemark},
+        #{FPayID}, #{FPayWay}, #{FPayDate}, #{FPayMoney},
+        #{FCycleID}, #{syncFlag}, #{syncTime},
+        #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}
         )
-    </insert>
-
-    <!-- 主表批量插入(忽略重复) -->
-    <insert id="batchInsertIgnore" parameterType="java.util.List">
-        INSERT IGNORE INTO at_service_card (
-        FID, FBillNo, FBillType, FDate, FOrgID, FOrgNumber, FOrgName,
-        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate,
-        FPayID, FPayWay, FPayDate, FPayMoney, FCycleID, mark
-        ) VALUES
-        <foreach collection="list" item="item" separator=",">
-            (
-            #{item.FID}, #{item.FBillNo}, #{item.FBillType}, #{item.FDate}, #{item.FOrgID}, #{item.FOrgNumber}, #{item.FOrgName},
-            #{item.FRemark}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate},
-            #{item.FPayID}, #{item.FPayWay}, #{item.FPayDate}, #{item.FPayMoney}, #{item.FCycleID}, #{item.mark}
-            )
-        </foreach>
     </insert>
 
 

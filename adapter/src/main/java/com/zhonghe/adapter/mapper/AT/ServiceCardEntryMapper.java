@@ -1,13 +1,10 @@
 package com.zhonghe.adapter.mapper.AT;
 
-import com.zhonghe.adapter.model.ServiceCardEntry;
+import com.zhonghe.adapter.model.ServiceCardLine;
 
 import java.util.List;
 
 public interface ServiceCardEntryMapper {
-    // 插入明细表数据
-    int insertEntry(ServiceCardEntry entry);
-
     // 批量插入明细表数据
-    int batchInsertEntry(List<ServiceCardEntry> entries);
+    int batchInsert(List<ServiceCardLine> entries);
 }

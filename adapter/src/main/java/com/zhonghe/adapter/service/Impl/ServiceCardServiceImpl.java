@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -34,7 +35,10 @@ public class ServiceCardServiceImpl implements ServiceCardService {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            String responseString = serviceCardClient.queryServiceCardRaw(request);
+            HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
+            objectObjectHashMap.put("current_page", currentPage);
+            objectObjectHashMap.put("page_size", pageSize);
+            String responseString = serviceCardClient.queryServiceCardRaw(objectObjectHashMap);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
@@ -44,8 +48,8 @@ public class ServiceCardServiceImpl implements ServiceCardService {
                     break;
                 } else {
                     for (ServiceCard serviceCard : serviceCardsList) {
-                        serviceCardMapper.insertIgnore(serviceCard);
-                        serviceCardEntryMapper.batchInsertEntry(serviceCard.getServiceCardEntrylist());
+                        serviceCardEntryMapper.batchInsert(serviceCard.getFEntry());
+                        serviceCardMapper.insert(serviceCard);
                     }
                     currentPage++;
                 }
