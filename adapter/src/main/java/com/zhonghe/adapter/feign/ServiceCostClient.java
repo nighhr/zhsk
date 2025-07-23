@@ -6,6 +6,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.HashMap;
+
 
 @FeignClient(name = "ServiceCostClient", url = "${api.base-url}", configuration = FeignConfig.class)
 public interface ServiceCostClient {
@@ -15,5 +17,5 @@ public interface ServiceCostClient {
             consumes = "application/json",
             produces = "application/json"
     )
-    String queryServiceCostRaw(@RequestBody ApiRequest request);
+    String queryServiceCostRaw(@RequestBody HashMap request);
 }

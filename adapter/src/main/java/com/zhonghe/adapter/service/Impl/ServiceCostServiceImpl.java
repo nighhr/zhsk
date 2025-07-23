@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -22,7 +23,7 @@ public class ServiceCostServiceImpl implements ServiceCostService {
     private final ServiceCostClient serviceCostClient;
 
     @Autowired
-    private ServiceCostMapper storeTranMapper;
+    private ServiceCostMapper serviceCostMapper;
 
     @Override
     public void getServiceCost(Integer currentPage, Integer pageSize, String start, String end) {
@@ -30,7 +31,10 @@ public class ServiceCostServiceImpl implements ServiceCostService {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            String responseString = serviceCostClient.queryServiceCostRaw(request);
+            HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
+            objectObjectHashMap.put("current_page", currentPage);
+            objectObjectHashMap.put("page_size", pageSize);
+            String responseString = serviceCostClient.queryServiceCostRaw(objectObjectHashMap);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
@@ -40,7 +44,7 @@ public class ServiceCostServiceImpl implements ServiceCostService {
                     break;
                 } else {
                     for (ServiceCost storeTran : serviceCosts) {
-                        storeTranMapper.insertIgnore(storeTran);
+                        serviceCostMapper.insertIgnore(storeTran);
                     }
                     currentPage++;
                 }
