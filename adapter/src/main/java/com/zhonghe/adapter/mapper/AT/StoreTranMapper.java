@@ -8,6 +8,5 @@ import java.util.List;
 
 @Mapper
 public interface StoreTranMapper {
-    int insertIgnore(StoreTran storeTran);
-    int batchInsertIgnore(@Param("list") List<StoreTran> list);
+    int insert(StoreTran storeTran);
 }

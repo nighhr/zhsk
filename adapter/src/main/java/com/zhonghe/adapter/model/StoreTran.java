@@ -7,21 +7,27 @@ import java.util.List;
 
 @Data
 public class StoreTran {
-    private Long id; // 自增ID
-    private String FID; // 调拨单ID
-    private Date FDate; // 日期
-    private String FOutOrgID; // 调出门店ID
-    private String FOutOrgNumber; // 调出门店编码
-    private String FOutOrgName; // 调出门店名称
-    private String FInOrgID; // 调入门店ID
-    private String FInOrgNumber; // 调入门店编码
-    private String FInOrgName; // 调入门店名称
-    private String FRemark; // 备注
-    private String FCreateBy; // 创建人
-    private Date FCreateDate; // 创建时间
-    private String FUpdateBy; // 修改人
-    private Date FUpdateDate; // 修改时间
-    private Boolean mark = false;
+    private Long ID;
+    private String FID;
+    private Date FDate;
 
-    private List<StoreTranEntry> storeTranEntryList;
+    private String FOutOrgID;
+    private String FOutOrgNumber;
+    private String FOutOrgName;
+
+    private String FInOrgID;
+    private String FInOrgNumber;
+    private String FInOrgName;
+
+    private String FRemark;
+
+    private String FCreateBy;
+    private Date FCreateDate;
+    private String FUpdateBy;
+    private Date FUpdateDate;
+
+    private String syncFlag;
+    private Date syncTime;
+
+    private List<StoreTranLine> FEntry;
 }

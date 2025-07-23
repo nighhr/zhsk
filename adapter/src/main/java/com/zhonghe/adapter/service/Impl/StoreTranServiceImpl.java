@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -33,7 +34,10 @@ public class StoreTranServiceImpl implements StoreTranService {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            String responseString = storeTranClient.queryStoreTranRaw(request);
+            HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
+            objectObjectHashMap.put("current_page", currentPage);
+            objectObjectHashMap.put("page_size", pageSize);
+            String responseString = storeTranClient.queryStoreTranRaw(objectObjectHashMap);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
@@ -43,8 +47,8 @@ public class StoreTranServiceImpl implements StoreTranService {
                     break;
                 } else {
                     for (StoreTran storeTran : storeTransList) {
-                        storeTranMapper.insertIgnore(storeTran);
-                        storeTranEntryMapper.batchInsertIgnore(storeTran.getStoreTranEntryList());
+                        storeTranMapper.insert(storeTran);
+                        storeTranEntryMapper.batchInsert(storeTran.getFEntry());
                     }
                     currentPage++;
                 }
