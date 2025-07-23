@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -34,7 +35,10 @@ public class StockTakeServiceImpl implements StockTakeService {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            String responseString = stockTakeClient.queryStockTakeRaw(request);
+            HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
+            objectObjectHashMap.put("current_page", currentPage);
+            objectObjectHashMap.put("page_size", pageSize);
+            String responseString = stockTakeClient.queryStockTakeRaw(objectObjectHashMap);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
@@ -45,7 +49,7 @@ public class StockTakeServiceImpl implements StockTakeService {
                 } else {
                     for (StockTake stockTake : stockTakeList) {
                         stockTakeMapper.insert(stockTake);
-                        stockTakeEntryMapper.batchInsertEntry(stockTake.getStockTakeEntryList());
+                        stockTakeEntryMapper.batchInsert(stockTake.getFEntry());
                     }
                     currentPage++;
                 }

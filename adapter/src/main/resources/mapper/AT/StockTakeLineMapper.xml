@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhonghe.adapter.mapper.AT.StockTakeEntryMapper">
+
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT IGNORE INTO at_stock_take_line (
+        FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName,
+        FMaterialTypeNumber, FMaterialTypeName, FUnit,
+        FYkQty, FYkPrice, FYkAmount,
+        FTzQty, FTzPrice, FTzAmount,
+        FCGPrice, FStockID, FStockNumber, FStockName,
+        FBatch, FNote, FZFQty, FQty
+        ) VALUES
+        <foreach collection="list" item="entry" separator=",">
+            (
+            #{entry.FID}, #{entry.FEntryID}, #{entry.FMaterialID}, #{entry.FMaterialNumber}, #{entry.FMaterialName},
+            #{entry.FMaterialTypeNumber}, #{entry.FMaterialTypeName}, #{entry.FUnit},
+            #{entry.FYkQty}, #{entry.FYkPrice}, #{entry.FYkAmount},
+            #{entry.FTzQty}, #{entry.FTzPrice}, #{entry.FTzAmount},
+            #{entry.FCGPrice}, #{entry.FStockID}, #{entry.FStockNumber}, #{entry.FStockName},
+            #{entry.FBatch}, #{entry.FNote}, #{entry.FZFQty}, #{entry.FQty}
+            )
+        </foreach>
+    </insert>
+
+
+</mapper>

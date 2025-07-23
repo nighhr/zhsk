@@ -7,19 +7,20 @@ import java.util.List;
 
 @Data
 public class StockTake {
-    private Long id; // 自增主键
-    private String FID; // 盘点单ID
-    private Integer FBillType; // 盘点类型
-    private Date FDate; // 日期
-    private String FOrgID; // 盘点门店ID
-    private String FOrgNumber; // 盘点门店编码
-    private String FOrgName; // 盘点门店名称
-    private String FRemark; // 备注
-    private String FCreateBy; // 创建人
-    private Date FCreateDate; // 创建时间
-    private String FUpdateBy; // 修改人
-    private Date FUpdateDate; // 修改时间
-    private Boolean mark = false;
+    private Long ID;
+    private String FID;
+    private String FBillType;
+    private Date FDate;
+    private String FOrgID;
+    private String FOrgNumber;
+    private String FOrgName;
+    private String FRemark;
+    private String FCreateBy;
+    private Date FCreateDate;
+    private String FUpdateBy;
+    private Date FUpdateDate;
+    private String syncFlag;
+    private Date syncTime;
 
-    private List<StockTakeEntry> stockTakeEntryList;
+    private List<StockTakeLine> FEntry;
 }

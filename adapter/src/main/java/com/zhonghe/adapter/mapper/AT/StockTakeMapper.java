@@ -10,6 +10,4 @@ public interface StockTakeMapper {
     // 插入主表数据(忽略重复)
     int insert(StockTake stockTake);
 
-    // 批量插入主表数据(忽略重复)
-    int batchInsert(List<StockTake> stockTakeList);
 }
