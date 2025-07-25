@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
 @Mapper
-public interface StockTakeEntryMapper {
+public interface StockTakeLineMapper {
     // 批量插入明细数据(忽略重复)
     int batchInsert(List<StockTakeLine> entryList);
 }

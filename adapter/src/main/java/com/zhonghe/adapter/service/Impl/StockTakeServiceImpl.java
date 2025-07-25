@@ -4,7 +4,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.StockTakeClient;
-import com.zhonghe.adapter.mapper.AT.StockTakeEntryMapper;
+import com.zhonghe.adapter.mapper.AT.StockTakeLineMapper;
 import com.zhonghe.adapter.mapper.AT.StockTakeMapper;
 import com.zhonghe.adapter.model.StockTake;
 import com.zhonghe.adapter.service.StockTakeService;
@@ -28,7 +28,7 @@ public class StockTakeServiceImpl implements StockTakeService {
     private StockTakeMapper stockTakeMapper;
 
     @Autowired
-    private StockTakeEntryMapper stockTakeEntryMapper;
+    private StockTakeLineMapper stockTakeLineMapper;
     @Override
     public void getStockTake(Integer currentPage, Integer pageSize, String start, String end) {
         for (int i = 1; ; i++) {
@@ -49,7 +49,7 @@ public class StockTakeServiceImpl implements StockTakeService {
                 } else {
                     for (StockTake stockTake : stockTakeList) {
                         stockTakeMapper.insert(stockTake);
-                        stockTakeEntryMapper.batchInsert(stockTake.getFEntry());
+                        stockTakeLineMapper.batchInsert(stockTake.getFEntry());
                     }
                     currentPage++;
                 }

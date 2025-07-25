@@ -31,6 +31,7 @@
             #{item.FUnit}, #{item.FSaleBillNo}, #{item.FCreateBy}, #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}
             )
         </foreach>
+        ON DUPLICATE KEY UPDATE FID = FID
     </insert>
 
 </mapper>

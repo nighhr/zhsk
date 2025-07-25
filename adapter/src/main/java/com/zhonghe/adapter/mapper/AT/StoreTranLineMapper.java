@@ -7,6 +7,6 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 @Mapper
-public interface StoreTranEntryMapper {
+public interface StoreTranLineMapper {
     int batchInsert(@Param("list") List<StoreTranLine> list);
 }

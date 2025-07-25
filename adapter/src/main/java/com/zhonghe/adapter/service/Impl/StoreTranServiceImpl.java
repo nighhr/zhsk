@@ -4,7 +4,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.StoreTranClient;
-import com.zhonghe.adapter.mapper.AT.StoreTranEntryMapper;
+import com.zhonghe.adapter.mapper.AT.StoreTranLineMapper;
 import com.zhonghe.adapter.mapper.AT.StoreTranMapper;
 import com.zhonghe.adapter.model.StoreTran;
 import com.zhonghe.adapter.service.StoreTranService;
@@ -27,7 +27,7 @@ public class StoreTranServiceImpl implements StoreTranService {
     private StoreTranMapper storeTranMapper;
 
     @Autowired
-    private StoreTranEntryMapper storeTranEntryMapper;
+    private StoreTranLineMapper storeTranLineMapper;
     @Override
     public void getStoreTran(Integer currentPage, Integer pageSize, String start, String end) {
         for (int i = 1; ; i++) {
@@ -48,7 +48,7 @@ public class StoreTranServiceImpl implements StoreTranService {
                 } else {
                     for (StoreTran storeTran : storeTransList) {
                         storeTranMapper.insert(storeTran);
-                        storeTranEntryMapper.batchInsert(storeTran.getFEntry());
+                        storeTranLineMapper.batchInsert(storeTran.getFEntry());
                     }
                     currentPage++;
                 }

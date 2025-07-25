@@ -15,6 +15,8 @@ public class VoucherSubject {
 
     private String subjectCode;
 
+    private Boolean useAuxiliary;
+
     private Map<String, String> dynamicFields; // 存储 name, sex 等
 
     public void addField(String fieldName, String value) {

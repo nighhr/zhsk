@@ -208,7 +208,7 @@ public class TaskServiceImpl implements TaskService {
                     start = firstDay.format(formatter);
                 }
             }
-            //todo 时间记得注释掉
+//            todo 时间记得注释掉
             start = "2025-04-01 00:00:00";
 
             // 处理结束时间
@@ -242,7 +242,7 @@ public class TaskServiceImpl implements TaskService {
         int totalRecords = glAccvouches.size();
         if (totalRecords == 0) {
             log.info("没有需要处理的凭证数据");
-            return 0;
+            new BusinessException(ErrorCode.PARAM_ERROR,"没有需要处理的凭证数据");
         }
 
         Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
@@ -273,7 +273,7 @@ public class TaskServiceImpl implements TaskService {
         });
 
         int totalRecord = sortedList.size();
-        int batchSize = 1000;
+        int batchSize = 50;
         int totalBatches = (totalRecord + batchSize - 1) / batchSize;
 
         IntStream.range(0, totalBatches).map(batchIndex -> batchIndex * batchSize).forEach(fromIndex -> {
@@ -301,7 +301,7 @@ public class TaskServiceImpl implements TaskService {
             }
         });
 
-        return 0;
+        return sortedList.size();
     }
 
 
@@ -438,23 +438,23 @@ public class TaskServiceImpl implements TaskService {
                 .append(") AS total ");
         sql.append(" FROM ").append(sourceTable).append(" a");
 
-        if (detailTable != null) {
+        if (!detailTable.isEmpty()) {
             sql.append(" LEFT JOIN ").append(detailTable).append(" b")
                     .append(" ON a.FID = b.FID ");
+        } else {
+            sql.append(" where 1=1");
         }
 
-//        sql.append(" WHERE a.mark = '0' ");
         return sql.toString();
     }
 
     private String buildFullSQL(
             String baseSelect, Map<String, Object> subject,
             Set<String> mainColumn, Entries entries, String start, String end,
-            String sourceTable) {
+            String sourceTable,String taskName) {
         StringBuilder finalSql = new StringBuilder(baseSelect);
         List<String> groupByFields = new ArrayList<>();
 
-        // Add time validation if start and end are not empty
         if (StringUtils.isNotBlank(start) && StringUtils.isNotBlank(end)) {
             finalSql.append(" AND a.FDate >= '").append(start).append("'");
             finalSql.append(" AND a.FDate <= '").append(end).append("'");
@@ -478,19 +478,35 @@ public class TaskServiceImpl implements TaskService {
         }
 
         int index = finalSql.indexOf("AS total");
-        if (entries.getSupplierRelated()) {
-            finalSql.insert(index + "AS total".length(), ", a.FSupplierNumber");
-            groupByFields.add("a.FSupplierNumber");
-        }
-        if (entries.getDepartmentAccounting()) {
-            if (sourceTable.equals("at_sale")||sourceTable.equals("at_sale_rec")||sourceTable.equals("at_service_card")
-                    ||sourceTable.equals("at_stock_take")){
-                finalSql.insert(index + "AS total".length(), ", a.FOrgNumber");
-                groupByFields.add("a.FOrgNumber");
-            }else{
-                finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
-                groupByFields.add("a.FDepNumber");
+        //如果true 为使用辅助核算
+        Boolean useAuxiliary = (Boolean) subject.get("useAuxiliary");
+        if (useAuxiliary){
+            if (entries.getSupplierRelated()) {
+                finalSql.insert(index + "AS total".length(), ", a.FSupplierNumber");
+                groupByFields.add("a.FSupplierNumber");
             }
+            if (entries.getDepartmentAccounting()) {
+                if (sourceTable.equals("at_sale")||sourceTable.equals("at_sale_rec")||sourceTable.equals("at_service_card")
+                        ||sourceTable.equals("at_stock_take")||sourceTable.equals("at_service_box")){
+                    finalSql.insert(index + "AS total".length(), ", a.FOrgNumber");
+                    groupByFields.add("a.FOrgNumber");
+                }else{
+                    finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
+                    groupByFields.add("a.FDepNumber");
+                }
+            }
+        }
+
+        if (taskName.equals("门店正常商品成本结转(不包含41)")){
+            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
+        }else if(taskName.equals("门店服务商品成本结转(只包含41)")){
+            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
+        } else if (taskName.equals("门店销售收入(只包含41分类)")) {
+            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
+        } else if (taskName.equals("门店销售收入(不包含41分类)")) {
+            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
+        } else if (taskName.equals("服务项目部销售商品收入(只包含41)")) {
+            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         }
 
         if (!groupByFields.isEmpty()) {
@@ -671,7 +687,7 @@ public class TaskServiceImpl implements TaskService {
             String baseSelect = buildBaseSelectSQL(entries, sourceTable, detailTable);
 
             for (Map<String, Object> subject : subjects) {
-                String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries,start,end,task.getSourceTable());
+                String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries,start,end,task.getSourceTable(),task.getTaskName());
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
 
                 for (Map<String, Object> queryData : queryResults) {
@@ -713,7 +729,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void syncSourceData(String sourceTable, String start, String end) {
-        int pageSize = 500;
+        int pageSize = 1000;
         int currentPage = 1;
 
         switch (sourceTable) {
@@ -756,7 +772,8 @@ public class TaskServiceImpl implements TaskService {
         sql.append("CREATE TABLE ").append(tableName).append(" (")
                 .append("id INT PRIMARY KEY AUTO_INCREMENT, ")
                 .append("rule_id INT NOT NULL COMMENT '分录id', ")
-                .append("subject_list JSON COMMENT '字段列表', ");
+                .append("subject_list JSON COMMENT '字段列表', ")
+                .append("use_auxiliary BOOLEAN DEFAULT FALSE COMMENT '是否使用辅助核算', ");
 
         for (String field : selectedFields) {
             sql.append("`").append(field).append("` VARCHAR(200) COMMENT '").append("', ");
@@ -772,8 +789,8 @@ public class TaskServiceImpl implements TaskService {
 
     private void insertDynamicTable(VoucherSubject voucherSubject) {
         String tableName = "at_voucher_subject_" + voucherSubject.getRuleId();
-        StringBuilder sqlFields = new StringBuilder("INSERT INTO " + tableName + " (rule_id, subject_list");
-        StringBuilder sqlValues = new StringBuilder(") VALUES (?, ?");
+        StringBuilder sqlFields = new StringBuilder("INSERT INTO " + tableName + " (rule_id, subject_list, use_auxiliary");  // 添加新字段
+        StringBuilder sqlValues = new StringBuilder(") VALUES (?, ?, ?");  // 添加新字段的值占位符
         List<Object> params = new ArrayList<>();
         params.add(voucherSubject.getRuleId());
 
@@ -790,6 +807,9 @@ public class TaskServiceImpl implements TaskService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("JSON转换失败", e);
         }
+
+        // 添加是否使用辅助核算的值，默认为false
+        params.add(voucherSubject.getUseAuxiliary() != null ? voucherSubject.getUseAuxiliary() : false);
 
         for (Map.Entry<String, String> entry : voucherSubject.getDynamicFields().entrySet()) {
             sqlFields.append(", ").append(entry.getKey());

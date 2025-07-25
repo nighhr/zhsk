@@ -4,7 +4,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.ServiceCardClient;
-import com.zhonghe.adapter.mapper.AT.ServiceCardEntryMapper;
+import com.zhonghe.adapter.mapper.AT.ServiceCardLineMapper;
 import com.zhonghe.adapter.mapper.AT.ServiceCardMapper;
 import com.zhonghe.adapter.model.ServiceCard;
 import com.zhonghe.adapter.service.ServiceCardService;
@@ -12,6 +12,7 @@ import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ServiceCardServiceImpl implements ServiceCardService {
 
     private final ServiceCardClient serviceCardClient;
@@ -28,7 +30,7 @@ public class ServiceCardServiceImpl implements ServiceCardService {
     private ServiceCardMapper serviceCardMapper;
 
     @Autowired
-    private ServiceCardEntryMapper serviceCardEntryMapper;
+    private ServiceCardLineMapper serviceCardLineMapper;
     @Override
     public void getServiceCard(Integer currentPage, Integer pageSize, String start, String end) {
         for (int i = 1; ; i++) {
@@ -48,7 +50,11 @@ public class ServiceCardServiceImpl implements ServiceCardService {
                     break;
                 } else {
                     for (ServiceCard serviceCard : serviceCardsList) {
-                        serviceCardEntryMapper.batchInsert(serviceCard.getFEntry());
+                        if (serviceCard.getFEntry().isEmpty()){
+                            log.info("由于FID为{}的实体类没有entry 该行数据并未同步",serviceCard.getFID());
+                            continue;
+                        }
+                        serviceCardLineMapper.batchInsert(serviceCard.getFEntry());
                         serviceCardMapper.insert(serviceCard);
                     }
                     currentPage++;
