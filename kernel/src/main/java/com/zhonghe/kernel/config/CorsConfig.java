@@ -12,6 +12,7 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedOriginPatterns(
                         "https://www.allwisedata.cn",
                         "https://allwisedata.cn",
+                        "http://192.168.*.*:[*]",// 解决局域网互联
                         "http://localhost:[*]"  // 开发环境
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")

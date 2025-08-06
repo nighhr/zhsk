@@ -231,75 +231,87 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "startTime或endTime格式错误");
         }
 
-
-        // 获取凭证头列表
-        List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
-        String voucherKey = taskVoucherHeads.isEmpty() ? "id" : taskVoucherHeads.get(0).getVoucherKey();
-
-        List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
-        //合并处理部门和供应商
-//        List<GLAccvouch> glAccvouches = process(glAccvouchList);
-        int totalRecords = glAccvouches.size();
-        if (totalRecords == 0) {
-            log.info("没有需要处理的凭证数据");
-            new BusinessException(ErrorCode.PARAM_ERROR, "没有需要处理的凭证数据");
-        }
-
-        Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
-        if (inoIdMax == null) {
-            inoIdMax = 1;
-        }
-        int baseInoId = inoIdMax + 1;
-
-        // 将 glAccvouches 拆分，md == 0 优先
-        List<GLAccvouch> mdZeroList = glAccvouches.stream()
-                .filter(item -> item.getMd() != null && item.getMd().compareTo(BigDecimal.ZERO) == 0)
-                .collect(Collectors.toList());
-
-        List<GLAccvouch> otherList = glAccvouches.stream()
-                .filter(item -> item.getMd() == null || item.getMd().compareTo(BigDecimal.ZERO) != 0)
-                .collect(Collectors.toList());
-
-// 合并：md == 0 的在后面
         List<GLAccvouch> sortedList = new ArrayList<>();
-        sortedList.addAll(otherList);
-        sortedList.addAll(mdZeroList);
+        try {
+            // 获取凭证头列表
+            List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
+            String voucherKey = taskVoucherHeads.isEmpty() ? "id" : taskVoucherHeads.get(0).getVoucherKey();
 
-// 使用原子计数器分配ID
-        AtomicInteger inidCounter = new AtomicInteger(1);
-        sortedList.forEach(item -> {
-            item.setInoId(baseInoId);
-            item.setInid(inidCounter.getAndIncrement());
-        });
+            List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
+            int totalRecords = glAccvouches.size();
+            if (totalRecords == 0) {
+                log.info("没有需要处理的凭证数据");
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "没有需要处理的凭证数据");
+            }
 
-        int totalRecord = sortedList.size();
-        int batchSize = 50;
-        int totalBatches = (totalRecord + batchSize - 1) / batchSize;
+            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
+            if (inoIdMax == null) {
+                inoIdMax = 1;
+            }
+            int baseInoId = inoIdMax + 1;
 
-        IntStream.range(0, totalBatches).map(batchIndex -> batchIndex * batchSize).forEach(fromIndex -> {
-            int toIndex = Math.min(fromIndex + batchSize, totalRecord);
-            List<GLAccvouch> batch = sortedList.subList(fromIndex, toIndex);
+            // 拆分处理 md == 0 的记录
+            List<GLAccvouch> mdZeroList = glAccvouches.stream()
+                    .filter(item -> item.getMd() != null && item.getMd().compareTo(BigDecimal.ZERO) == 0)
+                    .collect(Collectors.toList());
 
-            batch.forEach(item -> {
-                if (item.getMd() != null) {
-                    item.setMd(item.getMd().setScale(4, RoundingMode.HALF_UP));
-                }
-                if (item.getMc() != null) {
-                    item.setMc(item.getMc().setScale(4, RoundingMode.HALF_UP));
-                }
+            List<GLAccvouch> otherList = glAccvouches.stream()
+                    .filter(item -> item.getMd() == null || item.getMd().compareTo(BigDecimal.ZERO) != 0)
+                    .collect(Collectors.toList());
+
+
+            sortedList.addAll(otherList);
+            sortedList.addAll(mdZeroList);
+
+            // 分配ID
+            AtomicInteger inidCounter = new AtomicInteger(1);
+            sortedList.forEach(item -> {
+                item.setInoId(baseInoId);
+                item.setInid(inidCounter.getAndIncrement());
             });
 
-            try {
-                glAccvouchMapper.batchInsert(batch);
-                // 操作日志
-                saveOperationLog(taskId, task.getTaskName(), voucherKey,
-                        "成功", batch, "凭证批量插入成功，数量：" + batch.size());
-            } catch (Exception e) {
-                // 操作日志
-                saveOperationLog(taskId, task.getTaskName(), voucherKey,
-                        "失败", batch, getStackTraceAsString(e));
+            int totalRecord = sortedList.size();
+            int batchSize = 50;
+            int totalBatches = (totalRecord + batchSize - 1) / batchSize;
+
+            // 处理每个批次
+            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+                int fromIndex = batchIndex * batchSize;
+                int toIndex = Math.min(fromIndex + batchSize, totalRecord);
+                List<GLAccvouch> batch = sortedList.subList(fromIndex, toIndex);
+
+                try {
+                    // 金额精度处理
+                    batch.forEach(item -> {
+                        if (item.getMd() != null) {
+                            item.setMd(item.getMd().setScale(4, RoundingMode.HALF_UP));
+                        }
+                        if (item.getMc() != null) {
+                            item.setMc(item.getMc().setScale(4, RoundingMode.HALF_UP));
+                        }
+                    });
+
+                    glAccvouchMapper.batchInsert(batch);
+                    saveOperationLog(taskId, task.getTaskName(), voucherKey,
+                            "成功", batch, "凭证批量插入成功，数量：" + batch.size());
+                } catch (Exception e) {
+                    // 捕获批次处理中的所有异常
+                    saveOperationLog(taskId, task.getTaskName(), voucherKey,
+                            "失败", batch, getStackTraceAsString(e));
+                }
             }
-        });
+        } catch (BusinessException be) {
+            // 处理业务异常
+            saveOperationLog(taskId, task.getTaskName(), "N/A",
+                    "失败", Collections.emptyList(), "业务异常: " + be.getMessage());
+            throw be; // 重新抛出以保持原有异常处理流程
+        } catch (Exception e) {
+            // 捕获所有其他未处理的异常
+            saveOperationLog(taskId, task.getTaskName(), "N/A",
+                    "失败", Collections.emptyList(), "全局异常: " + getStackTraceAsString(e));
+            throw new RuntimeException("凭证处理失败", e);
+        }
+
 
         return sortedList.size();
     }
