@@ -242,7 +242,7 @@ public class TaskServiceImpl implements TaskService {
         int totalRecords = glAccvouches.size();
         if (totalRecords == 0) {
             log.info("没有需要处理的凭证数据");
-            new BusinessException(ErrorCode.PARAM_ERROR,"没有需要处理的凭证数据");
+            new BusinessException(ErrorCode.PARAM_ERROR, "没有需要处理的凭证数据");
         }
 
         Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
@@ -396,13 +396,13 @@ public class TaskServiceImpl implements TaskService {
         LocalDate today = LocalDate.now();
         Integer iyear = Integer.valueOf(today.format(DateTimeFormatter.ofPattern("yyyy")));
         Integer iYPeriod = Integer.valueOf(today.format(DateTimeFormatter.ofPattern("yyyyMM")));
-        if (task.getExecuteType().equals(ExecuteTypeEnum.MANUAL)){
+        if (task.getExecuteType().equals(ExecuteTypeEnum.MANUAL)) {
             //如果任务为手动执行 账期为结束日期的年月
             String result = end.substring(0, 4) + end.substring(5, 7);
             iYPeriod = Integer.valueOf(result);
         }
-
-        syncSourceData(sourceTable, start, end);
+//            todo 同步数据记得取消注释
+//        syncSourceData(sourceTable, start, end);
 
         List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(task.getId());
         if (taskVoucherHeads.isEmpty()) {
@@ -416,10 +416,99 @@ public class TaskServiceImpl implements TaskService {
             return Collections.emptyList();
         }
         Set<String> mainColumn = results.get(0).keySet();
+        if (task.getTaskName().equals("部门之间正常商品调拨（两个门店相互调拨）不包含41") || task.getTaskName().equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
+            return processEntriesTran(results, taskVoucherHead, task,currentPeriod,iyear,iYPeriod,mainColumn,start,end);
 
-        return processEntries(
-                task.getId(), sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear,start,end
-        );
+        } else {
+            return processEntries(
+                    task.getId(), sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear, start, end
+            );
+        }
+    }
+
+    private List<GLAccvouch> processEntriesTran(List<Map<String, Object>> results, TaskVoucherHead taskVoucherHead, Task task,int currentPeriod, int iyear,int iYPeriod,Set<String> mainColumn, String start, String end) throws Exception {
+        if (results.isEmpty()) {
+            return null;
+        }
+        List<GLAccvouch> sendData = Collections.synchronizedList(new ArrayList<>());
+        List<Entries> entriesList = entriesMapper.selectByTaskId(task.getId());
+        if (entriesList.isEmpty()) return sendData;
+
+        List<String> allTableNames = dbConnectionService.getAllTableNames(task.getSourceDbId());
+        // 使用并行流处理分录
+        entriesList.parallelStream().forEach(entries -> {
+            String subjectTable = validateSubjectTable(entries.getId());
+            List<Map<String, Object>> subjects = new ArrayList<>();
+            if (allTableNames.contains(subjectTable)) {
+                subjects = jdbcTemplate.queryForList("SELECT * FROM " + subjectTable);
+                if (subjects.isEmpty()) return;
+            }
+
+            String baseSelect = buildBaseSelectSQL(entries, "at_store_tran", "at_store_tran_line");
+
+            for (Map<String, Object> subject : subjects) {
+                String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries, start, end, task.getSourceTable(), task.getTaskName());
+                List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
+                GLAccvouch glAccvouch = null;
+                for (Map<String, Object> queryData : queryResults) {
+                    glAccvouch = new GLAccvouch();
+                    glAccvouch.setIperiod(currentPeriod);
+                    glAccvouch.setIYPeriod(iYPeriod);
+                    glAccvouch.setIyear(iyear);
+                    glAccvouch.setIdoc(0);
+                    glAccvouch.setIbook(0);
+                    glAccvouch.setCsign(taskVoucherHead.getVoucherWord());
+                    glAccvouch.setNfrat(ZERO_DOUBLE);
+                    glAccvouch.setNdS(ZERO_DOUBLE);
+                    glAccvouch.setNcS(ZERO_DOUBLE);
+                    glAccvouch.setBFlagOut(false);
+                    glAccvouch.setIsignseq(1);
+                    glAccvouch.setCcode(queryData.get("subject_code").toString());
+
+
+                    if (queryData.get("FInOrgNumber") != null) {
+                        glAccvouch.setCdeptId(queryData.get("FInOrgNumber").toString());
+                    } else if (queryData.get("FOutOrgNumber") != null) {
+                        glAccvouch.setCdeptId(queryData.get("FOutOrgNumber").toString());
+                    }
+                    LocalDate today = LocalDate.now();
+                    LocalDateTime startOfDay = today.atStartOfDay(); // 2025-07-23T00:00
+                    // 转成 Date
+                    Date zeroDate = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
+                    glAccvouch.setDbillDate(zeroDate);
+                    glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
+
+                    Object total = queryData.get("total");
+                    BigDecimal amount = convertToBigDecimal(total);
+
+                    if ("借".equals(entries.getDirection())) {
+                        glAccvouch.setMd(amount.divide(new BigDecimal("2")));
+                        glAccvouch.setMc(ZERO);
+                    } else {
+                        glAccvouch.setMd(ZERO);
+                        glAccvouch.setMc(amount.divide(new BigDecimal("2")));
+                    }
+                    glAccvouch.setMdF(ZERO);
+                    glAccvouch.setMcF(ZERO);
+
+                    glAccvouch.setCdigest(entries.getSummary());
+                    glAccvouch.setCbill(taskVoucherHead.getCreator());
+
+                    if (entries.getSupplierRelated()) {
+                        processMapping("1", queryData, glAccvouch);
+                    }
+                    if (entries.getDepartmentAccounting()) {
+                        processMapping("2", queryData, glAccvouch);
+                    }
+                    sendData.add(glAccvouch);
+                }
+
+
+            }
+        });
+
+
+        return sendData;
     }
 
     private String validateSubjectTable(Long entryId) {
@@ -439,7 +528,7 @@ public class TaskServiceImpl implements TaskService {
         sql.append(" FROM ").append(sourceTable).append(" a");
 
         if (!detailTable.isEmpty()) {
-            sql.append(" LEFT JOIN ").append(detailTable).append(" b")
+            sql.append(" INNER JOIN ").append(detailTable).append(" b")
                     .append(" ON a.FID = b.FID ");
         } else {
             sql.append(" where 1=1");
@@ -451,7 +540,7 @@ public class TaskServiceImpl implements TaskService {
     private String buildFullSQL(
             String baseSelect, Map<String, Object> subject,
             Set<String> mainColumn, Entries entries, String start, String end,
-            String sourceTable,String taskName) {
+            String sourceTable, String taskName) {
         StringBuilder finalSql = new StringBuilder(baseSelect);
         List<String> groupByFields = new ArrayList<>();
 
@@ -462,7 +551,7 @@ public class TaskServiceImpl implements TaskService {
 
         for (String field : subject.keySet()) {
             if ("subject_list".equals(field) || "id".equals(field) || "rule_id".equals(field) ||
-                    "create_time".equals(field) || "update_time".equals(field)) {
+                    "create_time".equals(field) || "update_time".equals(field) || "use_auxiliary".equals(field)) {
                 continue;
             }
 
@@ -479,34 +568,47 @@ public class TaskServiceImpl implements TaskService {
 
         int index = finalSql.indexOf("AS total");
         //如果true 为使用辅助核算
-        Boolean useAuxiliary = (Boolean) subject.get("useAuxiliary");
-        if (useAuxiliary){
+
+        Boolean useAuxiliary = Boolean.parseBoolean(subject.get("use_auxiliary").toString()) ;
+        if (useAuxiliary) {
             if (entries.getSupplierRelated()) {
                 finalSql.insert(index + "AS total".length(), ", a.FSupplierNumber");
                 groupByFields.add("a.FSupplierNumber");
             }
             if (entries.getDepartmentAccounting()) {
-                if (sourceTable.equals("at_sale")||sourceTable.equals("at_sale_rec")||sourceTable.equals("at_service_card")
-                        ||sourceTable.equals("at_stock_take")||sourceTable.equals("at_service_box")){
+                if (sourceTable.equals("at_sale") || sourceTable.equals("at_sale_rec") || sourceTable.equals("at_service_card")
+                        || sourceTable.equals("at_stock_take") || sourceTable.equals("at_service_box")) {
                     finalSql.insert(index + "AS total".length(), ", a.FOrgNumber");
                     groupByFields.add("a.FOrgNumber");
-                }else{
+                } else if (sourceTable.equals("at_store_tran")){
+                    finalSql.insert(index + "AS total".length(), ", b.FId");
+                    groupByFields.add("b.FId");
+                    if ("借".equals(entries.getDirection())){
+                        finalSql.insert(index + "AS total".length(), ", a.FInOrgNumber");
+                        groupByFields.add("a.FInOrgNumber");
+                    }else{
+                        finalSql.insert(index + "AS total".length(), ", a.FOutOrgNumber");
+                        groupByFields.add("a.FOutOrgNumber");
+                    }
+                }else {
                     finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
                     groupByFields.add("a.FDepNumber");
                 }
             }
         }
 
-        if (taskName.equals("门店正常商品成本结转(不包含41)")){
+        if (taskName.equals("门店正常商品成本结转(不包含41)")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        }else if(taskName.equals("门店服务商品成本结转(只包含41)")){
+        } else if (taskName.equals("门店服务商品成本结转(只包含41)")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("门店销售收入(只包含41分类)")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("门店销售收入(不包含41分类)")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        } else if (taskName.equals("服务项目部销售商品收入(只包含41)")) {
+        } else if (taskName.equals("部门之间服务商品调拨(两个门店相互调拨)只包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
+        } else if (taskName.equals("部门之间正常商品调拨(两个门店相互调拨)不包含41")) {
+            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
         }
 
         if (!groupByFields.isEmpty()) {
@@ -528,9 +630,9 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setIyear(iyear);
         glAccvouch.setIdoc(0);
         glAccvouch.setIbook(0);
-        if(queryData.get("FDepNumber")!=null ){
+        if (queryData.get("FDepNumber") != null) {
             glAccvouch.setCdeptId(queryData.get("FDepNumber").toString());
-        }else if (queryData.get("FOrgNumber")!=null ){
+        } else if (queryData.get("FOrgNumber") != null) {
             glAccvouch.setCdeptId(queryData.get("FOrgNumber").toString());
         }
         glAccvouch.setCsupId(queryData.get("FSupplierNumber") == null ? null : queryData.get("FSupplierNumber").toString());
@@ -622,9 +724,9 @@ public class TaskServiceImpl implements TaskService {
 
             Object sourceValue = queryData.get(sourceCol);
             if (sourceValue == null) {
-                if(queryData.get("FOrgNumber") != null){
+                if (queryData.get("FOrgNumber") != null) {
                     sourceValue = queryData.get("FOrgNumber");
-                }else{
+                } else {
                     continue;
                 }
             }
@@ -667,7 +769,7 @@ public class TaskServiceImpl implements TaskService {
     // 使用并行流处理分录
     private List<GLAccvouch> processEntries(
             Long taskId, String sourceTable, String detailTable,
-            Set<String> mainColumn, TaskVoucherHead taskVoucherHead, int currentPeriod, Integer iYPeriod, Integer iyear,String start,String end
+            Set<String> mainColumn, TaskVoucherHead taskVoucherHead, int currentPeriod, Integer iYPeriod, Integer iyear, String start, String end
     ) throws Exception {
 
         List<GLAccvouch> sendData = Collections.synchronizedList(new ArrayList<>());
@@ -687,7 +789,7 @@ public class TaskServiceImpl implements TaskService {
             String baseSelect = buildBaseSelectSQL(entries, sourceTable, detailTable);
 
             for (Map<String, Object> subject : subjects) {
-                String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries,start,end,task.getSourceTable(),task.getTaskName());
+                String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries, start, end, task.getSourceTable(), task.getTaskName());
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
 
                 for (Map<String, Object> queryData : queryResults) {
@@ -768,12 +870,10 @@ public class TaskServiceImpl implements TaskService {
         jdbcTemplate.execute("DROP TABLE IF EXISTS " + tableName);
 
         StringBuilder sql = new StringBuilder();
-
         sql.append("CREATE TABLE ").append(tableName).append(" (")
                 .append("id INT PRIMARY KEY AUTO_INCREMENT, ")
                 .append("rule_id INT NOT NULL COMMENT '分录id', ")
-                .append("subject_list JSON COMMENT '字段列表', ")
-                .append("use_auxiliary BOOLEAN DEFAULT FALSE COMMENT '是否使用辅助核算', ");
+                .append("subject_list JSON COMMENT '字段列表', ");
 
         for (String field : selectedFields) {
             sql.append("`").append(field).append("` VARCHAR(200) COMMENT '").append("', ");
@@ -789,14 +889,14 @@ public class TaskServiceImpl implements TaskService {
 
     private void insertDynamicTable(VoucherSubject voucherSubject) {
         String tableName = "at_voucher_subject_" + voucherSubject.getRuleId();
-        StringBuilder sqlFields = new StringBuilder("INSERT INTO " + tableName + " (rule_id, subject_list, use_auxiliary");  // 添加新字段
-        StringBuilder sqlValues = new StringBuilder(") VALUES (?, ?, ?");  // 添加新字段的值占位符
+        StringBuilder sqlFields = new StringBuilder("INSERT INTO " + tableName + " (rule_id, subject_list");
+        StringBuilder sqlValues = new StringBuilder(") VALUES (?, ?");
         List<Object> params = new ArrayList<>();
         params.add(voucherSubject.getRuleId());
 
         List<String> fieldsForJson = new ArrayList<>();
         for (String field : voucherSubject.getDynamicFields().keySet()) {
-            if (!"subject_code".equals(field)) {
+            if (!"subject_code".equals(field) && !"use_auxiliary".equals(field))  {
                 fieldsForJson.add(field);
             }
         }
@@ -808,8 +908,6 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("JSON转换失败", e);
         }
 
-        // 添加是否使用辅助核算的值，默认为false
-        params.add(voucherSubject.getUseAuxiliary() != null ? voucherSubject.getUseAuxiliary() : false);
 
         for (Map.Entry<String, String> entry : voucherSubject.getDynamicFields().entrySet()) {
             sqlFields.append(", ").append(entry.getKey());
