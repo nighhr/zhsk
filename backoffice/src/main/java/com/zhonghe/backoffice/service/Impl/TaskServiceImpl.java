@@ -522,9 +522,16 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private String buildBaseSelectSQL(Entries entries, String sourceTable, String detailTable) {
+        String sumScope = "";
+        if (!"at_stock_take".equals(sourceTable)){
+            sumScope = entries.getAmount();
+        }else {
+            sumScope= " b.FZFQty * b.FYkPrice ";
+        }
         StringBuilder sql = new StringBuilder("SELECT SUM(")
-                .append(entries.getAmount())
+                .append(sumScope)
                 .append(") AS total ");
+
         sql.append(" FROM ").append(sourceTable).append(" a");
 
         if (!detailTable.isEmpty()) {
@@ -609,6 +616,20 @@ public class TaskServiceImpl implements TaskService {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("部门之间正常商品调拨(两个门店相互调拨)不包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
+        }else if (taskName.equals("服务项目领用物料(盘点类型是4或5，包含41，）")) {
+            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (4, 5) ");
+        }else if (taskName.equals("正常商品平负库存调整成本(盘点类型是1或2或6，不包含41）")) {
+            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
+        }else if (taskName.equals("服务商品平负库存调整成本(盘点类型是1或2或6，包含41）")) {
+            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
+        }else if (taskName.equals("入库单（只包含总库）")) {
+            finalSql.append(" AND FDepNumber IN (1000, 1100, 1200, 1201, 202306, 202302, 202404, 202403, 202401, 202501, 1300) ");
+        }else if (taskName.equals("返厂单（只包含总库）")) {
+            finalSql.append(" AND FDepNumber IN (1000, 1100, 1200, 1201, 202306, 202302, 202404, 202403, 202401, 202501, 1300) ");
+        }else if (taskName.equals("入库单")) {
+            finalSql.append(" AND FDepNumber NOT IN (1000, 1100, 1200, 1201, 202306, 202302, 202404, 202403, 202401, 202501, 1300) ");
+        }else if (taskName.equals("返厂单")) {
+            finalSql.append(" AND FDepNumber NOT IN (1000, 1100, 1200, 1201, 202306, 202302, 202404, 202403, 202401, 202501, 1300) ");
         }
 
         if (!groupByFields.isEmpty()) {
