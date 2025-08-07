@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import com.zhonghe.adapter.model.OperationLog;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
@@ -92,6 +91,8 @@ public class TaskServiceImpl implements TaskService {
     private OperationLogMapper operationLogMapper;
     @Autowired
     private ServiceBoxService serviceBoxService;
+    @Autowired
+    private StockMapper stockMapper;
 
     // 添加映射规则缓存
     private final Map<String, List<TableMapping>> tableMappingCache = new ConcurrentHashMap<>();
@@ -208,8 +209,6 @@ public class TaskServiceImpl implements TaskService {
                     start = firstDay.format(formatter);
                 }
             }
-//            todo 时间记得注释掉
-            start = "2025-04-01 00:00:00";
 
             // 处理结束时间
             if (!params.containsKey("endTime")) {
@@ -433,7 +432,7 @@ public class TaskServiceImpl implements TaskService {
 
         } else {
             return processEntries(
-                    task.getId(), sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear, start, end
+                    task, sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear, start, end
             );
         }
     }
@@ -483,11 +482,13 @@ public class TaskServiceImpl implements TaskService {
                     } else if (queryData.get("FOutOrgNumber") != null) {
                         glAccvouch.setCdeptId(queryData.get("FOutOrgNumber").toString());
                     }
-                    LocalDate today = LocalDate.now();
-                    LocalDateTime startOfDay = today.atStartOfDay(); // 2025-07-23T00:00
+
+                    LocalDate date = LocalDate.parse(end);
+                    LocalDateTime startOfDay = date.atStartOfDay(); // 2025-07-23T00:00
                     // 转成 Date
                     Date zeroDate = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
                     glAccvouch.setDbillDate(zeroDate);
+
                     glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
 
                     Object total = queryData.get("total");
@@ -614,6 +615,26 @@ public class TaskServiceImpl implements TaskService {
                     groupByFields.add("a.FDepNumber");
                 }
             }
+        }else{
+            if (entries.getSupplierRelated()) {
+                finalSql.insert(index + "AS total".length(), ", a.FSupplierNumber");
+            }
+            if (entries.getDepartmentAccounting()) {
+                if (sourceTable.equals("at_sale") || sourceTable.equals("at_sale_rec") || sourceTable.equals("at_service_card")
+                        || sourceTable.equals("at_stock_take") || sourceTable.equals("at_service_box")) {
+                    finalSql.insert(index + "AS total".length(), ", a.FOrgNumber");
+                } else if (sourceTable.equals("at_store_tran")){
+                    finalSql.insert(index + "AS total".length(), ", b.FId");
+                    if ("借".equals(entries.getDirection())){
+                        finalSql.insert(index + "AS total".length(), ", a.FInOrgNumber");
+                    }else{
+                        finalSql.insert(index + "AS total".length(), ", a.FOutOrgNumber");
+                    }
+                }else {
+                    finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
+                }
+            }
+
         }
 
         if (taskName.equals("门店正常商品成本结转(不包含41)")) {
@@ -634,14 +655,58 @@ public class TaskServiceImpl implements TaskService {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
         }else if (taskName.equals("服务商品平负库存调整成本(盘点类型是1或2或6，包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
-        }else if (taskName.equals("入库单（只包含总库）")) {
-            finalSql.append(" AND FDepNumber IN (1000, 1100, 1200, 1201, 202306, 202302, 202404, 202403, 202401, 202501, 1300) ");
-        }else if (taskName.equals("返厂单（只包含总库）")) {
-            finalSql.append(" AND FDepNumber IN (1000, 1100, 1200, 1201, 202306, 202302, 202404, 202403, 202401, 202501, 1300) ");
+        }else if (taskName.equals("入库单（只包含总仓）")) {
+            finalSql.insert(index + "AS total".length(), ", b.FId");
+            groupByFields.add("b.FId");
+            List<String> codes = stockMapper.selectCode();
+            String codeString = codes.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining(","));
+            if (!codeString.isEmpty()) {
+                finalSql.append(" AND FDepNumber IN ( ")
+                        .append(codeString)
+                        .append(" ) ");
+            } 
+        }else if (taskName.equals("返厂单（只包含总仓）")) {
+            finalSql.insert(index + "AS total".length(), ", b.FId");
+            groupByFields.add("b.FId");
+            List<String> codes = stockMapper.selectCode();
+            String codeString = codes.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining(","));
+            if (!codeString.isEmpty()) {
+                finalSql.append(" AND FDepNumber IN ( ")
+                        .append(codeString)
+                        .append(" ) ");
+            } 
         }else if (taskName.equals("入库单")) {
-            finalSql.append(" AND FDepNumber NOT IN (1000, 1100, 1200, 1201, 202306, 202302, 202404, 202403, 202401, 202501, 1300) ");
+            List<String> codes = stockMapper.selectCode();
+            String codeString = codes.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining(","));
+            if (!codeString.isEmpty()) {
+                finalSql.append(" AND FDepNumber NOT IN ( ")
+                        .append(codeString)
+                        .append(" ) ");
+            } 
         }else if (taskName.equals("返厂单")) {
-            finalSql.append(" AND FDepNumber NOT IN (1000, 1100, 1200, 1201, 202306, 202302, 202404, 202403, 202401, 202501, 1300) ");
+            List<String> codes = stockMapper.selectCode();
+            String codeString = codes.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining(","));
+            if (!codeString.isEmpty()) {
+                finalSql.append(" AND FDepNumber NOT IN ( ")
+                        .append(codeString)
+                        .append(" ) ");
+            } 
         }
 
         if (!groupByFields.isEmpty()) {
@@ -652,9 +717,9 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private GLAccvouch createGLAccvouch(
-            Entries entries, TaskVoucherHead taskVoucherHead,
+            Task task,Entries entries, TaskVoucherHead taskVoucherHead,
             Map<String, Object> queryData, int currentPeriod,
-            BigDecimal ZERO, Double ZERO_DOUBLE, Integer iYPeriod, Integer iyear
+            BigDecimal ZERO, Double ZERO_DOUBLE, Integer iYPeriod, Integer iyear,String end
     ) {
         GLAccvouch glAccvouch = new GLAccvouch();
 
@@ -667,6 +732,10 @@ public class TaskServiceImpl implements TaskService {
             glAccvouch.setCdeptId(queryData.get("FDepNumber").toString());
         } else if (queryData.get("FOrgNumber") != null) {
             glAccvouch.setCdeptId(queryData.get("FOrgNumber").toString());
+        }else if (queryData.get("FInOrgNumber") != null){
+            glAccvouch.setCdeptId(queryData.get("FInOrgNumber").toString());
+        }else if (queryData.get("FOutOrgNumber") != null){
+            glAccvouch.setCdeptId(queryData.get("FOutOrgNumber").toString());
         }
         glAccvouch.setCsupId(queryData.get("FSupplierNumber") == null ? null : queryData.get("FSupplierNumber").toString());
         glAccvouch.setCsign(taskVoucherHead.getVoucherWord());
@@ -677,8 +746,8 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setBFlagOut(false);
         glAccvouch.setIsignseq(1);
 
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay(); // 2025-07-23T00:00
+        LocalDate date = LocalDate.parse(end);
+        LocalDateTime startOfDay = date.atStartOfDay(); // 2025-07-23T00:00
         // 转成 Date
         Date zeroDate = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
         glAccvouch.setDbillDate(zeroDate);
@@ -705,35 +774,14 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setMdF(ZERO);
         glAccvouch.setMcF(ZERO);
 
-        glAccvouch.setCdigest(entries.getSummary());
+        if ("入库单（只包含总仓）".equals(task.getTaskName())||"返厂单（只包含总仓）".equals(task.getTaskName())){
+            glAccvouch.setCdigest(entries.getSummary()+" - "+ queryData.get("FId"));
+        }else{
+            glAccvouch.setCdigest(entries.getSummary());
+        }
         glAccvouch.setCbill(taskVoucherHead.getCreator());
 
         return glAccvouch;
-    }
-
-
-    private static GLAccvouch copyBasicFields(GLAccvouch source) {
-        GLAccvouch target = new GLAccvouch();
-        target.setIperiod(source.getIperiod());
-        target.setIYPeriod(source.getIYPeriod());
-        target.setIsignseq(source.getIsignseq());
-        target.setIyear(source.getIyear());
-        target.setIdoc(source.getIdoc());
-        target.setIbook(source.getIbook());
-        target.setCsign(source.getCsign());
-        target.setCcode(source.getCcode());
-        target.setNfrat(source.getNfrat());
-        target.setNdS(source.getNdS());
-        target.setNcS(source.getNcS());
-        target.setBFlagOut(source.getBFlagOut());
-        target.setDbillDate(source.getDbillDate());
-        target.setMdF(source.getMdF());
-        target.setMcF(source.getMcF());
-        target.setCdigest(source.getCdigest());
-        target.setCbill(source.getCbill());
-        target.setCdeptId(source.getCdeptId());
-        target.setCsupId(source.getCsupId());
-        return target;
     }
 
 
@@ -801,14 +849,13 @@ public class TaskServiceImpl implements TaskService {
 
     // 使用并行流处理分录
     private List<GLAccvouch> processEntries(
-            Long taskId, String sourceTable, String detailTable,
+            Task task, String sourceTable, String detailTable,
             Set<String> mainColumn, TaskVoucherHead taskVoucherHead, int currentPeriod, Integer iYPeriod, Integer iyear, String start, String end
     ) throws Exception {
-
+        Long taskId = task.getId();
         List<GLAccvouch> sendData = Collections.synchronizedList(new ArrayList<>());
         List<Entries> entriesList = entriesMapper.selectByTaskId(taskId);
         if (entriesList.isEmpty()) return sendData;
-        Task task = taskMapper.selectById(taskId);
         List<String> allTableNames = dbConnectionService.getAllTableNames(task.getSourceDbId());
         // 使用并行流处理分录
         entriesList.parallelStream().forEach(entries -> {
@@ -827,7 +874,7 @@ public class TaskServiceImpl implements TaskService {
 
                 for (Map<String, Object> queryData : queryResults) {
                     GLAccvouch glAccvouch = createGLAccvouch(
-                            entries, taskVoucherHead, queryData, currentPeriod, ZERO, ZERO_DOUBLE, iYPeriod, iyear
+                            task,entries, taskVoucherHead, queryData, currentPeriod, ZERO, ZERO_DOUBLE, iYPeriod, iyear,end
                     );
                     synchronized (sendData) {
                         sendData.add(glAccvouch);

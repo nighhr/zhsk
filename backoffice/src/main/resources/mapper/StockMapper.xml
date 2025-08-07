@@ -159,6 +159,9 @@
             </if>
         </where>
     </select>
+    <select id="selectCode" resultType="java.lang.String">
+        SELECT code FROM stock
+    </select>
 
 
 </mapper>
