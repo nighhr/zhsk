@@ -37,5 +37,11 @@
             )
         </foreach>
     </insert>
+    <update id="updateFSetType">
+        UPDATE at_sale s
+            JOIN at_sale_rec r ON s.FBillNo = r.FBillNo
+            SET s.FSetTypeName = r.FSetTypeName
+        WHERE s.FDate BETWEEN #{start} AND #{end}
+    </update>
 
 </mapper>

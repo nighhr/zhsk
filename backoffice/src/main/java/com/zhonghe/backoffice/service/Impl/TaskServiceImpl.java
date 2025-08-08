@@ -25,6 +25,7 @@ import com.zhonghe.backoffice.model.*;
 import com.zhonghe.backoffice.model.DTO.TaskDTO;
 import com.zhonghe.backoffice.model.enums.ExecuteTypeEnum;
 import com.zhonghe.backoffice.service.DbConnectionService;
+import com.zhonghe.backoffice.service.StockService;
 import com.zhonghe.backoffice.service.TaskService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
@@ -92,7 +93,7 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private ServiceBoxService serviceBoxService;
     @Autowired
-    private StockMapper stockMapper;
+    private StockService stockService;
 
     // 添加映射规则缓存
     private final Map<String, List<TableMapping>> tableMappingCache = new ConcurrentHashMap<>();
@@ -190,6 +191,7 @@ public class TaskServiceImpl implements TaskService {
         LocalDateTime firstDay = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
         LocalDateTime lastDay = now.withDayOfMonth(now.toLocalDate().lengthOfMonth())
                 .withHour(23).withMinute(59).withSecond(59);
+
         try {
             /**
              *  自动 只传id   手动传id和时间
@@ -230,12 +232,14 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "startTime或endTime格式错误");
         }
 
-        List<GLAccvouch> sortedList = new ArrayList<>();
+        List<GLAccvouch> sortedList1 = new ArrayList<>();
         try {
             // 获取凭证头列表
             List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
             String voucherKey = taskVoucherHeads.isEmpty() ? "id" : taskVoucherHeads.get(0).getVoucherKey();
-
+            LocalDateTime dateTime = LocalDateTime.parse(end, formatter);
+            // 提取年月（202505）
+            String yearMonth = dateTime.format(DateTimeFormatter.ofPattern("yyyyMM"));
             List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
             int totalRecords = glAccvouches.size();
             if (totalRecords == 0) {
@@ -243,33 +247,50 @@ public class TaskServiceImpl implements TaskService {
                 throw new BusinessException(ErrorCode.PARAM_ERROR, "没有需要处理的凭证数据");
             }
 
-            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
+
+            //按照当前月的最大inoId计算
+//            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
+            //按照end月份的最大inoId计算
+            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByEndMonth(yearMonth);
             if (inoIdMax == null) {
-                inoIdMax = 1;
+                inoIdMax = 0;
             }
             int baseInoId = inoIdMax + 1;
 
-            // 拆分处理 md == 0 的记录
-            List<GLAccvouch> mdZeroList = glAccvouches.stream()
+            List<GLAccvouch> sortedList = glAccvouches.stream()
+                    .filter(item -> {
+                        boolean bothZero = item.getMd() != null && item.getMc() != null
+                                && item.getMd().compareTo(BigDecimal.ZERO) == 0
+                                && item.getMc().compareTo(BigDecimal.ZERO) == 0;
+
+                        boolean bothNull = item.getMd() == null && item.getMc() == null;
+
+                        return !(bothZero || bothNull); // 保留不符合这两种情况的数据
+                    })
+                    .collect(Collectors.toList());
+
+            // 拆分处理 md == 0 的记录 用于排序 借方在上 贷方在下
+            List<GLAccvouch> mdZeroList = sortedList.stream()
                     .filter(item -> item.getMd() != null && item.getMd().compareTo(BigDecimal.ZERO) == 0)
                     .collect(Collectors.toList());
 
-            List<GLAccvouch> otherList = glAccvouches.stream()
+            List<GLAccvouch> otherList = sortedList.stream()
                     .filter(item -> item.getMd() == null || item.getMd().compareTo(BigDecimal.ZERO) != 0)
                     .collect(Collectors.toList());
 
 
-            sortedList.addAll(otherList);
-            sortedList.addAll(mdZeroList);
+            sortedList1.addAll(otherList);
+            sortedList1.addAll(mdZeroList);
+
 
             // 分配ID
             AtomicInteger inidCounter = new AtomicInteger(1);
-            sortedList.forEach(item -> {
+            sortedList1.forEach(item -> {
                 item.setInoId(baseInoId);
                 item.setInid(inidCounter.getAndIncrement());
             });
 
-            int totalRecord = sortedList.size();
+            int totalRecord = sortedList1.size();
             int batchSize = 50;
             int totalBatches = (totalRecord + batchSize - 1) / batchSize;
 
@@ -277,7 +298,7 @@ public class TaskServiceImpl implements TaskService {
             for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
                 int fromIndex = batchIndex * batchSize;
                 int toIndex = Math.min(fromIndex + batchSize, totalRecord);
-                List<GLAccvouch> batch = sortedList.subList(fromIndex, toIndex);
+                List<GLAccvouch> batch = sortedList1.subList(fromIndex, toIndex);
 
                 try {
                     // 金额精度处理
@@ -289,30 +310,34 @@ public class TaskServiceImpl implements TaskService {
                             item.setMc(item.getMc().setScale(4, RoundingMode.HALF_UP));
                         }
                     });
-
+                    Thread.sleep(1000);
                     glAccvouchMapper.batchInsert(batch);
                     saveOperationLog(taskId, task.getTaskName(), voucherKey,
                             "成功", batch, "凭证批量插入成功，数量：" + batch.size());
                 } catch (Exception e) {
                     // 捕获批次处理中的所有异常
+                    System.out.println("捕获批次处理中的所有异常-----" + getStackTraceAsString(e));
+                    log.error("捕获批次处理中的所有异常----" + e.getMessage());
                     saveOperationLog(taskId, task.getTaskName(), voucherKey,
                             "失败", batch, getStackTraceAsString(e));
                 }
             }
         } catch (BusinessException be) {
             // 处理业务异常
+            log.error("处理业务异常----" + be.getMessage());
             saveOperationLog(taskId, task.getTaskName(), "N/A",
                     "失败", Collections.emptyList(), "业务异常: " + be.getMessage());
             throw be; // 重新抛出以保持原有异常处理流程
         } catch (Exception e) {
             // 捕获所有其他未处理的异常
+            log.error("捕获所有其他未处理的异常----" + e.getMessage());
             saveOperationLog(taskId, task.getTaskName(), "N/A",
                     "失败", Collections.emptyList(), "全局异常: " + getStackTraceAsString(e));
             throw new RuntimeException("凭证处理失败", e);
         }
 
 
-        return sortedList.size();
+        return sortedList1.size();
     }
 
 
@@ -402,18 +427,23 @@ public class TaskServiceImpl implements TaskService {
     public List<GLAccvouch> handleExecution(Task task, String start, String end) throws Exception {
         String sourceTable = task.getSourceTable();
         String detailTable = task.getDetailTable();
+        //账期使用当前月
+//        int currentPeriod = Calendar.getInstance().get(Calendar.MONTH) + 1;
+        //账期使用end月
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime dateTime = LocalDateTime.parse(end, inputFormatter);
+        int currentPeriod = dateTime.getMonthValue();
+//        LocalDate dateTime = LocalDate.now();
 
-        int currentPeriod = Calendar.getInstance().get(Calendar.MONTH) + 1;
-        LocalDate today = LocalDate.now();
-        Integer iyear = Integer.valueOf(today.format(DateTimeFormatter.ofPattern("yyyy")));
-        Integer iYPeriod = Integer.valueOf(today.format(DateTimeFormatter.ofPattern("yyyyMM")));
+        Integer iyear = Integer.valueOf(dateTime.format(DateTimeFormatter.ofPattern("yyyy")));
+        Integer iYPeriod = Integer.valueOf(dateTime.format(DateTimeFormatter.ofPattern("yyyyMM")));
         if (task.getExecuteType().equals(ExecuteTypeEnum.MANUAL)) {
             //如果任务为手动执行 账期为结束日期的年月
             String result = end.substring(0, 4) + end.substring(5, 7);
             iYPeriod = Integer.valueOf(result);
         }
 //            todo 同步数据记得取消注释
-//        syncSourceData(sourceTable, start, end);
+        syncSourceData(sourceTable, start, end);
 
         List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(task.getId());
         if (taskVoucherHeads.isEmpty()) {
@@ -428,16 +458,63 @@ public class TaskServiceImpl implements TaskService {
         }
         Set<String> mainColumn = results.get(0).keySet();
         if (task.getTaskName().equals("部门之间正常商品调拨（两个门店相互调拨）不包含41") || task.getTaskName().equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
-            return processEntriesTran(results, taskVoucherHead, task,currentPeriod,iyear,iYPeriod,mainColumn,start,end);
+            return processEntriesTran(results, taskVoucherHead, task, currentPeriod, iyear, iYPeriod, mainColumn, start, end);
 
         } else {
-            return processEntries(
+            List<GLAccvouch> glAccvouches = processEntries(
                     task, sourceTable, detailTable, mainColumn, taskVoucherHead, currentPeriod, iYPeriod, iyear, start, end
             );
+            if ("入库单（只包含总仓）".equals(task.getTaskName()) || "返厂单（只包含总仓）".equals(task.getTaskName())) {
+                return groupByDeptAndSumMd(glAccvouches);
+
+            }
+            return glAccvouches;
         }
     }
 
-    private List<GLAccvouch> processEntriesTran(List<Map<String, Object>> results, TaskVoucherHead taskVoucherHead, Task task,int currentPeriod, int iyear,int iYPeriod,Set<String> mainColumn, String start, String end) throws Exception {
+    public static List<GLAccvouch> groupByDeptAndSumMd(List<GLAccvouch> glAccvouches) {
+        // 1. 过滤掉 md 为 null 或 0 的记录，然后按 cdeptId 分组
+        Map<String, List<GLAccvouch>> groupedByDept = glAccvouches.stream()
+                .filter(item -> item.getMd() != null && item.getMd().compareTo(BigDecimal.ZERO) != 0)
+                .collect(Collectors.groupingBy(GLAccvouch::getCdeptId));
+
+        // 2. 创建合并后的记录列表
+        List<GLAccvouch> mergedList = new ArrayList<>();
+
+        // 3. 对每个分组处理：md 求和，其他字段取第一条数据
+        for (Map.Entry<String, List<GLAccvouch>> entry : groupedByDept.entrySet()) {
+            List<GLAccvouch> group = entry.getValue();
+
+            // 3.1 取分组的第一条数据（用于填充非 md 字段）
+            GLAccvouch firstItem = group.get(0);
+
+            // 3.2 计算该分组所有 md 的总和
+            BigDecimal sumMd = group.stream()
+                    .map(GLAccvouch::getMd)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // 3.3 创建新对象并赋值
+            GLAccvouch mergedItem = new GLAccvouch();
+            // 复制所有字段
+            BeanUtils.copyProperties(firstItem, mergedItem);
+            // 覆盖 md 为求和后的值
+            mergedItem.setMd(sumMd);
+
+            mergedList.add(mergedItem);
+        }
+
+        // 4. 保留原始列表中 md 为 null 或 0 的记录
+        List<GLAccvouch> zeroOrNullMdList = glAccvouches.stream()
+                .filter(item -> item.getMd() == null || item.getMd().compareTo(BigDecimal.ZERO) == 0)
+                .collect(Collectors.toList());
+
+        // 5. 合并两个列表
+        mergedList.addAll(zeroOrNullMdList);
+
+        return mergedList;
+    }
+
+    private List<GLAccvouch> processEntriesTran(List<Map<String, Object>> results, TaskVoucherHead taskVoucherHead, Task task, int currentPeriod, int iyear, int iYPeriod, Set<String> mainColumn, String start, String end) throws Exception {
         if (results.isEmpty()) {
             return null;
         }
@@ -536,10 +613,10 @@ public class TaskServiceImpl implements TaskService {
 
     private String buildBaseSelectSQL(Entries entries, String sourceTable, String detailTable) {
         String sumScope = "";
-        if (!"at_stock_take".equals(sourceTable)){
+        if (!"at_stock_take".equals(sourceTable)) {
             sumScope = entries.getAmount();
-        }else {
-            sumScope= " b.FZFQty * b.FYkPrice ";
+        } else {
+            sumScope = " b.FZFQty * b.FYkPrice ";
         }
         StringBuilder sql = new StringBuilder("SELECT SUM(")
                 .append(sumScope)
@@ -589,7 +666,7 @@ public class TaskServiceImpl implements TaskService {
         int index = finalSql.indexOf("AS total");
         //如果true 为使用辅助核算
 
-        Boolean useAuxiliary = Boolean.parseBoolean(subject.get("use_auxiliary").toString()) ;
+        Boolean useAuxiliary = Boolean.parseBoolean(subject.get("use_auxiliary").toString());
         if (useAuxiliary) {
             if (entries.getSupplierRelated()) {
                 finalSql.insert(index + "AS total".length(), ", a.FSupplierNumber");
@@ -600,22 +677,22 @@ public class TaskServiceImpl implements TaskService {
                         || sourceTable.equals("at_stock_take") || sourceTable.equals("at_service_box")) {
                     finalSql.insert(index + "AS total".length(), ", a.FOrgNumber");
                     groupByFields.add("a.FOrgNumber");
-                } else if (sourceTable.equals("at_store_tran")){
+                } else if (sourceTable.equals("at_store_tran")) {
                     finalSql.insert(index + "AS total".length(), ", b.FId");
                     groupByFields.add("b.FId");
-                    if ("借".equals(entries.getDirection())){
+                    if ("借".equals(entries.getDirection())) {
                         finalSql.insert(index + "AS total".length(), ", a.FInOrgNumber");
                         groupByFields.add("a.FInOrgNumber");
-                    }else{
+                    } else {
                         finalSql.insert(index + "AS total".length(), ", a.FOutOrgNumber");
                         groupByFields.add("a.FOutOrgNumber");
                     }
-                }else {
+                } else {
                     finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
                     groupByFields.add("a.FDepNumber");
                 }
             }
-        }else{
+        } else {
             if (entries.getSupplierRelated()) {
                 finalSql.insert(index + "AS total".length(), ", a.FSupplierNumber");
             }
@@ -623,14 +700,14 @@ public class TaskServiceImpl implements TaskService {
                 if (sourceTable.equals("at_sale") || sourceTable.equals("at_sale_rec") || sourceTable.equals("at_service_card")
                         || sourceTable.equals("at_stock_take") || sourceTable.equals("at_service_box")) {
                     finalSql.insert(index + "AS total".length(), ", a.FOrgNumber");
-                } else if (sourceTable.equals("at_store_tran")){
+                } else if (sourceTable.equals("at_store_tran")) {
                     finalSql.insert(index + "AS total".length(), ", b.FId");
-                    if ("借".equals(entries.getDirection())){
+                    if ("借".equals(entries.getDirection())) {
                         finalSql.insert(index + "AS total".length(), ", a.FInOrgNumber");
-                    }else{
+                    } else {
                         finalSql.insert(index + "AS total".length(), ", a.FOutOrgNumber");
                     }
-                }else {
+                } else {
                     finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
                 }
             }
@@ -649,16 +726,16 @@ public class TaskServiceImpl implements TaskService {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("部门之间正常商品调拨(两个门店相互调拨)不包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        }else if (taskName.equals("服务项目领用物料(盘点类型是4或5，包含41，）")) {
+        } else if (taskName.equals("服务项目领用物料(盘点类型是4或5，包含41，）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (4, 5) ");
-        }else if (taskName.equals("正常商品平负库存调整成本(盘点类型是1或2或6，不包含41）")) {
+        } else if (taskName.equals("正常商品平负库存调整成本(盘点类型是1或2或6，不包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
-        }else if (taskName.equals("服务商品平负库存调整成本(盘点类型是1或2或6，包含41）")) {
+        } else if (taskName.equals("服务商品平负库存调整成本(盘点类型是1或2或6，包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
-        }else if (taskName.equals("入库单（只包含总仓）")) {
+        } else if (taskName.equals("入库单（只包含总仓）")) {
             finalSql.insert(index + "AS total".length(), ", b.FId");
             groupByFields.add("b.FId");
-            List<String> codes = stockMapper.selectCode();
+            List<String> codes = stockService.selectCode();
             String codeString = codes.stream()
                     .filter(Objects::nonNull)
                     .map(String::trim)
@@ -668,11 +745,13 @@ public class TaskServiceImpl implements TaskService {
                 finalSql.append(" AND FDepNumber IN ( ")
                         .append(codeString)
                         .append(" ) ");
-            } 
-        }else if (taskName.equals("返厂单（只包含总仓）")) {
+            }
+        } else if (taskName.equals("返厂单（只包含总仓）")) {
+//            if ("贷".equals(entries.getDirection())) {
+//            }
             finalSql.insert(index + "AS total".length(), ", b.FId");
             groupByFields.add("b.FId");
-            List<String> codes = stockMapper.selectCode();
+            List<String> codes = stockService.selectCode();
             String codeString = codes.stream()
                     .filter(Objects::nonNull)
                     .map(String::trim)
@@ -682,9 +761,9 @@ public class TaskServiceImpl implements TaskService {
                 finalSql.append(" AND FDepNumber IN ( ")
                         .append(codeString)
                         .append(" ) ");
-            } 
-        }else if (taskName.equals("入库单")) {
-            List<String> codes = stockMapper.selectCode();
+            }
+        } else if (taskName.equals("入库单")) {
+            List<String> codes = stockService.selectCode();
             String codeString = codes.stream()
                     .filter(Objects::nonNull)
                     .map(String::trim)
@@ -694,9 +773,9 @@ public class TaskServiceImpl implements TaskService {
                 finalSql.append(" AND FDepNumber NOT IN ( ")
                         .append(codeString)
                         .append(" ) ");
-            } 
-        }else if (taskName.equals("返厂单")) {
-            List<String> codes = stockMapper.selectCode();
+            }
+        } else if (taskName.equals("返厂单")) {
+            List<String> codes = stockService.selectCode();
             String codeString = codes.stream()
                     .filter(Objects::nonNull)
                     .map(String::trim)
@@ -706,7 +785,7 @@ public class TaskServiceImpl implements TaskService {
                 finalSql.append(" AND FDepNumber NOT IN ( ")
                         .append(codeString)
                         .append(" ) ");
-            } 
+            }
         }
 
         if (!groupByFields.isEmpty()) {
@@ -717,9 +796,9 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private GLAccvouch createGLAccvouch(
-            Task task,Entries entries, TaskVoucherHead taskVoucherHead,
+            Task task, Entries entries, TaskVoucherHead taskVoucherHead,
             Map<String, Object> queryData, int currentPeriod,
-            BigDecimal ZERO, Double ZERO_DOUBLE, Integer iYPeriod, Integer iyear,String end
+            BigDecimal ZERO, Double ZERO_DOUBLE, Integer iYPeriod, Integer iyear, String end
     ) {
         GLAccvouch glAccvouch = new GLAccvouch();
 
@@ -732,9 +811,9 @@ public class TaskServiceImpl implements TaskService {
             glAccvouch.setCdeptId(queryData.get("FDepNumber").toString());
         } else if (queryData.get("FOrgNumber") != null) {
             glAccvouch.setCdeptId(queryData.get("FOrgNumber").toString());
-        }else if (queryData.get("FInOrgNumber") != null){
+        } else if (queryData.get("FInOrgNumber") != null) {
             glAccvouch.setCdeptId(queryData.get("FInOrgNumber").toString());
-        }else if (queryData.get("FOutOrgNumber") != null){
+        } else if (queryData.get("FOutOrgNumber") != null) {
             glAccvouch.setCdeptId(queryData.get("FOutOrgNumber").toString());
         }
         glAccvouch.setCsupId(queryData.get("FSupplierNumber") == null ? null : queryData.get("FSupplierNumber").toString());
@@ -746,10 +825,12 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setBFlagOut(false);
         glAccvouch.setIsignseq(1);
 
-        LocalDate date = LocalDate.parse(end);
-        LocalDateTime startOfDay = date.atStartOfDay(); // 2025-07-23T00:00
+        // 1. 定义匹配的格式器
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        LocalDateTime dateTime = LocalDateTime.parse(end, formatter);
         // 转成 Date
-        Date zeroDate = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
+        Date zeroDate = Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
         glAccvouch.setDbillDate(zeroDate);
         glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
 
@@ -774,9 +855,13 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setMdF(ZERO);
         glAccvouch.setMcF(ZERO);
 
-        if ("入库单（只包含总仓）".equals(task.getTaskName())||"返厂单（只包含总仓）".equals(task.getTaskName())){
-            glAccvouch.setCdigest(entries.getSummary()+" - "+ queryData.get("FId"));
-        }else{
+        if ("入库单（只包含总仓）".equals(task.getTaskName()) || "返厂单（只包含总仓）".equals(task.getTaskName())) {
+            if ("贷".equals(entries.getDirection())) {
+                glAccvouch.setCdigest(entries.getSummary() + " - " + queryData.get("FId"));
+            } else {
+                glAccvouch.setCdigest(entries.getSummary());
+            }
+        } else {
             glAccvouch.setCdigest(entries.getSummary());
         }
         glAccvouch.setCbill(taskVoucherHead.getCreator());
@@ -874,7 +959,7 @@ public class TaskServiceImpl implements TaskService {
 
                 for (Map<String, Object> queryData : queryResults) {
                     GLAccvouch glAccvouch = createGLAccvouch(
-                            task,entries, taskVoucherHead, queryData, currentPeriod, ZERO, ZERO_DOUBLE, iYPeriod, iyear,end
+                            task, entries, taskVoucherHead, queryData, currentPeriod, ZERO, ZERO_DOUBLE, iYPeriod, iyear, end
                     );
                     synchronized (sendData) {
                         sendData.add(glAccvouch);
@@ -910,37 +995,51 @@ public class TaskServiceImpl implements TaskService {
         return results;
     }
 
-    private void syncSourceData(String sourceTable, String start, String end) {
+    private void syncSourceData(String sourceTable, String start, String end) throws InterruptedException {
         int pageSize = 1000;
         int currentPage = 1;
 
         switch (sourceTable) {
             case "at_pur_in":
+                stockService.getStock();
                 purInService.getPurIn(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 break;
             case "at_pur_ret":
+                stockService.getStock();
                 purRetService.getPurRet(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 break;
             case "at_sale":
+                saleRecService.getSaleRec(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 saleService.getSale(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
+                saleService.updateFSetType(start, end);
                 break;
             case "at_sale_rec":
                 saleRecService.getSaleRec(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 break;
             case "at_service_card":
                 serviceCardService.getServiceCard(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 break;
             case "at_service_cost":
                 serviceCostService.getServiceCost(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 break;
             case "at_stock_take":
                 stockTakeService.getStockTake(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 break;
             case "at_store_tran":
                 storeTranService.getStoreTran(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 break;
             case "at_service_box":
                 serviceBoxService.getServiceBox(currentPage, pageSize, start, end);
+                Thread.sleep(1000);
                 break;
         }
     }
@@ -976,7 +1075,7 @@ public class TaskServiceImpl implements TaskService {
 
         List<String> fieldsForJson = new ArrayList<>();
         for (String field : voucherSubject.getDynamicFields().keySet()) {
-            if (!"subject_code".equals(field) && !"use_auxiliary".equals(field))  {
+            if (!"subject_code".equals(field) && !"use_auxiliary".equals(field)) {
                 fieldsForJson.add(field);
             }
         }

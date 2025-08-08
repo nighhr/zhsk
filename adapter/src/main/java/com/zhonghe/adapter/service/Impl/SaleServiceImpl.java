@@ -62,4 +62,9 @@ public class SaleServiceImpl implements SaleService {
             }
         }
     }
+
+    @Override
+    public void updateFSetType(String start, String end) {
+        saleMapper.updateFSetType(start,end);
+    }
 }

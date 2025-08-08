@@ -20,4 +20,5 @@ public interface GLAccvouchMapper {
 
     Integer selectInoIdMaxByMonth();
 
+    Integer selectInoIdMaxByEndMonth(String yearMonth);
 }

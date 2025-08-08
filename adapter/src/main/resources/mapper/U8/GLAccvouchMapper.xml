@@ -79,4 +79,10 @@
             iyperiod = CONVERT(CHAR(6), GETDATE(), 112)
           AND iyear = YEAR(GETDATE())
     </select>
+    <select id="selectInoIdMaxByEndMonth" resultType="java.lang.Integer">
+        SELECT MAX(ino_id) AS max_inid
+        FROM GL_accvouch
+        WHERE
+            iyperiod = #{yearMonth}
+    </select>
 </mapper>

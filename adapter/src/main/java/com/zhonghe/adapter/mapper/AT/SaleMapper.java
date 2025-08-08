@@ -9,4 +9,6 @@ import java.util.List;
 public interface SaleMapper {
     int insert(Sale sale);
     int batchInsert(List<Sale> sales);
+
+    void updateFSetType(String start, String end);
 }
