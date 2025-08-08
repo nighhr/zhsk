@@ -317,20 +317,20 @@ public class TaskServiceImpl implements TaskService {
                 } catch (Exception e) {
                     // 捕获批次处理中的所有异常
                     System.out.println("捕获批次处理中的所有异常-----" + getStackTraceAsString(e));
-                    log.error("捕获批次处理中的所有异常----" + e.getMessage());
+                    log.warn("捕获批次处理中的所有异常----" + e.getMessage());
                     saveOperationLog(taskId, task.getTaskName(), voucherKey,
                             "失败", batch, getStackTraceAsString(e));
                 }
             }
         } catch (BusinessException be) {
             // 处理业务异常
-            log.error("处理业务异常----" + be.getMessage());
+            log.warn("处理业务异常----" + be.getMessage());
             saveOperationLog(taskId, task.getTaskName(), "N/A",
                     "失败", Collections.emptyList(), "业务异常: " + be.getMessage());
             throw be; // 重新抛出以保持原有异常处理流程
         } catch (Exception e) {
             // 捕获所有其他未处理的异常
-            log.error("捕获所有其他未处理的异常----" + e.getMessage());
+            log.warn("捕获所有其他未处理的异常----" + e.getMessage());
             saveOperationLog(taskId, task.getTaskName(), "N/A",
                     "失败", Collections.emptyList(), "全局异常: " + getStackTraceAsString(e));
             throw new RuntimeException("凭证处理失败", e);
@@ -475,7 +475,11 @@ public class TaskServiceImpl implements TaskService {
     public static List<GLAccvouch> groupByDeptAndSumMd(List<GLAccvouch> glAccvouches) {
         // 1. 过滤掉 md 为 null 或 0 的记录，然后按 cdeptId 分组
         Map<String, List<GLAccvouch>> groupedByDept = glAccvouches.stream()
-                .filter(item -> item.getMd() != null && item.getMd().compareTo(BigDecimal.ZERO) != 0)
+                .filter(item ->
+                        item.getMd() != null &&
+                                item.getMd().compareTo(BigDecimal.ZERO) != 0 &&
+                                item.getCdeptId() != null
+                )
                 .collect(Collectors.groupingBy(GLAccvouch::getCdeptId));
 
         // 2. 创建合并后的记录列表
@@ -687,12 +691,17 @@ public class TaskServiceImpl implements TaskService {
                         finalSql.insert(index + "AS total".length(), ", a.FOutOrgNumber");
                         groupByFields.add("a.FOutOrgNumber");
                     }
-                } else {
+                } else if(sourceTable.equals("at_service_cost")){
+                    finalSql.insert(index + "AS total".length(), ", a.FConsumeStoreNumber");
+                    groupByFields.add("a.FConsumeStoreNumber");
+                }else {
                     finalSql.insert(index + "AS total".length(), ", a.FDepNumber");
                     groupByFields.add("a.FDepNumber");
                 }
             }
         } else {
+            finalSql.insert(index + "AS total".length(), ", b.FId");
+            groupByFields.add("b.FId");
             if (entries.getSupplierRelated()) {
                 finalSql.insert(index + "AS total".length(), ", a.FSupplierNumber");
             }
@@ -749,8 +758,6 @@ public class TaskServiceImpl implements TaskService {
         } else if (taskName.equals("返厂单（只包含总仓）")) {
 //            if ("贷".equals(entries.getDirection())) {
 //            }
-            finalSql.insert(index + "AS total".length(), ", b.FId");
-            groupByFields.add("b.FId");
             List<String> codes = stockService.selectCode();
             String codeString = codes.stream()
                     .filter(Objects::nonNull)
@@ -892,7 +899,9 @@ public class TaskServiceImpl implements TaskService {
             if (sourceValue == null) {
                 if (queryData.get("FOrgNumber") != null) {
                     sourceValue = queryData.get("FOrgNumber");
-                } else {
+                } else if(queryData.get("FConsumeStoreNumber") != null){
+                    sourceValue = queryData.get("FConsumeStoreNumber");
+                }else{
                     continue;
                 }
             }
