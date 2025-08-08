@@ -310,12 +310,13 @@ public class TaskServiceImpl implements TaskService {
                             item.setMc(item.getMc().setScale(4, RoundingMode.HALF_UP));
                         }
                     });
-                    Thread.sleep(1000);
                     glAccvouchMapper.batchInsert(batch);
+                    Thread.sleep(1000);
                     saveOperationLog(taskId, task.getTaskName(), voucherKey,
                             "成功", batch, "凭证批量插入成功，数量：" + batch.size());
                 } catch (Exception e) {
                     // 捕获批次处理中的所有异常
+                    Thread.sleep(1000);
                     System.out.println("捕获批次处理中的所有异常-----" + getStackTraceAsString(e));
                     log.warn("捕获批次处理中的所有异常----" + e.getMessage());
                     saveOperationLog(taskId, task.getTaskName(), voucherKey,
@@ -443,7 +444,7 @@ public class TaskServiceImpl implements TaskService {
             iYPeriod = Integer.valueOf(result);
         }
 //            todo 同步数据记得取消注释
-        syncSourceData(sourceTable, start, end);
+//        syncSourceData(sourceTable, start, end);
 
         List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(task.getId());
         if (taskVoucherHeads.isEmpty()) {
@@ -563,11 +564,10 @@ public class TaskServiceImpl implements TaskService {
                     } else if (queryData.get("FOutOrgNumber") != null) {
                         glAccvouch.setCdeptId(queryData.get("FOutOrgNumber").toString());
                     }
-
-                    LocalDate date = LocalDate.parse(end);
-                    LocalDateTime startOfDay = date.atStartOfDay(); // 2025-07-23T00:00
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    LocalDateTime dateTime = LocalDateTime.parse(end, formatter);
                     // 转成 Date
-                    Date zeroDate = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
+                    Date zeroDate = Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
                     glAccvouch.setDbillDate(zeroDate);
 
                     glAccvouch.setIdoc(taskVoucherHead.getAttachmentCount());
@@ -682,8 +682,6 @@ public class TaskServiceImpl implements TaskService {
                     finalSql.insert(index + "AS total".length(), ", a.FOrgNumber");
                     groupByFields.add("a.FOrgNumber");
                 } else if (sourceTable.equals("at_store_tran")) {
-                    finalSql.insert(index + "AS total".length(), ", b.FId");
-                    groupByFields.add("b.FId");
                     if ("借".equals(entries.getDirection())) {
                         finalSql.insert(index + "AS total".length(), ", a.FInOrgNumber");
                         groupByFields.add("a.FInOrgNumber");
@@ -725,21 +723,21 @@ public class TaskServiceImpl implements TaskService {
 
         if (taskName.equals("门店正常商品成本结转(不包含41)")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        } else if (taskName.equals("门店服务商品成本结转(只包含41)")) {
+        } else if (taskName.equals("门店服务商品成本结转（只包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
-        } else if (taskName.equals("门店销售收入(只包含41分类)")) {
+        } else if (taskName.equals("门店销售收入（只包含41分类）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
-        } else if (taskName.equals("门店销售收入(不包含41分类)")) {
+        } else if (taskName.equals("门店销售收入（不包含41分类）")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        } else if (taskName.equals("部门之间服务商品调拨(两个门店相互调拨)只包含41")) {
+        } else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
-        } else if (taskName.equals("部门之间正常商品调拨(两个门店相互调拨)不包含41")) {
+        } else if (taskName.equals("部门之间正常商品调拨（两个门店相互调拨）不包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        } else if (taskName.equals("服务项目领用物料(盘点类型是4或5，包含41，）")) {
+        } else if (taskName.equals("服务项目领用物料(盘点类型是4或5，包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (4, 5) ");
-        } else if (taskName.equals("正常商品平负库存调整成本(盘点类型是1或2或6，不包含41）")) {
+        } else if (taskName.equals("正常商品平负库存调整成本（盘点类型1,或2或6）不包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
-        } else if (taskName.equals("服务商品平负库存调整成本(盘点类型是1或2或6，包含41）")) {
+        } else if (taskName.equals("服务商品平负库存调整成本（盘点类型1,或2或6）只包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
         } else if (taskName.equals("入库单（只包含总仓）")) {
             finalSql.insert(index + "AS total".length(), ", b.FId");
@@ -901,6 +899,10 @@ public class TaskServiceImpl implements TaskService {
                     sourceValue = queryData.get("FOrgNumber");
                 } else if(queryData.get("FConsumeStoreNumber") != null){
                     sourceValue = queryData.get("FConsumeStoreNumber");
+                }else if(queryData.get("FInOrgNumber") != null){
+                    sourceValue = queryData.get("FInOrgNumber");
+                }else if(queryData.get("FOutOrgNumber") != null){
+                    sourceValue = queryData.get("FOutOrgNumber");
                 }else{
                     continue;
                 }
