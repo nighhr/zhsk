@@ -6,6 +6,7 @@ import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.SaleClient;
 import com.zhonghe.adapter.feign.SaleRecClient;
 import com.zhonghe.adapter.mapper.AT.SaleRecMapper;
+import com.zhonghe.adapter.model.PurIn;
 import com.zhonghe.adapter.model.SaleRec;
 import com.zhonghe.adapter.service.SaleRecService;
 import com.zhonghe.kernel.exception.BusinessException;
@@ -13,7 +14,10 @@ import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,17 +31,17 @@ public class SaleRecServiceImpl implements SaleRecService {
     @Autowired
     private SaleRecMapper saleRecMapper;
 
+    @Value("${app.batch.master-size}")
+    private int masterBatchSize;
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void getSaleRec(Integer currentPage, Integer pageSize, String start, String end) {
-        for (int i = 1; ; i++) {
+        while (true) {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
             request.setStart(start);
             request.setEnd(end);
-            HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
-            objectObjectHashMap.put("current_page", currentPage);
-            objectObjectHashMap.put("page_size", pageSize);
-            String responseString = saleRecClient.querySaleRecRaw(objectObjectHashMap);
+            String responseString = saleRecClient.querySaleRecRaw(request);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
@@ -45,12 +49,14 @@ public class SaleRecServiceImpl implements SaleRecService {
                 List<SaleRec> SaleRecsList = JSONUtil.toList(dataArray, SaleRec.class);
                 if (SaleRecsList.isEmpty()) {
                     break;
-                } else {
-                    for (SaleRec saleRec : SaleRecsList) {
-                        saleRecMapper.insert(saleRec);
-                    }
-                    currentPage++;
                 }
+                for (int i = 0; i < SaleRecsList.size(); i += masterBatchSize) {
+                    int endIndex = Math.min(i + masterBatchSize, SaleRecsList.size());
+                    List<SaleRec> batchList = SaleRecsList.subList(i, endIndex);
+                    saleRecMapper.batchInsert(batchList);
+                }
+                currentPage++;
+
 
             } else {
                 // 处理错误情况

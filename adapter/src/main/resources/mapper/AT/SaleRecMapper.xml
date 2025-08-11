@@ -18,17 +18,34 @@
 
     <insert id="batchInsert" parameterType="java.util.List">
         INSERT IGNORE INTO at_sale_rec (
-        ID, FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
+         FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
         FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
         FSetTypeName, FMemberID, FPayMoney, FRemark, FCreateBy,
         FCreateDate, FUpdateBy, FUpdateDate, sync_flag, sync_time
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
-            #{item.ID}, #{item.FID}, #{item.FBillNo}, #{item.FSalesNo}, #{item.FOrgID}, #{item.FOrgNumber}, #{item.FOrgName},
-            #{item.FDate}, #{item.FSaleType}, #{item.FSaleTypeName}, #{item.FSrcEntryID}, #{item.FSetType},
-            #{item.FSetTypeName}, #{item.FMemberID}, #{item.FPayMoney}, #{item.FRemark}, #{item.FCreateBy},
-            #{item.FCreateDate}, #{item.FUpdateBy}, #{item.FUpdateDate}, #{item.sync_flag}, #{item.sync_time}
+            #{item.FID,jdbcType=VARCHAR},
+            #{item.FBillNo,jdbcType=VARCHAR},
+            #{item.FSalesNo,jdbcType=VARCHAR},
+            #{item.FOrgID,jdbcType=VARCHAR},
+            #{item.FOrgNumber,jdbcType=VARCHAR},
+            #{item.FOrgName,jdbcType=VARCHAR},
+            #{item.FDate,jdbcType=TIMESTAMP},
+            #{item.FSaleType,jdbcType=VARCHAR},
+            #{item.FSaleTypeName,jdbcType=VARCHAR},
+            #{item.FSrcEntryID,jdbcType=VARCHAR},
+            #{item.FSetType,jdbcType=VARCHAR},
+            #{item.FSetTypeName,jdbcType=VARCHAR},
+            #{item.FMemberID,jdbcType=VARCHAR},
+            #{item.FPayMoney,jdbcType=DECIMAL},
+            #{item.FRemark,jdbcType=VARCHAR},
+            #{item.FCreateBy,jdbcType=VARCHAR},
+            #{item.FCreateDate,jdbcType=TIMESTAMP},
+            #{item.FUpdateBy,jdbcType=VARCHAR},
+            #{item.FUpdateDate,jdbcType=TIMESTAMP},
+            #{item.sync_flag,jdbcType=VARCHAR},
+            #{item.sync_time,jdbcType=TIMESTAMP}
             )
         </foreach>
     </insert>
