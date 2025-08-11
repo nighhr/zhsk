@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Import;
 )
 @EnableFeignClients(basePackages = "com.zhonghe.adapter.feign")
 @Import({
-        // 显式导入依赖模块的配置类（按需添加）
         com.zhonghe.adapter.config.SecondaryDataSourceConfig.class,
         com.zhonghe.backoffice.config.BackOfficeDataSourceConfig.class
 })

@@ -75,3 +75,8 @@ api:
   base-url: hcapi.hnkingdee.cn:60002
   sign-header-value: NsRm1fqs+mEW0MROZM4w5w==
 
+app:
+  batch:
+    master-size: 500
+    detail-size: 2000
+

@@ -9,6 +9,6 @@ import java.util.List;
 public interface PurRetLineMapper {
 
     // 明细表批量插入
-    int batchInsertLines(List<PurRetLine> purRetLines);
+    int batchInsert(List<PurRetLine> purRetLines);
 
 }

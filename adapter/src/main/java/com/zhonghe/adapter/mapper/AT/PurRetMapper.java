@@ -9,5 +9,6 @@ import java.util.List;
 public interface PurRetMapper {
     // 主表插入
     int insert(PurRet purRet);
+    int batchInsert(List<PurRet> purIns);
 
 }

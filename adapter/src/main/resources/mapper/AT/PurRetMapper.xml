@@ -14,6 +14,38 @@
         #{FCreateBy}, #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}, #{sync_flag}, #{sync_time}
         )
     </insert>
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO at_pur_ret (
+        FID, FBillType, FFactoryType, FDepID, FDepNumber, FDepName,
+        FDate, FSupplierID, FSupplierNumber, FSupplierName, FReason,
+        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate,
+        sync_flag, sync_time
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.FID,jdbcType=VARCHAR},
+            #{item.FBillType,jdbcType=VARCHAR},
+            #{item.FFactoryType,jdbcType=VARCHAR},
+            #{item.FDepID,jdbcType=VARCHAR},
+            #{item.FDepNumber,jdbcType=VARCHAR},
+            #{item.FDepName,jdbcType=VARCHAR},
+            #{item.FDate,jdbcType=TIMESTAMP},
+            #{item.FSupplierID,jdbcType=VARCHAR},
+            #{item.FSupplierNumber,jdbcType=VARCHAR},
+            #{item.FSupplierName,jdbcType=VARCHAR},
+            #{item.FReason,jdbcType=VARCHAR},
+            #{item.FRemark,jdbcType=VARCHAR},
+            #{item.FCreateBy,jdbcType=VARCHAR},
+            #{item.FCreateDate,jdbcType=TIMESTAMP},
+            #{item.FUpdateBy,jdbcType=VARCHAR},
+            #{item.FUpdateDate,jdbcType=TIMESTAMP},
+            #{item.sync_flag,jdbcType=VARCHAR},
+            #{item.sync_time,jdbcType=TIMESTAMP}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        FID = VALUES(FID)
+    </insert>
 
 
 </mapper>

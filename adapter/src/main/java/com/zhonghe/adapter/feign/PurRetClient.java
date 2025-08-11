@@ -17,5 +17,5 @@ public interface PurRetClient {
             consumes = "application/json",
             produces = "application/json"
     )
-    String queryPurRetRaw(@RequestBody HashMap request);
+    String queryPurRetRaw(@RequestBody ApiRequest request);
 }

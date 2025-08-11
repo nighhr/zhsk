@@ -2,20 +2,36 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zhonghe.adapter.mapper.AT.PurRetLineMapper">
 
-    <insert id="batchInsertLines" parameterType="java.util.List">
-        INSERT IGNORE INTO at_pur_ret_line (
-        FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName, FMaterialTypeNumber,
-        FMaterialTypeName, FUnit, FQty, FBatch, FStockID, FStockNumber,
-        FStockName, FRate, FTaxPrice, FAllAmount, FNote
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO at_pur_ret_line (
+        FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName,
+        FMaterialTypeNumber, FMaterialTypeName, FUnit, FQty, FBatch,
+        FStockID, FStockNumber, FStockName, FRate, FTaxPrice,
+        FAllAmount, FNote
         ) VALUES
-        <foreach collection="list" item="item" separator=",">
+        <foreach collection="list" item="item" index="index" separator=",">
             (
-            #{item.FID}, #{item.FEntryID}, #{item.FMaterialID}, #{item.FMaterialNumber}, #{item.FMaterialName},
-            #{item.FMaterialTypeNumber}, #{item.FMaterialTypeName}, #{item.FUnit}, #{item.FQty},
-            #{item.FBatch}, #{item.FStockID}, #{item.FStockNumber}, #{item.FStockName},
-            #{item.FRate}, #{item.FTaxPrice}, #{item.FAllAmount}, #{item.FNote}
+            #{item.FID,jdbcType=VARCHAR},
+            #{item.FEntryID,jdbcType=VARCHAR},
+            #{item.FMaterialID,jdbcType=VARCHAR},
+            #{item.FMaterialNumber,jdbcType=VARCHAR},
+            #{item.FMaterialName,jdbcType=VARCHAR},
+            #{item.FMaterialTypeNumber,jdbcType=VARCHAR},
+            #{item.FMaterialTypeName,jdbcType=VARCHAR},
+            #{item.FUnit,jdbcType=VARCHAR},
+            #{item.FQty,jdbcType=VARCHAR},
+            #{item.FBatch,jdbcType=VARCHAR},
+            #{item.FStockID,jdbcType=VARCHAR},
+            #{item.FStockNumber,jdbcType=VARCHAR},
+            #{item.FStockName,jdbcType=VARCHAR},
+            #{item.FRate,jdbcType=DOUBLE},
+            #{item.FTaxPrice,jdbcType=DOUBLE},
+            #{item.FAllAmount,jdbcType=DOUBLE},
+            #{item.FNote,jdbcType=VARCHAR}
             )
         </foreach>
+        ON DUPLICATE KEY UPDATE
+        FEntryID = VALUES(FEntryID)
     </insert>
 
 </mapper>

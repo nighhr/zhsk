@@ -14,6 +14,7 @@ import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,12 +33,15 @@ public class PurInServiceImpl implements PurInService {
     @Autowired
     private PurInLineMapper purInLineMapper;
 
+    @Value("${app.batch.master-size}")
+    private int masterBatchSize;
+
+    @Value("${app.batch.detail-size}")
+    private int detailBatchSize;
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void getPurIn(Integer currentPage, Integer pageSize, String start, String end) {
-
-        final int masterBatchSize = 500;  // 主表批次大小
-        final int detailBatchSize = 2000; // 明细表批次大小
 
         while (true) {
             ApiRequest request = new ApiRequest(currentPage, pageSize);
