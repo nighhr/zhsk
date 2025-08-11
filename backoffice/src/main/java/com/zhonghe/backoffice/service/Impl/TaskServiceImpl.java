@@ -444,7 +444,7 @@ public class TaskServiceImpl implements TaskService {
             iYPeriod = Integer.valueOf(result);
         }
 //            todo 同步数据记得取消注释
-//        syncSourceData(sourceTable, start, end);
+        syncSourceData(sourceTable, start, end);
 
         List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(task.getId());
         if (taskVoucherHeads.isEmpty()) {
@@ -848,6 +848,9 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Object total = queryData.get("total");
+        if (total==null){
+            total = 0;
+        }
         BigDecimal amount = convertToBigDecimal(total);
 
         if ("借".equals(entries.getDirection())) {

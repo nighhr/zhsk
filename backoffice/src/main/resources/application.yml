@@ -2,13 +2,16 @@ spring:
   datasource:
     # 主数据源（MySQL）
     backoffice:
-      jdbc-url: "jdbc:mysql://localhost:3306/aite?useSSL=false&serverTimezone=Asia/Shanghai"
+      jdbc-url: "jdbc:mysql://localhost:3306/aite?useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true"
       username: root
       password: Root@1234
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         pool-name: PrimaryMySQLPool
-        maximum-pool-size: 10
+        maximum-pool-size: 20
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
 
     secondary:
       jdbc-url: "jdbc:sqlserver://192.168.28.24:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true"
@@ -43,6 +46,7 @@ spring:
 #          threadPool:
 #            threadCount: 5
 mybatis:
+  executor-type: batch
   mapper-locations:
     - classpath*:mapper/*.xml
   type-aliases-package: com.zhonghe.backoffice.model
