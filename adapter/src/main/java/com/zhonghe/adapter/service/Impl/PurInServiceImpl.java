@@ -1,48 +1,30 @@
 package com.zhonghe.adapter.service.Impl;
 
-import cn.hutool.json.JSON;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.zhonghe.adapter.feign.PurInClient;
 import com.zhonghe.adapter.mapper.AT.PurInLineMapper;
 import com.zhonghe.adapter.mapper.AT.PurInMapper;
-import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
 import com.zhonghe.adapter.model.PurIn;
 import com.zhonghe.adapter.model.PurInLine;
-import com.zhonghe.adapter.model.U8.GLAccvouch;
-import com.zhonghe.adapter.response.AiTeResponse;
 import com.zhonghe.adapter.service.PurInService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import lombok.RequiredArgsConstructor;
-import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class PurInServiceImpl implements PurInService {
 
     private final PurInClient purInClient;
-
-    @Autowired
-    @Qualifier("secondarySqlSessionTemplate")
-    private SqlSessionTemplate secondarySqlSessionTemplate;
-
-    @Autowired
-    private GLAccvouchMapper glAccvouchMapper;
 
     @Autowired
     private PurInMapper purInMapper;
@@ -54,9 +36,8 @@ public class PurInServiceImpl implements PurInService {
     @Override
     public void getPurIn(Integer currentPage, Integer pageSize, String start, String end) {
 
-        // 配置批次大小（可放入配置文件）
         final int masterBatchSize = 500;  // 主表批次大小
-        final int detailBatchSize = 1000; // 明细表批次大小
+        final int detailBatchSize = 2000; // 明细表批次大小
 
         while (true) {
             ApiRequest request = new ApiRequest(currentPage, pageSize);

@@ -55,7 +55,7 @@
 
     <!-- 批量插入 -->
     <insert id="batchInsert" parameterType="java.util.List">
-        INSERT IGNORE INTO at_pur_in_line (
+        INSERT INTO at_pur_in_line (
         FID, FEntryID, FMaterialID, FMaterialNumber, FMaterialName,
         FUnit, FInQty, FQty, FGiftQty, FBatch,
         FStockID, FStockNumber, FStockName, FRate, FTaxPrice,
@@ -83,5 +83,8 @@
             #{item.FOrderEntryID,jdbcType=VARCHAR}
             )
         </foreach>
+        ON DUPLICATE KEY UPDATE
+        FID = VALUES(FID),
+        FEntryID = VALUES(FEntryID)
     </insert>
 </mapper>

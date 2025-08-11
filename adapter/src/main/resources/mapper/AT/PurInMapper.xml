@@ -52,8 +52,8 @@
     </insert>
 
     <!-- 批量插入 -->
-    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="ID">
-        INSERT IGNORE INTO at_pur_in (
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO at_pur_in (
         FID, FOrderNo, FDate, FDepID, FDepNumber, FDepName,
         FSupplierID, FSupplierNumber, FSupplierName, FRemark,
         FCreateBy, FCreateDate, FUpdateBy, FUpdateDate, FBillType,
@@ -80,5 +80,6 @@
             #{item.sync_time,jdbcType=TIMESTAMP}
             )
         </foreach>
+        ON DUPLICATE KEY UPDATE FID = FID
     </insert>
 </mapper>
