@@ -10,31 +10,27 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import javax.sql.DataSource;
 
 
-//@Configuration
+@Configuration
 public class QuartzConfig {
-//
-//    @Autowired
-//    @Qualifier("backofficeDataSource")
-//    private DataSource dataSource;
-//
-//    @Bean
-//    public SchedulerFactoryBean schedulerFactoryBean() {
-//        SchedulerFactoryBean factory = new SchedulerFactoryBean();
-//        factory.setDataSource(dataSource);
-//        factory.setApplicationContextSchedulerContextKey("applicationContext");
-//        factory.setAutoStartup(true);
-//        return factory;
-//    }
-//
-//    @Bean
-//    public QuartzProperties quartzProperties() {
-//        return new QuartzProperties();
-//    }
-//
-//    @Bean
-//    public AutowiringSpringBeanJobFactory jobFactory() {
-//        return new AutowiringSpringBeanJobFactory();
-//    }
+
+    @Autowired
+    @Qualifier("backofficeDataSource")
+    private DataSource dataSource;
+
+    @Bean
+    public SchedulerFactoryBean schedulerFactoryBean() {
+        SchedulerFactoryBean factory = new SchedulerFactoryBean();
+        factory.setDataSource(dataSource);
+        factory.setApplicationContextSchedulerContextKey("applicationContext");
+        factory.setAutoStartup(true);
+        return factory;
+    }
+
+    @Bean
+    public QuartzProperties quartzProperties() {
+        return new QuartzProperties();
+    }
+
 }
 
 

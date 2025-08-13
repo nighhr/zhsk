@@ -22,29 +22,36 @@ spring:
         pool-name: SecondarySQLServerPool
         maximum-pool-size: 5
 
-  liquibase:
-    url: jdbc:mysql://localhost:3306/aite?useSSL=false&serverTimezone=Asia/Shanghai
-    user: root
-    password: Root@1234
-    enabled: false
-    change-log: classpath:db/changelog/backoffice-changelog-master.yaml
-    default-schema: aite
 #  quartz:
+#    # 使用数据库存储
 #    job-store-type: jdbc
+#    # 自动初始化数据库表结构
 #    jdbc:
 #      initialize-schema: always
+#    # 使用Spring管理的事务
 #    properties:
-#      org:
-#        quartz:
-#          jobStore:
-#            tablePrefix: QRTZ_
-#            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-#            useProperties: true
-#          scheduler:
-#            instanceName: BackofficeScheduler
-#            instanceId: AUTO
-#          threadPool:
-#            threadCount: 5
+#      org.quartz.scheduler.instanceName: MySpringBootScheduler
+#      org.quartz.scheduler.instanceId: AUTO
+#      org.quartz.jobStore.class: org.quartz.impl.jdbcjobstore.JobStoreTX
+#      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+#      org.quartz.jobStore.tablePrefix: QRTZ_
+#      org.quartz.jobStore.isClustered: true
+#      org.quartz.jobStore.clusterCheckinInterval: 20000
+#      org.quartz.jobStore.useProperties: false
+#      org.quartz.threadPool.class: org.quartz.simpl.SimpleThreadPool
+#      org.quartz.threadPool.threadCount: 10
+#      org.quartz.threadPool.threadPriority: 5
+#      org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread: true
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/backoffice-changelog-master.yaml
+    default-schema: aite
+    user: ${spring.datasource.backoffice.username}
+    password: ${spring.datasource.backoffice.password}
+    url: ${spring.datasource.backoffice.jdbc-url}
+    driver-class-name: ${spring.datasource.backoffice.driver-class-name}
+
 mybatis:
   executor-type: batch
   mapper-locations:
@@ -53,13 +60,13 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
-
 logging:
   level:
     org.mybatis: DEBUG
     com.zhonghe.backoffice.mapper: DEBUG
     com.zhonghe.adapter.feign: DEBUG
     feign.Logger: DEBUG
+#    org.quartz: INFO # 添加Quartz日志级别
 
 feign:
   client:
@@ -79,4 +86,3 @@ app:
   batch:
     master-size: 500
     detail-size: 2000
-
