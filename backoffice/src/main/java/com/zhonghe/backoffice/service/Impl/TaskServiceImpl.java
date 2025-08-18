@@ -41,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -541,6 +540,7 @@ public class TaskServiceImpl implements TaskService {
 
             for (Map<String, Object> subject : subjects) {
                 String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries, start, end, task.getSourceTable(), task.getTaskName());
+                System.out.println("fullSql-------------------"+fullSql);
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
                 GLAccvouch glAccvouch = null;
                 for (Map<String, Object> queryData : queryResults) {
@@ -969,6 +969,7 @@ public class TaskServiceImpl implements TaskService {
 
             for (Map<String, Object> subject : subjects) {
                 String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries, start, end, task.getSourceTable(), task.getTaskName());
+                System.out.println("fullSql-------------------"+fullSql);
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
 
                 for (Map<String, Object> queryData : queryResults) {
