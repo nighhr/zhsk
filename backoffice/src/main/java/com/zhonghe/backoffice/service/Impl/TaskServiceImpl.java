@@ -540,7 +540,7 @@ public class TaskServiceImpl implements TaskService {
 
             for (Map<String, Object> subject : subjects) {
                 String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries, start, end, task.getSourceTable(), task.getTaskName());
-                System.out.println("fullSql-------------------"+fullSql);
+                log.error("fullSql-------------------"+fullSql);
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
                 GLAccvouch glAccvouch = null;
                 for (Map<String, Object> queryData : queryResults) {
@@ -969,7 +969,7 @@ public class TaskServiceImpl implements TaskService {
 
             for (Map<String, Object> subject : subjects) {
                 String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries, start, end, task.getSourceTable(), task.getTaskName());
-                System.out.println("fullSql-------------------"+fullSql);
+                log.error("fullSql-------------------"+fullSql);
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
 
                 for (Map<String, Object> queryData : queryResults) {
@@ -999,13 +999,6 @@ public class TaskServiceImpl implements TaskService {
         if (results.isEmpty()) {
             return Collections.emptyList();
         }
-
-        // 3. 获取所有列名（包括主键）
-//        Set<String> columns = results.get(0).keySet();
-
-        // 4. 更新这些记录的mark为1
-//        String updateSql = "UPDATE " + sourceTable + " SET mark = 1 WHERE FDate BETWEEN ? AND ? ";
-//        int updatedCount = jdbcTemplate.update(updateSql, start, end);
 
         return results;
     }

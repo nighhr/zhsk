@@ -30,13 +30,12 @@ public class StoreTranServiceImpl implements StoreTranService {
     private StoreTranLineMapper storeTranLineMapper;
     @Override
     public void getStoreTran(Integer currentPage, Integer pageSize, String start, String end) {
-        for (int i = 1; ; i++) {
-            ApiRequest request = new ApiRequest(currentPage, pageSize);
-            request.setStart(start);
-            request.setEnd(end);
+        while (true) {
             HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
             objectObjectHashMap.put("current_page", currentPage);
             objectObjectHashMap.put("page_size", pageSize);
+            objectObjectHashMap.put("start",start);
+            objectObjectHashMap.put("end",end);
             String responseString = storeTranClient.queryStoreTranRaw(objectObjectHashMap);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
