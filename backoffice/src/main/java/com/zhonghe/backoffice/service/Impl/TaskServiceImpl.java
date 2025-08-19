@@ -1154,23 +1154,24 @@ public class TaskServiceImpl implements TaskService {
 
     private void saveOperationLog(Long taskId, String taskName, String primaryKeyValue,
                                   String status, Object inputDetail, String logDetail) {
-        OperationLog log = new OperationLog();
-        log.setTaskId(taskId);
-        log.setTaskName(taskName);
-        log.setPrimaryKeyValue(primaryKeyValue);
-        log.setStatus(status);
-        log.setLogTime(new Date());
-        log.setLogDetail(logDetail);
+        OperationLog logs = new OperationLog();
+        logs.setTaskId(taskId);
+        logs.setTaskName(taskName);
+        logs.setPrimaryKeyValue(primaryKeyValue);
+        logs.setStatus(status);
+        logs.setLogTime(new Date());
+        logs.setLogDetail(logDetail);
         try {
-            log.setInputDetail(OBJECT_MAPPER.writeValueAsString(inputDetail));
+            logs.setInputDetail(OBJECT_MAPPER.writeValueAsString(inputDetail));
         } catch (JsonProcessingException e) {
-            log.setInputDetail("参数序列化失败：" + e.getMessage());
+            logs.setInputDetail("参数序列化失败：" + e.getMessage());
         }
 
+
         try {
-            operationLogMapper.insert(log);
+            operationLogMapper.insert(logs);
         } catch (Exception e) {
-            log.error("保存操作日志失败", e);
+            log.error("日志插入失败："+e);
         }
     }
 
