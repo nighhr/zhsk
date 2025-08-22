@@ -17,5 +17,5 @@ public interface SaleClient {
             consumes = "application/json",
             produces = "application/json"
     )
-    String querySaleRaw(@RequestBody ApiRequest request);
+    String querySaleRaw(@RequestBody HashMap request);
 }

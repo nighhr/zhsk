@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -50,11 +51,12 @@ public class SaleServiceImpl implements SaleService {
 
             // 一次请求多页数据
             for (int i = 0; i < pageCountPerBatch; i++) {
-                ApiRequest request = new ApiRequest(currentPage, pageSize);
-                request.setStart(start);
-                request.setEnd(end);
-
-                String responseString = saleClient.querySaleRaw(request);
+                HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
+                objectObjectHashMap.put("current_page", currentPage);
+                objectObjectHashMap.put("page_size", pageSize);
+                objectObjectHashMap.put("start",start);
+                objectObjectHashMap.put("end",end);
+                String responseString = saleClient.querySaleRaw(objectObjectHashMap);
                 JSONObject parse = JSONUtil.parseObj(responseString);
 
                 if (!"OK".equals(parse.getStr("OFlag"))) {

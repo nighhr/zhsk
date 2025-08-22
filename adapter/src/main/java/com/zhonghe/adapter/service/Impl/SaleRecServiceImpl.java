@@ -38,10 +38,12 @@ public class SaleRecServiceImpl implements SaleRecService {
     @Override
     public void getSaleRec(Integer currentPage, Integer pageSize, String start, String end) {
         while (true) {
-            ApiRequest request = new ApiRequest(currentPage, pageSize);
-            request.setStart(start);
-            request.setEnd(end);
-            String responseString = saleRecClient.querySaleRecRaw(request);
+            HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
+            objectObjectHashMap.put("current_page", currentPage);
+            objectObjectHashMap.put("page_size", pageSize);
+            objectObjectHashMap.put("start",start);
+            objectObjectHashMap.put("end",end);
+            String responseString = saleRecClient.querySaleRecRaw(objectObjectHashMap);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表

@@ -3,16 +3,37 @@
 <mapper namespace="com.zhonghe.adapter.mapper.AT.SaleRecMapper">
 
     <insert id="insert" parameterType="com.zhonghe.adapter.model.SaleRec">
-        INSERT IGNORE INTO at_sale_rec (
+        INSERT
+        IGNORE INTO at_sale_rec (
             ID, FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
             FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
-            FSetTypeName, FMemberID, FPayMoney, FRemark, FCreateBy,
+            FSetTypeName, FPayMent,FPayMentName,FMemberID, FPayMoney, FRemark, FCreateBy,
             FCreateDate, FUpdateBy, FUpdateDate, sync_flag, sync_time
         ) VALUES (
-        #{ID}, #{FID}, #{FBillNo}, #{FSalesNo}, #{FOrgID}, #{FOrgNumber}, #{FOrgName},
-        #{FDate}, #{FSaleType}, #{FSaleTypeName}, #{FSrcEntryID}, #{FSetType},
-        #{FSetTypeName}, #{FMemberID}, #{FPayMoney}, #{FRemark}, #{FCreateBy},
-        #{FCreateDate}, #{FUpdateBy}, #{FUpdateDate}, #{sync_flag}, #{sync_time}
+        #{ID},
+        #{FID},
+        #{FBillNo},
+        #{FSalesNo},
+        #{FOrgID},
+        #{FOrgNumber},
+        #{FOrgName},
+        #{FDate},
+        #{FSaleType},
+        #{FSaleTypeName},
+        #{FSrcEntryID},
+        #{FSetType},
+        #{FSetTypeName},
+        #{FPayMent},
+        #{FPayMentName},
+        #{FMemberID},
+        #{FPayMoney},
+        #{FRemark},
+        #{FCreateBy},
+        #{FCreateDate},
+        #{FUpdateBy},
+        #{FUpdateDate},
+        #{sync_flag},
+        #{sync_time}
         )
     </insert>
 
@@ -20,7 +41,7 @@
         INSERT IGNORE INTO at_sale_rec (
          FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
         FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
-        FSetTypeName, FMemberID, FPayMoney, FRemark, FCreateBy,
+        FSetTypeName,FPayMent,FPayMentName, FMemberID, FPayMoney, FRemark, FCreateBy,
         FCreateDate, FUpdateBy, FUpdateDate, sync_flag, sync_time
         ) VALUES
         <foreach collection="list" item="item" separator=",">
@@ -37,6 +58,8 @@
             #{item.FSrcEntryID,jdbcType=VARCHAR},
             #{item.FSetType,jdbcType=VARCHAR},
             #{item.FSetTypeName,jdbcType=VARCHAR},
+            #{item.FPayMent,jdbcType=VARCHAR},
+            #{item.FPayMentName,jdbcType=VARCHAR},
             #{item.FMemberID,jdbcType=VARCHAR},
             #{item.FPayMoney,jdbcType=DECIMAL},
             #{item.FRemark,jdbcType=VARCHAR},

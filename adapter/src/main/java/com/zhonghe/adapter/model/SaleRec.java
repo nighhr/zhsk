@@ -19,6 +19,8 @@ public class SaleRec {
     private String FSrcEntryID;
     private String FSetType;
     private String FSetTypeName;
+    private String FPayMent;
+    private String FPayMentName;
     private String FMemberID;
     private Double FPayMoney;
     private String FRemark;

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -44,10 +45,12 @@ public class PurInServiceImpl implements PurInService {
     public void getPurIn(Integer currentPage, Integer pageSize, String start, String end) {
 
         while (true) {
-            ApiRequest request = new ApiRequest(currentPage, pageSize);
-            request.setStart(start);
-            request.setEnd(end);
-            String responseString = purInClient.queryPurInRaw(request);
+            HashMap<Object, Object> objectObjectHashMap = new HashMap<>();
+            objectObjectHashMap.put("current_page", currentPage);
+            objectObjectHashMap.put("page_size", pageSize);
+            objectObjectHashMap.put("start",start);
+            objectObjectHashMap.put("end",end);
+            String responseString = purInClient.queryPurInRaw(objectObjectHashMap);
             JSONObject parse = JSONUtil.parseObj(responseString);
             if ("OK".equals(parse.getStr("OFlag"))) {
                 // 获取Data数组并转换为模型列表
