@@ -14,8 +14,4 @@ public class OperationLog {
     private String status; // "成功" or "失败"
     private String inputDetail;
     private String logDetail;
-
-    public void error(String 保存操作日志失败, Exception e) {
-
-    }
 }
