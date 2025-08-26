@@ -1,5 +1,6 @@
 package com.zhonghe.adapter.controller;
 
+import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
 import com.zhonghe.adapter.service.*;
 import com.zhonghe.kernel.vo.request.ApiRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,8 @@ public class AiTeController {
     private ServiceCostService serviceCostService;
     @Autowired
     private ServiceBoxService serviceBoxService;
+    @Autowired
+    private GLAccvouchMapper glAccvouchMapper;
 
     /**
      * 采购入库接口
@@ -102,4 +105,9 @@ public class AiTeController {
         serviceBoxService.getServiceBox(apiRequest.getCurrent_page(), apiRequest.getPage_size(), apiRequest.getStart(), apiRequest.getEnd());
     }
 
+    @GetMapping("/testConnect")
+    public Integer testConnect(){
+        Integer test = glAccvouchMapper.test();
+        return test;
+    }
 }

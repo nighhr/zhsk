@@ -1,14 +1,16 @@
 spring:
   datasource:
     secondary:
-      jdbc-url: "jdbc:sqlserver://192.168.28.24:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true"
+      jdbc-url: "jdbc:sqlserver://192.168.4.8:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true;serverTimezone=Asia/Shanghai"
       username: sa
-      password: Aa123456
+      password: sy1901!!
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
       hikari:
         pool-name: SecondarySQLServerPool
-        maximum-pool-size: 5
-        connection-timeout: 30000
+        maximum-pool-size: 10
+        maxLifetime: 1800000
+        idleTimeout: 600000
+        validation-timeout: 5000
 
 mybatis:
   secondary:

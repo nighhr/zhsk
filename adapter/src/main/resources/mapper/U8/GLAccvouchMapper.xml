@@ -72,6 +72,10 @@
         </foreach>
     </insert>
 
+    <select id = 'test' resultType="java.lang.Integer">
+        select 1;
+    </select>
+
     <select id="selectInoIdMaxByMonth" resultType="java.lang.Integer">
         SELECT MAX(ino_id) AS max_inid
         FROM GL_accvouch

@@ -715,12 +715,14 @@ public class TaskServiceImpl implements TaskService {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
         } else if (taskName.equals("门店服务商品成本结转（只包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
-        } else if (taskName.equals("门店销售收入（只包含41分类）")) {
-            //todo 需要问一下爱特
-            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
-        } else if (taskName.equals("门店销售收入（不包含41分类）")) {
-            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        } else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
+        }
+//        else if (taskName.equals("门店销售收入（只包含41分类）")) {
+//            //todo 需要问一下爱特
+//            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
+//        } else if (taskName.equals("门店销售收入（不包含41分类）")) {
+//            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
+//        }
+        else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("部门之间正常商品调拨（两个门店相互调拨）不包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
