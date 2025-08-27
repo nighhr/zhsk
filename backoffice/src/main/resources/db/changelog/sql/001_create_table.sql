@@ -379,36 +379,39 @@ CREATE TABLE IF NOT EXISTS  `at_sale_line`  (
 
 -- changeset zq:1.19
 
-CREATE TABLE IF NOT EXISTS  `at_sale_rec`  (
+CREATE TABLE IF NOT EXISTS`at_sale_rec` (
     `ID` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `FID` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '主表ID',
-    `FBillNo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '单据编码',
-    `FSalesNo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '销售单号',
-    `FOrgID` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '回款门店ID',
-    `FOrgNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '回款门店编码',
-    `FOrgName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '回款门店名称',
-    `FDate` datetime NULL DEFAULT NULL COMMENT '业务日期',
-    `FSaleType` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '销售类型编码',
-    `FSaleTypeName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '销售类型名称',
-    `FSrcEntryID` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '销售明细内码',
-    `FSetType` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '结算方式编码',
-    `FSetTypeName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '结算方式名称',
-    `FMemberID` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '会员编码',
-    `FPayMoney` decimal(18, 10) NULL DEFAULT NULL COMMENT '回款金额',
-    `FRemark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
-    `FCreateBy` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建人',
-    `FCreateDate` datetime NULL DEFAULT NULL COMMENT '创建时间',
-    `FUpdateBy` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '修改人',
-    `FUpdateDate` datetime NULL DEFAULT NULL COMMENT '修改时间',
-    `sync_flag` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '同步标志',
-    `sync_time` datetime NULL DEFAULT NULL COMMENT '同步时间',
-    PRIMARY KEY (`ID`) USING BTREE,
-    UNIQUE INDEX `idx_fsalesno`(`FSalesNo` ASC) USING BTREE COMMENT '销售单号唯一索引',
-    INDEX `idx_fid`(`FID` ASC) USING BTREE COMMENT '主表ID索引',
-    INDEX `idx_fdate`(`FDate` ASC) USING BTREE COMMENT '业务日期索引',
-    INDEX `idx_org_number`(`FOrgNumber` ASC) USING BTREE COMMENT '门店编码索引',
-    INDEX `idx_sync`(`sync_flag` ASC, `sync_time` ASC) USING BTREE COMMENT '同步状态索引'
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '销售回款记录表' KEY_BLOCK_SIZE = 8 ROW_FORMAT = COMPRESSED;
+    `FID` varchar(50) NOT NULL COMMENT '主表ID',
+    `FBillNo` varchar(30) DEFAULT NULL COMMENT '单据编码',
+    `FSalesNo` varchar(30) NOT NULL COMMENT '销售单号',
+    `FOrgID` varchar(20) DEFAULT NULL COMMENT '回款门店ID',
+    `FOrgNumber` varchar(20) DEFAULT NULL COMMENT '回款门店编码',
+    `FOrgName` varchar(50) DEFAULT NULL COMMENT '回款门店名称',
+    `FDate` date DEFAULT NULL COMMENT '业务日期',
+    `FSaleType` varchar(20) DEFAULT NULL COMMENT '销售类型编码',
+    `FSaleTypeName` varchar(50) DEFAULT NULL COMMENT '销售类型名称',
+    `FSrcEntryID` varchar(30) DEFAULT NULL COMMENT '销售明细内码',
+    `FSetType` varchar(20) DEFAULT NULL COMMENT '结算方式编码',
+    `FSetTypeName` varchar(50) DEFAULT NULL COMMENT '结算方式名称',
+    `FPayMent` varchar(50) DEFAULT NULL COMMENT '支付方式编码',
+    `FPayMentName` varchar(50) DEFAULT NULL COMMENT '支付方式名称',
+    `FMemberID` varchar(20) DEFAULT NULL COMMENT '会员编码',
+    `FPayMoney` decimal(18,2) DEFAULT NULL COMMENT '回款金额',
+    `FRemark` varchar(200) DEFAULT NULL COMMENT '备注',
+    `FCreateBy` varchar(20) DEFAULT NULL COMMENT '创建人',
+    `FCreateDate` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `FUpdateBy` varchar(20) DEFAULT NULL COMMENT '修改人',
+    `FUpdateDate` datetime DEFAULT NULL COMMENT '修改时间',
+    `sync_flag` varchar(10) DEFAULT '0' COMMENT '同步标志',
+    `sync_time` datetime DEFAULT NULL COMMENT '同步时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `uk_fsalesno` (`FSalesNo`),
+    KEY `idx_query_org_date` (`FOrgID`,`FDate`),
+    KEY `idx_query_date_type` (`FDate`,`FSaleType`),
+    KEY `idx_sync` (`sync_flag`,`sync_time`),
+    KEY `idx_bill` (`FBillNo`),
+    KEY `idx_fid` (`FID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售回款记录表';
 
 -- changeset zq:1.20
 CREATE TABLE IF NOT EXISTS  `at_service_card`  (
@@ -612,7 +615,3 @@ CREATE TABLE IF NOT EXISTS  `at_service_box`  (
     UNIQUE INDEX `uk_sale_record_fid`(`FID` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- changeset zq:1.28
-ALTER TABLE at_sale_rec
-ADD COLUMN `FPayMent` varchar(50) DEFAULT NULL COMMENT '支付方式编码' AFTER `FSetTypeName`,
-ADD COLUMN `FPayMentName` varchar(50) DEFAULT NULL COMMENT '支付方式名称' AFTER `FPayMent`;

@@ -715,14 +715,11 @@ public class TaskServiceImpl implements TaskService {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
         } else if (taskName.equals("门店服务商品成本结转（只包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
-        }
-//        else if (taskName.equals("门店销售收入（只包含41分类）")) {
-//            //todo 需要问一下爱特
-//            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
-//        } else if (taskName.equals("门店销售收入（不包含41分类）")) {
-//            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-//        }
-        else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
+        }else if (taskName.equals("门店销售收入（只包含41分类）")) {
+            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
+        } else if (taskName.equals("门店销售收入（不包含41分类）")) {
+            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
+        }else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("部门之间正常商品调拨（两个门店相互调拨）不包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
@@ -814,7 +811,26 @@ public class TaskServiceImpl implements TaskService {
         } else if (queryData.get("FOutOrgNumber") != null) {
             glAccvouch.setCdeptId(queryData.get("FOutOrgNumber").toString());
         }
-        glAccvouch.setCsupId(queryData.get("FSupplierNumber") == null ? null : queryData.get("FSupplierNumber").toString());
+        if ("门店销售收入(收款明细)".equals(task.getTaskName()) ){
+            String fSetTypeName = queryData.get("FSetTypeName").toString()==null?"":queryData.get("FSetTypeName").toString();
+            if("爱他美券".equals(fSetTypeName)){
+                glAccvouch.setCsupId("010080");
+            }else if("飞鹤券".equals(fSetTypeName)){
+                glAccvouch.setCsupId("010084");
+            }else if("惠氏券".equals(fSetTypeName)){
+                glAccvouch.setCsupId("010082");
+            }else if("君乐宝券".equals(fSetTypeName)){
+                glAccvouch.setCsupId("010572");
+            }else if("美赞臣券".equals(fSetTypeName)){
+                glAccvouch.setCsupId("010826");
+            }else if("雀巢券".equals(fSetTypeName)){
+                glAccvouch.setCsupId("010098");
+            }else if("伊利券".equals(fSetTypeName)){
+                glAccvouch.setCsupId("011228");
+            }
+        }else{
+            glAccvouch.setCsupId(queryData.get("FSupplierNumber") == null ? null : queryData.get("FSupplierNumber").toString());
+        }
         glAccvouch.setCsign(taskVoucherHead.getVoucherWord());
         glAccvouch.setCcode(queryData.get("subject_code").toString());
         glAccvouch.setNfrat(ZERO_DOUBLE);
@@ -856,13 +872,22 @@ public class TaskServiceImpl implements TaskService {
         glAccvouch.setMdF(ZERO);
         glAccvouch.setMcF(ZERO);
 
+        // 处理特殊摘要
         if ("入库单（只包含总仓）".equals(task.getTaskName()) || "返厂单（只包含总仓）".equals(task.getTaskName())) {
             if ("贷".equals(entries.getDirection())) {
                 glAccvouch.setCdigest(entries.getSummary() + " - " + queryData.get("FId"));
             } else {
                 glAccvouch.setCdigest(entries.getSummary());
             }
-        } else {
+        } else if ("门店销售收入(收款明细)".equals(task.getTaskName()) ){
+            if ("借".equals(entries.getDirection())) {
+                Object FOrgName = queryData.get("FOrgName")==null?"":queryData.get("FOrgName");
+                Object FSetTypeName = queryData.get("FSetTypeName")==null?"":queryData.get("FSetTypeName");
+                glAccvouch.setCdigest(""+ iYPeriod +"-"+ FOrgName +"-"+ FSetTypeName);
+            } else {
+                glAccvouch.setCdigest(entries.getSummary());
+            }
+        }else {
             glAccvouch.setCdigest(entries.getSummary());
         }
         glAccvouch.setCbill(taskVoucherHead.getCreator());
