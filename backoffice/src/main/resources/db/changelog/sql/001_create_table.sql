@@ -612,4 +612,7 @@ CREATE TABLE IF NOT EXISTS  `at_service_box`  (
     UNIQUE INDEX `uk_sale_record_fid`(`FID` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
-
+-- changeset zq:1.28
+ALTER TABLE at_sale_rec
+ADD COLUMN `FPayMent` varchar(50) DEFAULT NULL COMMENT '支付方式编码' AFTER `FSetTypeName`,
+ADD COLUMN `FPayMentName` varchar(50) DEFAULT NULL COMMENT '支付方式名称' AFTER `FPayMent`;
