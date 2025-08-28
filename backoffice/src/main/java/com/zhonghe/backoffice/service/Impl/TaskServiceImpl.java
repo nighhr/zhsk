@@ -14,10 +14,11 @@ import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.zhonghe.adapter.model.OperationLog;
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.service.*;
 import com.zhonghe.backoffice.mapper.*;
@@ -25,6 +26,7 @@ import com.zhonghe.backoffice.model.*;
 import com.zhonghe.backoffice.model.DTO.TaskDTO;
 import com.zhonghe.backoffice.model.enums.ExecuteTypeEnum;
 import com.zhonghe.backoffice.service.DbConnectionService;
+import com.zhonghe.backoffice.service.OperationLogService;
 import com.zhonghe.backoffice.service.StockService;
 import com.zhonghe.backoffice.service.TaskService;
 import com.zhonghe.kernel.exception.BusinessException;
@@ -93,6 +95,8 @@ public class TaskServiceImpl implements TaskService {
     private ServiceBoxService serviceBoxService;
     @Autowired
     private StockService stockService;
+    @Autowired
+    private OperationLogService operationLogService;
 
     // 添加映射规则缓存
     private final Map<String, List<TableMapping>> tableMappingCache = new ConcurrentHashMap<>();
@@ -163,6 +167,7 @@ public class TaskServiceImpl implements TaskService {
         }
         return ruleId;
     }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Integer manualExecution(Map<String, Object> params) {
@@ -233,7 +238,6 @@ public class TaskServiceImpl implements TaskService {
             if (!taskVoucherHeads.isEmpty()) {
                 voucherKey = taskVoucherHeads.get(0).getVoucherKey();
             }
-
             LocalDateTime dateTime = LocalDateTime.parse(end, formatter);
             // 提取年月（202505）
             String yearMonth = dateTime.format(DateTimeFormatter.ofPattern("yyyyMM"));
@@ -247,11 +251,11 @@ public class TaskServiceImpl implements TaskService {
             //按照当前月的最大inoId计算
 //            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
             //按照end月份的最大inoId计算
-            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByEndMonth(yearMonth);
-            if (inoIdMax == null) {
-                inoIdMax = 0;
-            }
-            int baseInoId = inoIdMax + 1;
+//            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByEndMonth(yearMonth);
+//            if (inoIdMax == null) {
+//                inoIdMax = 0;
+//            }
+//            int baseInoId = inoIdMax + 1;
 
             List<GLAccvouch> sortedList = glAccvouches.stream()
                     .filter(item -> {
@@ -281,7 +285,7 @@ public class TaskServiceImpl implements TaskService {
             // 分配ID
             AtomicInteger inidCounter = new AtomicInteger(1);
             sortedList1.forEach(item -> {
-                item.setInoId(baseInoId);
+//                item.setInoId(baseInoId);
                 item.setInid(inidCounter.getAndIncrement());
             });
 
@@ -305,10 +309,12 @@ public class TaskServiceImpl implements TaskService {
                     }
                 });
 
-                glAccvouchMapper.batchInsert(batch);
+//                glAccvouchMapper.batchInsert(batch);
                 Thread.sleep(1000);
-                saveOperationLog(taskId, taskName, voucherKey,
-                        "成功", batch, "凭证批量插入成功，数量：" + batch.size());
+
+//                 2. 记录成功日志（独立事务）
+                operationLogService.asyncRecordSuccessLog(taskId, taskName, voucherKey,
+                        batch, "凭证批量插入成功，数量：" + batch.size());
             }
 
             return sortedList1.size();
@@ -317,16 +323,16 @@ public class TaskServiceImpl implements TaskService {
             // 业务异常，记录日志并重新抛出
             String errorMsg = "业务异常: " + be.getMessage();
             log.error(errorMsg, be);
-            saveOperationLog(taskId, taskName, voucherKey,
-                    "失败", params, errorMsg + "\n堆栈信息: " + getStackTraceAsString(be));
+            operationLogService.recordFailureLog(taskId, taskName, voucherKey,
+                    params, errorMsg + "\n堆栈信息: " + getStackTraceAsString(be));
             throw be;
 
         } catch (Exception e) {
-            // 全局异常捕获，记录详细日志并包装抛出
+            // 全局异常，记录失败日志（独立事务）
             String errorMsg = "凭证处理失败: " + e.getMessage();
             log.error(errorMsg, e);
-            saveOperationLog(taskId, taskName, voucherKey,
-                    "失败", params, errorMsg + "\n堆栈信息: " + getStackTraceAsString(e));
+            operationLogService.recordFailureLog(taskId, taskName, voucherKey,
+                    params, errorMsg + "\n堆栈信息: " + getStackTraceAsString(e));
             throw new BusinessException(ErrorCode.DB_CONNECT_ERROR, errorMsg);
         }
     }
@@ -416,6 +422,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     public List<GLAccvouch> handleExecution(Task task, String start, String end) throws Exception {
+
         String sourceTable = task.getSourceTable();
         String detailTable = task.getDetailTable();
         //账期使用当前月
@@ -456,7 +463,6 @@ public class TaskServiceImpl implements TaskService {
             );
             if ("入库单（只包含总仓）".equals(task.getTaskName()) || "返厂单（只包含总仓）".equals(task.getTaskName())) {
                 return groupByDeptAndSumMd(glAccvouches);
-
             }
             return glAccvouches;
         }
@@ -715,11 +721,11 @@ public class TaskServiceImpl implements TaskService {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
         } else if (taskName.equals("门店服务商品成本结转（只包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
-        }else if (taskName.equals("门店销售收入（只包含41分类）")) {
+        } else if (taskName.equals("门店销售收入（只包含41分类）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("门店销售收入（不包含41分类）")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        }else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
+        } else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("部门之间正常商品调拨（两个门店相互调拨）不包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
@@ -811,24 +817,24 @@ public class TaskServiceImpl implements TaskService {
         } else if (queryData.get("FOutOrgNumber") != null) {
             glAccvouch.setCdeptId(queryData.get("FOutOrgNumber").toString());
         }
-        if ("门店销售收入(收款明细)".equals(task.getTaskName()) ){
-            String fSetTypeName = queryData.get("FSetTypeName").toString()==null?"":queryData.get("FSetTypeName").toString();
-            if("爱他美券".equals(fSetTypeName)){
+        if ("门店销售收入(收款明细)".equals(task.getTaskName())) {
+            String fSetTypeName = queryData.get("FSetTypeName").toString() == null ? "" : queryData.get("FSetTypeName").toString();
+            if ("爱他美券".equals(fSetTypeName)) {
                 glAccvouch.setCsupId("010080");
-            }else if("飞鹤券".equals(fSetTypeName)){
+            } else if ("飞鹤券".equals(fSetTypeName)) {
                 glAccvouch.setCsupId("010084");
-            }else if("惠氏券".equals(fSetTypeName)){
+            } else if ("惠氏券".equals(fSetTypeName)) {
                 glAccvouch.setCsupId("010082");
-            }else if("君乐宝券".equals(fSetTypeName)){
+            } else if ("君乐宝券".equals(fSetTypeName)) {
                 glAccvouch.setCsupId("010572");
-            }else if("美赞臣券".equals(fSetTypeName)){
+            } else if ("美赞臣券".equals(fSetTypeName)) {
                 glAccvouch.setCsupId("010826");
-            }else if("雀巢券".equals(fSetTypeName)){
+            } else if ("雀巢券".equals(fSetTypeName)) {
                 glAccvouch.setCsupId("010098");
-            }else if("伊利券".equals(fSetTypeName)){
+            } else if ("伊利券".equals(fSetTypeName)) {
                 glAccvouch.setCsupId("011228");
             }
-        }else{
+        } else {
             glAccvouch.setCsupId(queryData.get("FSupplierNumber") == null ? null : queryData.get("FSupplierNumber").toString());
         }
         glAccvouch.setCsign(taskVoucherHead.getVoucherWord());
@@ -859,9 +865,9 @@ public class TaskServiceImpl implements TaskService {
         Object total = queryData.get("total");
         if (total == null) {
             total = 0;
+            log.warn("本位币金额有null值---{}", queryData.get("subject_code").toString());
         }
         BigDecimal amount = convertToBigDecimal(total);
-
         if ("借".equals(entries.getDirection())) {
             glAccvouch.setMd(amount);
             glAccvouch.setMc(ZERO);
@@ -879,15 +885,15 @@ public class TaskServiceImpl implements TaskService {
             } else {
                 glAccvouch.setCdigest(entries.getSummary());
             }
-        } else if ("门店销售收入(收款明细)".equals(task.getTaskName()) ){
+        } else if ("门店销售收入(收款明细)".equals(task.getTaskName())) {
             if ("借".equals(entries.getDirection())) {
-                Object FOrgName = queryData.get("FOrgName")==null?"":queryData.get("FOrgName");
-                Object FSetTypeName = queryData.get("FSetTypeName")==null?"":queryData.get("FSetTypeName");
-                glAccvouch.setCdigest(""+ iYPeriod +"-"+ FOrgName +"-"+ FSetTypeName);
+                Object FOrgName = queryData.get("FOrgName") == null ? "" : queryData.get("FOrgName");
+                Object FSetTypeName = queryData.get("FSetTypeName") == null ? "" : queryData.get("FSetTypeName");
+                glAccvouch.setCdigest("" + iYPeriod + "-" + FOrgName + "-" + FSetTypeName);
             } else {
                 glAccvouch.setCdigest(entries.getSummary());
             }
-        }else {
+        } else {
             glAccvouch.setCdigest(entries.getSummary());
         }
         glAccvouch.setCbill(taskVoucherHead.getCreator());
@@ -949,6 +955,22 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
+    private List<Map<String, Object>> queryAndMarkMainTableData(String sourceTable, String start, String end) {
+        // 1. 验证源表名格式
+        if (!sourceTable.startsWith("at_")) {
+            throw new IllegalArgumentException("Invalid source table: " + sourceTable);
+        }
+
+        String querySql = "SELECT * FROM " + sourceTable + " WHERE FDate BETWEEN ? AND ?";
+        List<Map<String, Object>> results = jdbcTemplate.queryForList(querySql, start, end);
+
+        if (results.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return results;
+    }
+
     private BigDecimal convertToBigDecimal(Object value) {
         if (value instanceof BigDecimal) {
             return (BigDecimal) value;
@@ -1004,69 +1026,132 @@ public class TaskServiceImpl implements TaskService {
         return sendData;
     }
 
-    private List<Map<String, Object>> queryAndMarkMainTableData(String sourceTable, String start, String end) {
-        // 1. 验证源表名格式
-        if (!sourceTable.startsWith("at_")) {
-            throw new IllegalArgumentException("Invalid source table: " + sourceTable);
-        }
 
-        // 2. 查询数据（mark != 1的记录）
-        String querySql = "SELECT * FROM " + sourceTable + " WHERE FDate BETWEEN ? AND ?";
-        List<Map<String, Object>> results = jdbcTemplate.queryForList(querySql, start, end);
-
-        if (results.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return results;
-    }
-
-    private void syncSourceData(String sourceTable, String start, String end) throws InterruptedException {
+    private void syncSourceData(String sourceTable, String start, String end) {
         int pageSize = 1000;
         int currentPage = 1;
 
         switch (sourceTable) {
             case "at_pur_in":
-                stockService.getStock();
-                purInService.getPurIn(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
+                try {
+                    CompletableFuture<Void> stockFuture = CompletableFuture.runAsync(() ->
+                            stockService.getStock());
+                    CompletableFuture<Void> purInFuture = CompletableFuture.runAsync(() ->
+                            purInService.getPurIn(currentPage, pageSize, start, end));
+
+                    CompletableFuture.allOf(stockFuture, purInFuture).join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "采购入库数据");
+                }
                 break;
+
             case "at_pur_ret":
-                stockService.getStock();
-                purRetService.getPurRet(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
+                try {
+                    CompletableFuture<Void> stockFuture2 = CompletableFuture.runAsync(() ->
+                            stockService.getStock());
+                    CompletableFuture<Void> purRetFuture = CompletableFuture.runAsync(() ->
+                            purRetService.getPurRet(currentPage, pageSize, start, end));
+
+                    CompletableFuture.allOf(stockFuture2, purRetFuture).join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "采购退货数据");
+                }
                 break;
+
             case "at_sale":
-                saleRecService.getSaleRec(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
-                saleService.getSale(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
-                saleService.updateFSetType(start, end);
+                try {
+                    CompletableFuture<Void> saleRecFuture = CompletableFuture.runAsync(() ->
+                            saleRecService.getSaleRec(currentPage, pageSize, start, end));
+                    saleRecFuture.join();
+
+                    CompletableFuture<Void> saleFuture = CompletableFuture.runAsync(() ->
+                            saleService.getSale(currentPage, pageSize, start, end));
+                    saleFuture.join();
+
+                    CompletableFuture<Void> updateFuture = CompletableFuture.runAsync(() ->
+                            saleService.updateFSetType(start, end));
+                    updateFuture.join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "销售数据");
+                }
                 break;
+
             case "at_sale_rec":
-                saleRecService.getSaleRec(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
+                try {
+                    CompletableFuture<Void> saleRecFuture2 = CompletableFuture.runAsync(() ->
+                            saleRecService.getSaleRec(currentPage, pageSize, start, end));
+                    saleRecFuture2.join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "销售收款数据");
+                }
                 break;
+
             case "at_service_card":
-                serviceCardService.getServiceCard(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
+                try {
+                    CompletableFuture<Void> serviceCardFuture = CompletableFuture.runAsync(() ->
+                            serviceCardService.getServiceCard(currentPage, pageSize, start, end));
+                    serviceCardFuture.join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "服务卡数据");
+                }
                 break;
+
             case "at_service_cost":
-                serviceCostService.getServiceCost(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
+                try {
+                    CompletableFuture<Void> serviceCostFuture = CompletableFuture.runAsync(() ->
+                            serviceCostService.getServiceCost(currentPage, pageSize, start, end));
+                    serviceCostFuture.join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "服务成本数据");
+                }
                 break;
+
             case "at_stock_take":
-                stockTakeService.getStockTake(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
+                try {
+                    CompletableFuture<Void> stockTakeFuture = CompletableFuture.runAsync(() ->
+                            stockTakeService.getStockTake(currentPage, pageSize, start, end));
+                    stockTakeFuture.join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "盘点数据");
+                }
                 break;
+
             case "at_store_tran":
-                storeTranService.getStoreTran(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
+                try {
+                    CompletableFuture<Void> storeTranFuture = CompletableFuture.runAsync(() ->
+                            storeTranService.getStoreTran(currentPage, pageSize, start, end));
+                    storeTranFuture.join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "库存调拨数据");
+                }
                 break;
+
             case "at_service_box":
-                serviceBoxService.getServiceBox(currentPage, pageSize, start, end);
-                Thread.sleep(1000);
+                try {
+                    CompletableFuture<Void> serviceBoxFuture = CompletableFuture.runAsync(() ->
+                            serviceBoxService.getServiceBox(currentPage, pageSize, start, end));
+                    serviceBoxFuture.join();
+                } catch (CompletionException e) {
+                    handleCompletionException(e, "服务箱数据");
+                }
                 break;
+
+            default:
+                break;
+        }
+    }
+
+    /**
+     * 统一处理CompletionException
+     */
+    private void handleCompletionException(CompletionException e, String dataType) {
+        // 解包CompletionException获取真正的异常
+        Throwable cause = e.getCause();
+        if (cause instanceof BusinessException) {
+            throw (BusinessException) cause;
+        } else {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,
+                    "同步" + dataType + "失败: " + (cause != null ? cause.getMessage() : e.getMessage()));
         }
     }
 
@@ -1157,40 +1242,5 @@ public class TaskServiceImpl implements TaskService {
         return value;
     }
 
-    public Object getFieldValue(Object obj, String fieldName) {
-        try {
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            Class<?> clazz = obj.getClass();
-            Field field = clazz.getDeclaredField(fieldName);
-            MethodHandle mh = lookup.unreflectGetter(field);
-            return mh.invoke(obj);
-        } catch (Throwable e) {
-            log.error("获取字段值失败: {}", fieldName, e);
-            return null;
-        }
-    }
-
-    private void saveOperationLog(Long taskId, String taskName, String primaryKeyValue,
-                                  String status, Object inputDetail, String logDetail) {
-        OperationLog logs = new OperationLog();
-        logs.setTaskId(taskId);
-        logs.setTaskName(taskName);
-        logs.setPrimaryKeyValue(primaryKeyValue);
-        logs.setStatus(status);
-        logs.setLogTime(new Date());
-        logs.setLogDetail(logDetail);
-        try {
-            logs.setInputDetail(OBJECT_MAPPER.writeValueAsString(inputDetail));
-        } catch (JsonProcessingException e) {
-            logs.setInputDetail("参数序列化失败：" + e.getMessage());
-        }
-
-
-        try {
-            operationLogMapper.insert(logs);
-        } catch (Exception e) {
-            log.error("日志插入失败：" + e);
-        }
-    }
 
 }

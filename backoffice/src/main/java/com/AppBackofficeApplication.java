@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerA
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication(
         scanBasePackages = {
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Import;
         com.zhonghe.adapter.config.SecondaryDataSourceConfig.class,
         com.zhonghe.backoffice.config.BackOfficeDataSourceConfig.class
 })
+@EnableAsync
 public class AppBackofficeApplication {
     public static void main(String[] args) {
         SpringApplication.run(AppBackofficeApplication.class, args);
