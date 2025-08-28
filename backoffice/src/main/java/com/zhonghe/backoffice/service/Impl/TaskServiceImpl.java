@@ -251,11 +251,11 @@ public class TaskServiceImpl implements TaskService {
             //按照当前月的最大inoId计算
 //            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
             //按照end月份的最大inoId计算
-//            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByEndMonth(yearMonth);
-//            if (inoIdMax == null) {
-//                inoIdMax = 0;
-//            }
-//            int baseInoId = inoIdMax + 1;
+            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByEndMonth(yearMonth);
+            if (inoIdMax == null) {
+                inoIdMax = 0;
+            }
+            int baseInoId = inoIdMax + 1;
 
             List<GLAccvouch> sortedList = glAccvouches.stream()
                     .filter(item -> {
@@ -285,7 +285,7 @@ public class TaskServiceImpl implements TaskService {
             // 分配ID
             AtomicInteger inidCounter = new AtomicInteger(1);
             sortedList1.forEach(item -> {
-//                item.setInoId(baseInoId);
+                item.setInoId(baseInoId);
                 item.setInid(inidCounter.getAndIncrement());
             });
 
@@ -309,7 +309,7 @@ public class TaskServiceImpl implements TaskService {
                     }
                 });
 
-//                glAccvouchMapper.batchInsert(batch);
+                glAccvouchMapper.batchInsert(batch);
                 Thread.sleep(1000);
 
 //                 2. 记录成功日志（独立事务）
@@ -1031,6 +1031,9 @@ public class TaskServiceImpl implements TaskService {
         int pageSize = 1000;
         int currentPage = 1;
 
+        // 收集所有异步任务
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
         switch (sourceTable) {
             case "at_pur_in":
                 try {
@@ -1139,6 +1142,16 @@ public class TaskServiceImpl implements TaskService {
             default:
                 break;
         }
+
+        // 等待所有异步任务完成
+        try {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        } catch (CompletionException e) {
+            handleCompletionException(e, "数据同步");
+        }
+
+        // 强制刷新JDBC连接，确保数据可见
+        jdbcTemplate.execute("COMMIT");
     }
 
     /**
