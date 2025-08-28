@@ -642,7 +642,7 @@ public class TaskServiceImpl implements TaskService {
         List<String> groupByFields = new ArrayList<>();
 
         if (StringUtils.isNotBlank(start) && StringUtils.isNotBlank(end)) {
-            if (sourceTable.equals("at_sale")) {
+            if ("at_sale".equals(sourceTable)) {
                 finalSql.append(" AND a.FCreateDate >= '").append(start).append("'");
                 finalSql.append(" AND a.FCreateDate <= '").append(end).append("'");
             } else {
