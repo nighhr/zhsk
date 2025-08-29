@@ -310,7 +310,6 @@ public class TaskServiceImpl implements TaskService {
                 });
 
                 glAccvouchMapper.batchInsert(batch);
-                Thread.sleep(1000);
 
 //                 2. 记录成功日志（独立事务）
                 operationLogService.asyncRecordSuccessLog(taskId, taskName, voucherKey,
