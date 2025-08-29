@@ -405,7 +405,7 @@ CREATE TABLE IF NOT EXISTS`at_sale_rec` (
     `sync_flag` varchar(10) DEFAULT '0' COMMENT '同步标志',
     `sync_time` datetime DEFAULT NULL COMMENT '同步时间',
     PRIMARY KEY (`ID`),
-    UNIQUE KEY `uk_fsalesno` (`FSalesNo`),
+    UNIQUE KEY `uk_fsalesno` (`FID`),
     KEY `idx_query_org_date` (`FOrgID`,`FDate`),
     KEY `idx_query_date_type` (`FDate`,`FSaleType`),
     KEY `idx_sync` (`sync_flag`,`sync_time`),
