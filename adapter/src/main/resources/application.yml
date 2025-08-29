@@ -2,8 +2,10 @@ spring:
   datasource:
     secondary:
       jdbc-url: "jdbc:sqlserver://192.168.4.8:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true;serverTimezone=Asia/Shanghai"
-      username: sa
+#      jdbc-url: "jdbc:sqlserver://192.168.28.24:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true;serverTimezone=Asia/Shanghai"
       password: sy1901!!
+#      password: Aa123456
+      username: sa
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
       hikari:
         pool-name: SecondarySQLServerPool
