@@ -28,6 +28,7 @@ public class Sale {
     private Boolean mark = false;
     private Boolean syncFlag;
     private Date syncTime;
+    private String FPlatformArea;
 
     private List<SaleLine> FEntry;
 }

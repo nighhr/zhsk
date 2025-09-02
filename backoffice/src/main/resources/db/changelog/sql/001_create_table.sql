@@ -323,31 +323,31 @@ CREATE TABLE IF NOT EXISTS  `at_pur_ret_line`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '采购返厂单明细表' ROW_FORMAT = Dynamic;
 
 -- changeset zq:1.17
-CREATE TABLE IF NOT EXISTS  `at_sale`  (
+CREATE TABLE IF NOT EXISTS `at_sale` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '自增主键',
     `FID` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '主表ID',
-    `FBillNo` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '单据编码',
-    `FSalesType` int NULL DEFAULT NULL COMMENT '销售类型(0：销售(非会员)，1：销售(会员)，2：退货，3：挂单，4：维修，5：批发)',
-    `FDate` datetime NULL DEFAULT NULL COMMENT '业务日期',
-    `FOrgType` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '销售组织类型',
-    `FOrgID` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '销售组织ID',
-    `FOrgNumber` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '销售组织编码',
-    `FOrgName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '销售组织名称',
-    `FGuideID` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '导购员ID',
-    `FGuideNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '导购员编码',
-    `FGuideName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '导购员名称',
-    `FRemark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '备注',
-    `FCreateBy` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '创建人',
-    `FCreateDate` datetime NULL DEFAULT NULL COMMENT '创建时间',
-    `FUpdateBy` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '修改人',
-    `FUpdateDate` datetime NULL DEFAULT NULL COMMENT '修改时间',
-    `sync_flag` tinyint(1) NULL DEFAULT NULL COMMENT '同步标志',
-    `sync_time` datetime NULL DEFAULT NULL COMMENT '同步时间',
-    `FSetTypeName` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '结算方式名称',
+    `FBillNo` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '单据编码',
+    `FSalesType` int DEFAULT NULL COMMENT '销售类型(0：销售(非会员)，1：销售(会员)，2：退货，3：挂单，4：维修，5：批发)',
+    `FDate` datetime DEFAULT NULL COMMENT '业务日期',
+    `FOrgType` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '销售组织类型',
+    `FOrgID` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '销售组织ID',
+    `FOrgNumber` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '销售组织编码',
+    `FOrgName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '销售组织名称',
+    `FGuideID` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '导购员ID',
+    `FGuideNumber` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '导购员编码',
+    `FGuideName` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '导购员名称',
+    `FRemark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '备注',
+    `FCreateBy` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '创建人',
+    `FCreateDate` datetime DEFAULT NULL COMMENT '创建时间',
+    `FUpdateBy` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '修改人',
+    `FPlatformArea` varchar(20) DEFAULT NULL COMMENT '海博平台调用渠道 1京东到家，2美团，3饿了么，9自有渠道，10有赞',
+    `FUpdateDate` datetime DEFAULT NULL COMMENT '修改时间',
+    `sync_flag` tinyint(1) DEFAULT NULL COMMENT '同步标志',
+    `sync_time` datetime DEFAULT NULL COMMENT '同步时间',
+    `FSetTypeName` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '结算方式名称',
     PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE INDEX `uk_at_sale_fid`(`FID` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '销售主表' ROW_FORMAT = Dynamic;
-
+    UNIQUE KEY `uk_at_sale_fid` (`FID`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='销售主表';
 -- changeset zq:1.18
 CREATE TABLE IF NOT EXISTS  `at_sale_line`  (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '自增主键',
