@@ -14,6 +14,7 @@ public class SaleRec {
     private String FOrgNumber;
     private String FOrgName;
     private Date FDate;
+    private Date FSaleTime;
     private String FSaleType;
     private String FSaleTypeName;
     private String FSrcEntryID;

@@ -644,7 +644,10 @@ public class TaskServiceImpl implements TaskService {
             if ("at_sale".equals(sourceTable)) {
                 finalSql.append(" AND a.FCreateDate >= '").append(start).append("'");
                 finalSql.append(" AND a.FCreateDate <= '").append(end).append("'");
-            } else {
+            }  else if ("at_sale_rec".equals(sourceTable)){
+                finalSql.append(" AND a.FSaleTime >= '").append(start).append("'");
+                finalSql.append(" AND a.FSaleTime <= '").append(end).append("'");
+            }else {
                 finalSql.append(" AND a.FDate >= '").append(start).append("'");
                 finalSql.append(" AND a.FDate <= '").append(end).append("'");
             }

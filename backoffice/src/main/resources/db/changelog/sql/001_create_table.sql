@@ -379,7 +379,7 @@ CREATE TABLE IF NOT EXISTS  `at_sale_line`  (
 
 -- changeset zq:1.19
 
-CREATE TABLE IF NOT EXISTS`at_sale_rec` (
+CREATE TABLE IF NOT EXISTS `at_sale_rec` (
     `ID` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `FID` varchar(50) NOT NULL COMMENT '主表ID',
     `FBillNo` varchar(30) DEFAULT NULL COMMENT '单据编码',
@@ -388,6 +388,7 @@ CREATE TABLE IF NOT EXISTS`at_sale_rec` (
     `FOrgNumber` varchar(20) DEFAULT NULL COMMENT '回款门店编码',
     `FOrgName` varchar(50) DEFAULT NULL COMMENT '回款门店名称',
     `FDate` date DEFAULT NULL COMMENT '业务日期',
+    `FSaleTime` date DEFAULT NULL COMMENT '销售时间',
     `FSaleType` varchar(20) DEFAULT NULL COMMENT '销售类型编码',
     `FSaleTypeName` varchar(50) DEFAULT NULL COMMENT '销售类型名称',
     `FSrcEntryID` varchar(30) DEFAULT NULL COMMENT '销售明细内码',
@@ -398,6 +399,7 @@ CREATE TABLE IF NOT EXISTS`at_sale_rec` (
     `FMemberID` varchar(20) DEFAULT NULL COMMENT '会员编码',
     `FPayMoney` decimal(18,2) DEFAULT NULL COMMENT '回款金额',
     `FRemark` varchar(200) DEFAULT NULL COMMENT '备注',
+    `FPlatformArea` varchar(20) DEFAULT NULL COMMENT '海博平台调用渠道 1京东到家，2美团，3饿了么，9自有渠道，10有赞',
     `FCreateBy` varchar(20) DEFAULT NULL COMMENT '创建人',
     `FCreateDate` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `FUpdateBy` varchar(20) DEFAULT NULL COMMENT '修改人',
@@ -410,7 +412,9 @@ CREATE TABLE IF NOT EXISTS`at_sale_rec` (
     KEY `idx_query_date_type` (`FDate`,`FSaleType`),
     KEY `idx_sync` (`sync_flag`,`sync_time`),
     KEY `idx_bill` (`FBillNo`),
-    KEY `idx_fid` (`FID`)
+    KEY `idx_fid` (`FID`),
+    KEY `idx_settype_date` (`FSetTypeName`,`FDate`),
+    KEY `idx_fid_date` (`FID`,`FDate`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售回款记录表';
 
 -- changeset zq:1.20
