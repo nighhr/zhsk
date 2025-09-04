@@ -34,7 +34,6 @@ public class SaleRecServiceImpl implements SaleRecService {
     @Value("${app.batch.master-size}")
     private int masterBatchSize;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void getSaleRec(Integer currentPage, Integer pageSize, String start, String end) {
         while (true) {
@@ -52,11 +51,8 @@ public class SaleRecServiceImpl implements SaleRecService {
                 if (SaleRecsList.isEmpty()) {
                     break;
                 }
-                for (int i = 0; i < SaleRecsList.size(); i += masterBatchSize) {
-                    int endIndex = Math.min(i + masterBatchSize, SaleRecsList.size());
-                    List<SaleRec> batchList = SaleRecsList.subList(i, endIndex);
-                    saleRecMapper.batchInsert(batchList);
-                }
+                insertRec(SaleRecsList);
+                SaleRecsList.clear();
                 currentPage++;
 
 
@@ -65,6 +61,15 @@ public class SaleRecServiceImpl implements SaleRecService {
                 String errorMessage = parse.getStr("Message");
                 throw new BusinessException(ErrorCode.INTERNAL_ERROR,"请求失败: " + errorMessage);
             }
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // 为每一页开新事务
+    public void insertRec(List<SaleRec> saleRecsList) {
+        for (int i = 0; i < saleRecsList.size(); i += masterBatchSize) {
+            int endIndex = Math.min(i + masterBatchSize, saleRecsList.size());
+            List<SaleRec> batchList = saleRecsList.subList(i, endIndex);
+            saleRecMapper.batchInsert(batchList);
         }
     }
 }

@@ -7,7 +7,7 @@
         IGNORE INTO at_sale_rec (
             ID, FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
             FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
-            FSetTypeName, FPayMent,FPayMentName,FMemberID, FPayMoney, FRemark, FCreateBy,
+            FSetTypeName, FPayMent,FPayMentName,FMemberID, FPayMoney, FRemark, FPlatformArea,FCreateBy,
             FCreateDate, FUpdateBy, FUpdateDate, sync_flag, sync_time
         ) VALUES (
         #{ID},
@@ -28,6 +28,7 @@
         #{FMemberID},
         #{FPayMoney},
         #{FRemark},
+        #{FPlatformArea},
         #{FCreateBy},
         #{FCreateDate},
         #{FUpdateBy},
@@ -39,10 +40,11 @@
 
     <insert id="batchInsert" parameterType="java.util.List">
         INSERT IGNORE INTO at_sale_rec (
-         FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
+        FID, FBillNo, FSalesNo, FOrgID, FOrgNumber, FOrgName,
         FDate, FSaleType, FSaleTypeName, FSrcEntryID, FSetType,
-        FSetTypeName,FPayMent,FPayMentName, FMemberID, FPayMoney, FRemark, FCreateBy,
-        FCreateDate, FUpdateBy, FUpdateDate, sync_flag, sync_time
+        FSetTypeName, FPayMent, FPayMentName, FMemberID, FPayMoney,
+        FRemark, FPlatformArea, FCreateBy, FCreateDate, FUpdateBy,
+        FUpdateDate, sync_flag, sync_time
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
@@ -63,6 +65,17 @@
             #{item.FMemberID,jdbcType=VARCHAR},
             #{item.FPayMoney,jdbcType=DECIMAL},
             #{item.FRemark,jdbcType=VARCHAR},
+            CASE
+            WHEN #{item.FSetTypeName,jdbcType=VARCHAR} = '商城海博支付' THEN
+            COALESCE(
+            (SELECT s.FPlatformArea
+            FROM at_sale s
+            WHERE s.FID = #{item.FSalesNo,jdbcType=VARCHAR}
+            LIMIT 1),
+            #{item.FPlatformArea,jdbcType=VARCHAR}
+            )
+            ELSE #{item.FPlatformArea,jdbcType=VARCHAR}
+            END,
             #{item.FCreateBy,jdbcType=VARCHAR},
             #{item.FCreateDate,jdbcType=TIMESTAMP},
             #{item.FUpdateBy,jdbcType=VARCHAR},

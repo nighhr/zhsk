@@ -24,6 +24,7 @@ public class SaleRec {
     private String FMemberID;
     private Double FPayMoney;
     private String FRemark;
+    private String FPlatformArea;
     private String FCreateBy;
     private Date FCreateDate;
     private String FUpdateBy;

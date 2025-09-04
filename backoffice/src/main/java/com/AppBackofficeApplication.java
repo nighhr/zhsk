@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication(
         scanBasePackages = {
@@ -27,6 +28,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
         com.zhonghe.backoffice.config.BackOfficeDataSourceConfig.class
 })
 @EnableAsync
+@EnableTransactionManagement
 public class AppBackofficeApplication {
     public static void main(String[] args) {
         SpringApplication.run(AppBackofficeApplication.class, args);
