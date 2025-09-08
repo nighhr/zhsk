@@ -644,10 +644,10 @@ public class TaskServiceImpl implements TaskService {
             if ("at_sale".equals(sourceTable)) {
                 finalSql.append(" AND a.FCreateDate >= '").append(start).append("'");
                 finalSql.append(" AND a.FCreateDate <= '").append(end).append("'");
-            }  else if ("at_sale_rec".equals(sourceTable)){
+            } else if ("at_sale_rec".equals(sourceTable)) {
                 finalSql.append(" AND a.FSaleTime >= '").append(start).append("'");
                 finalSql.append(" AND a.FSaleTime <= '").append(end).append("'");
-            }else {
+            } else {
                 finalSql.append(" AND a.FDate >= '").append(start).append("'");
                 finalSql.append(" AND a.FDate <= '").append(end).append("'");
             }
@@ -733,7 +733,7 @@ public class TaskServiceImpl implements TaskService {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("门店销售收入（不包含41分类）")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        }else if (taskName.equals("门店销售收入(收款明细)")||finalSql.toString().contains("代金券")) {
+        } else if (taskName.equals("门店销售收入(收款明细)") && finalSql.toString().contains("代金券") && "借".equals(entries.getDirection())) {
             finalSql.insert(index + "AS total".length(), ", a.FOrgName, a.FSetTypeName, a.FPayMentName");
             groupByFields.add(" a.FOrgName, a.FSetTypeName, a.FPayMentName");
         } else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
