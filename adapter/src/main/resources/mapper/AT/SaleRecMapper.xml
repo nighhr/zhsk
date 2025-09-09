@@ -70,13 +70,29 @@
             CASE
             WHEN #{item.FSetTypeName,jdbcType=VARCHAR} = '商城海博支付' THEN
             COALESCE(
-            (SELECT s.FPlatformArea
+            (SELECT
+            CASE s.FPlatformArea
+            WHEN '1' THEN '京东到家'
+            WHEN '2' THEN '美团'
+            WHEN '3' THEN '饿了么'
+            WHEN '9' THEN '自有渠道'
+            WHEN '10' THEN '有赞'
+            ELSE s.FPlatformArea
+            END
             FROM at_sale s
             WHERE s.FID = #{item.FSalesNo,jdbcType=VARCHAR}
             LIMIT 1),
             #{item.FPlatformArea,jdbcType=VARCHAR}
             )
+            ELSE
+            CASE #{item.FPlatformArea,jdbcType=VARCHAR}
+            WHEN '1' THEN '京东到家'
+            WHEN '2' THEN '美团'
+            WHEN '3' THEN '饿了么'
+            WHEN '9' THEN '自有渠道'
+            WHEN '10' THEN '有赞'
             ELSE #{item.FPlatformArea,jdbcType=VARCHAR}
+            END
             END,
             #{item.FCreateBy,jdbcType=VARCHAR},
             #{item.FCreateDate,jdbcType=TIMESTAMP},

@@ -310,7 +310,6 @@ public class TaskServiceImpl implements TaskService {
                 });
 
                 glAccvouchMapper.batchInsert(batch);
-
 //                 2. 记录成功日志（独立事务）
                 operationLogService.asyncRecordSuccessLog(taskId, taskName, voucherKey,
                         batch, "凭证批量插入成功，数量：" + batch.size());
@@ -535,7 +534,7 @@ public class TaskServiceImpl implements TaskService {
 
             for (Map<String, Object> subject : subjects) {
                 String fullSql = buildFullSQL(baseSelect, subject, mainColumn, entries, start, end, task.getSourceTable(), task.getTaskName());
-                log.error("fullSql-------------------" + fullSql);
+                log.error("fullSqlTran-------------------" + fullSql);
                 List<Map<String, Object>> queryResults = jdbcTemplate.queryForList(fullSql);
                 GLAccvouch glAccvouch = null;
                 for (Map<String, Object> queryData : queryResults) {
@@ -666,9 +665,12 @@ public class TaskServiceImpl implements TaskService {
                 continue;
             }
 
-            String tablePrefix = mainColumn.contains(field) ? "a." : "b.";
-            finalSql.append(" AND ").append(tablePrefix).append(field)
-                    .append(" = '").append(subject.get(field)).append("'");
+            if(StringUtils.isNotBlank((CharSequence) subject.get(field))){
+                String tablePrefix = mainColumn.contains(field) ? "a." : "b.";
+                finalSql.append(" AND ").append(tablePrefix).append(field)
+                        .append(" = '").append(subject.get(field)).append("'");
+            }
+
         }
 
         int index = finalSql.indexOf("AS total");
@@ -733,9 +735,13 @@ public class TaskServiceImpl implements TaskService {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("门店销售收入（不包含41分类）")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
-        } else if (taskName.equals("门店销售收入(收款明细)") && finalSql.toString().contains("代金券") && "借".equals(entries.getDirection())) {
+        } else if (taskName.equals("门店销售收入(收款明细)")  && "借".equals(entries.getDirection())) {
             finalSql.insert(index + "AS total".length(), ", a.FOrgName, a.FSetTypeName, a.FPayMentName");
             groupByFields.add(" a.FOrgName, a.FSetTypeName, a.FPayMentName");
+            if( finalSql.toString().contains("商城海博支付")){
+                finalSql.insert(index + "AS total".length(), ", a.FPlatformArea");
+                groupByFields.add(" a.FPlatformArea");
+            }
         } else if (taskName.equals("部门之间服务商品调拨（两个门店相互调拨）只包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' ");
         } else if (taskName.equals("部门之间正常商品调拨（两个门店相互调拨）不包含41")) {
@@ -899,7 +905,8 @@ public class TaskServiceImpl implements TaskService {
             if ("借".equals(entries.getDirection())) {
                 Object FOrgName = queryData.get("FOrgName") == null ? "" : queryData.get("FOrgName");
                 Object FSetTypeName = queryData.get("FSetTypeName") == null ? "" : queryData.get("FSetTypeName");
-                glAccvouch.setCdigest("" + iYPeriod + "-" + FOrgName + "-" + FSetTypeName);
+                Object FPlatformArea = queryData.get("FPlatformArea") == null ? "" : queryData.get("FPlatformArea");
+                glAccvouch.setCdigest("" + iYPeriod + "-" + FOrgName + "-" + FSetTypeName+FPlatformArea);
             } else {
                 glAccvouch.setCdigest(entries.getSummary());
             }
