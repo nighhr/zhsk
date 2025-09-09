@@ -35,6 +35,7 @@ public enum ErrorCode {
     CUSTOMER_NOT_FOUND(303, "客户不存在"),
     VOUCHER_HEAD_NULL(304,"任务没有设置凭证头"),
     ORDER_LIST_NULL(305,"目标日期内没有订单"),
+    ORDER_PRE_TASK(306,"任务需要前置任务"),
 
     // 服务端错误 (04)
 

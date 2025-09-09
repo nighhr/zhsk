@@ -13,5 +13,7 @@ public interface OperationLogMapper {
     long selectOperationLogCount(Map<String, Object> params);
 
     List<OperationLog> selectOperationLogList(Map<String, Object> params);
+
+    int selectSuccLogCountByTaskNameAndMonth(String sourceTable);
 }
 
