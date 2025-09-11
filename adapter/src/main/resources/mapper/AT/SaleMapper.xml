@@ -43,5 +43,8 @@
             SET s.FSetTypeName = r.FSetTypeName
         WHERE s.FDate BETWEEN #{start} AND #{end}
     </update>
+    <select id="getCountByTime" resultType="java.lang.Integer">
+        select count(1) where FCreateDate> = #{start} and FCreateDate &lt; #{end} limit 1
+    </select>
 
 </mapper>

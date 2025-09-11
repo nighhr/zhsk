@@ -113,4 +113,11 @@ public class SaleServiceImpl implements SaleService {
     public void updateFSetType(String start, String end) {
         saleMapper.updateFSetType(start,end);
     }
+
+    @Override
+    public int getCountByTime(String start, String end) {
+
+        return saleMapper.getCountByTime(start,end);
+    }
+
 }

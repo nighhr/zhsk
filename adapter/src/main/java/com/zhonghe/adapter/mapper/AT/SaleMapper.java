@@ -12,4 +12,6 @@ public interface SaleMapper {
     int batchInsert(List<Sale> sales);
 
     void updateFSetType(@Param("start")String start, @Param("end")String end);
+
+    int getCountByTime(@Param("start")String start, @Param("end")String end);
 }

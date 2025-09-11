@@ -72,13 +72,5 @@
         </where>
     </select>
 
-    <select id="selectSuccLogCountByTaskNameAndMonth" resultType="java.lang.Integer">
-        SELECT count(1)
-        FROM operation_log
-        WHERE log_time >= DATE_FORMAT(NOW(), '%Y-%m-01 00:00:00')
-          AND log_time &lt; DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 1 MONTH), '%Y-%m-01 00:00:00')
-          AND task_name in (SELECT task_name from task where source_table = #{sourceTable})
-          AND status = '成功'
-    </select>
 
 </mapper>

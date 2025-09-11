@@ -192,12 +192,7 @@ public class TaskServiceImpl implements TaskService {
             }
             taskName = task.getTaskName();
 
-            if("门店销售收入(收款明细)".equals(task.getTaskName())){
-                int i = operationLogMapper.selectSuccLogCountByTaskNameAndMonth("at_sale");
-                if (i==0){
-                    throw new BusinessException(ErrorCode.ORDER_PRE_TASK,"本月还未成功生成门店销售收入,会影响收款明细参数");
-                }
-            }
+
 
             String start;
             String end;
@@ -240,6 +235,12 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
 
+            if("门店销售收入(收款明细)".equals(task.getTaskName())){
+                int countByTime = saleService.getCountByTime(start, end);
+                if (countByTime==0){
+                    throw new BusinessException(ErrorCode.ORDER_PRE_TASK,"本月还未成功生成门店销售收入,会影响收款明细参数");
+                }
+            }
             // 获取凭证头列表
             List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
             if (!taskVoucherHeads.isEmpty()) {
