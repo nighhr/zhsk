@@ -10,4 +10,6 @@ import java.util.List;
 public interface SaleRecMapper {
     int insert(SaleRec saleRec);
     int batchInsert(@Param("list")List<SaleRec> saleRecs);
+    int batchUpdatePlatformArea(@Param("list")List<SaleRec> saleRecs);
+    void deleteSaleRecByTime(@Param("start")String start, @Param("end")String end);
 }

@@ -104,4 +104,46 @@
         </foreach>
     </insert>
 
+    <update id="batchUpdatePlatformArea" parameterType="java.util.List">
+        UPDATE at_sale_rec
+        SET FPlatformArea =
+        CASE
+        WHEN FSetTypeName = '商城海博支付' THEN
+        COALESCE(
+        (SELECT
+        CASE s.FPlatformArea
+        WHEN '1' THEN '京东到家'
+        WHEN '2' THEN '美团'
+        WHEN '3' THEN '饿了么'
+        WHEN '9' THEN '自有渠道'
+        WHEN '10' THEN '有赞'
+        ELSE s.FPlatformArea
+        END
+        FROM at_sale s
+        WHERE s.FID = at_sale_rec.FSalesNo
+        LIMIT 1),
+        FPlatformArea
+        )
+        ELSE
+        CASE FPlatformArea
+        WHEN '1' THEN '京东到家'
+        WHEN '2' THEN '美团'
+        WHEN '3' THEN '饿了么'
+        WHEN '9' THEN '自有渠道'
+        WHEN '10' THEN '有赞'
+        ELSE FPlatformArea
+        END
+        END
+        WHERE FID IN
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.FID,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <delete id="deleteSaleRecByTime">
+        DELETE FROM at_sale_rec
+        WHERE FSaleTime &gt;= #{start,jdbcType=TIMESTAMP}
+        AND FSaleTime &lt;= #{end,jdbcType=TIMESTAMP}
+    </delete>
+
 </mapper>

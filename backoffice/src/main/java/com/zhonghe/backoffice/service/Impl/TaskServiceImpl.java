@@ -1107,7 +1107,7 @@ public class TaskServiceImpl implements TaskService {
             case "at_sale_rec":
                 try {
                     CompletableFuture<Void> saleRecFuture2 = CompletableFuture.runAsync(() ->
-                            saleRecService.getSaleRec(currentPage, pageSize, start, end));
+                            saleRecService.updateSaleRec(currentPage, pageSize, start, end));
                     saleRecFuture2.join();
                 } catch (CompletionException e) {
                     handleCompletionException(e, "销售收款数据");

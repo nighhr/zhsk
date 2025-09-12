@@ -75,7 +75,7 @@ public class OperationLogServiceImpl implements OperationLogService {
         log.setPrimaryKeyValue(voucherKey);
         log.setStatus("失败");
         log.setInputDetail(params != null ? params.toString() : "无参数");
-        log.setLogDetail(errorDetail);
+        log.setLogDetail(errorDetail.length()>60000?errorDetail.substring(0,60000):errorDetail);
         log.setLogTime(new Date());
         operationLogMapper.insert(log);
     }
@@ -90,7 +90,7 @@ public class OperationLogServiceImpl implements OperationLogService {
         log.setPrimaryKeyValue(voucherKey);
         log.setStatus(status);
         log.setInputDetail(inputDetail);
-        log.setLogDetail(logDetail);
+        log.setLogDetail(logDetail.length()>60000?logDetail.substring(0,60000):logDetail);
         log.setLogTime(new Date()); // 手动设置时间，确保准确性
         return log;
     }
