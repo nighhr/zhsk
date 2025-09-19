@@ -761,8 +761,8 @@ public class TaskServiceImpl implements TaskService {
         } else if (taskName.equals("门店销售收入（不包含41分类）")) {
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' ");
         } else if (taskName.equals("门店销售收入(收款明细)")  && "借".equals(entries.getDirection())) {
-            finalSql.insert(index + "AS total".length(), ", a.FOrgName, a.FSetTypeName, a.FPayMentName");
-            groupByFields.add(" a.FOrgName, a.FSetTypeName, a.FPayMentName");
+            finalSql.insert(index + "AS total".length(), ", a.FOrgNumber,a.FOrgName, a.FSetTypeName, a.FPayMentName");
+            groupByFields.add(" a.FOrgNumber,a.FOrgName, a.FSetTypeName, a.FPayMentName");
             if( finalSql.toString().contains("商城海博支付")){
                 finalSql.insert(index + "AS total".length(), ", a.FPlatformArea");
                 groupByFields.add(" a.FPlatformArea");
@@ -883,12 +883,18 @@ public class TaskServiceImpl implements TaskService {
             processMapping("1", queryData, glAccvouch);
         }
         if (entries.getDepartmentAccounting()) {
-            processMapping("2", queryData, glAccvouch);
+            if (!"门店销售收入(收款明细)".equals(task.getTaskName())){
+                processMapping("2", queryData, glAccvouch);
+            }
         }
-
+        //无论是否选择部门辅助核算都进行部门的字段对照
         if ("门店销售收入(收款明细)".equals(task.getTaskName())) {
+            processMapping("2", queryData, glAccvouch);
             String fPayMentName = queryData.get("FPayMentName") == null ? "" : queryData.get("FPayMentName").toString();
-            if ("爱他美券".equals(fPayMentName)) {
+            if("".equals(fPayMentName)){
+
+            }
+            else if ("爱他美券".equals(fPayMentName)) {
                 glAccvouch.setCsupId("010080");
             } else if ("飞鹤券".equals(fPayMentName)) {
                 glAccvouch.setCsupId("010084");
