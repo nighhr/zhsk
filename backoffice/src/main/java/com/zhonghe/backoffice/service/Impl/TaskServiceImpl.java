@@ -291,11 +291,28 @@ public class TaskServiceImpl implements TaskService {
             sortedList1.addAll(mdZeroList);
 
             // 分配ID
-            AtomicInteger inidCounter = new AtomicInteger(1);
-            sortedList1.forEach(item -> {
-                item.setInoId(baseInoId);
-                item.setInid(inidCounter.getAndIncrement());
-            });
+            if("门店销售收入(收款明细)".equals(task.getTaskName())){
+                // 按门店分组
+                Map<String, List<GLAccvouch>> groupByDept = sortedList1.stream()
+                        .collect(Collectors.groupingBy(GLAccvouch::getCdeptId));
+
+                // 为每个门店分配不同的InoId（baseInoId递增），门店内部分配自增Inid
+                AtomicInteger deptInoIdCounter = new AtomicInteger(baseInoId);
+                groupByDept.forEach((deptId, deptList) -> {
+                    int currentInoId = deptInoIdCounter.getAndIncrement();
+                    AtomicInteger inidCounter = new AtomicInteger(1);
+                    deptList.forEach(item -> {
+                        item.setInoId(currentInoId);
+                        item.setInid(inidCounter.getAndIncrement());
+                    });
+                });
+            }else{
+                AtomicInteger inidCounter = new AtomicInteger(1);
+                sortedList1.forEach(item -> {
+                    item.setInoId(baseInoId);
+                    item.setInid(inidCounter.getAndIncrement());
+                });
+            }
 
             int totalRecord = sortedList1.size();
             int batchSize = 50;
@@ -757,7 +774,8 @@ public class TaskServiceImpl implements TaskService {
         } else if (taskName.equals("服务项目领用物料(盘点类型是4或5，包含41）")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (4, 5) ");
         } else if (taskName.equals("正常商品平负库存调整成本（盘点类型1,或2或6）不包含41")) {
-            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
+            //9月19日规则调整 从126改为3
+            finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' AND a.FBillType IN (3) ");
         } else if (taskName.equals("服务商品平负库存调整成本（盘点类型1,或2或6）只包含41")) {
             finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
         } else if (taskName.equals("入库单（只包含总仓）")) {
