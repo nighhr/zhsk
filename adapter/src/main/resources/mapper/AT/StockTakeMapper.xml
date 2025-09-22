@@ -4,7 +4,7 @@
     <insert id="insert" parameterType="com.zhonghe.adapter.model.StockTake">
         INSERT IGNORE INTO at_stock_take (
         FID, FBillType, FDate, FOrgID, FOrgNumber, FOrgName,
-        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate,FCheckDate
+        FRemark, FCreateBy, FCreateDate, FUpdateBy, FUpdateDate,FCheckDate,
         sync_flag, sync_time
     ) VALUES (
         #{FID}, #{FBillType}, #{FDate}, #{FOrgID}, #{FOrgNumber}, #{FOrgName},
