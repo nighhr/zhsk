@@ -19,6 +19,7 @@ public class StockTake {
     private Date FCreateDate;
     private String FUpdateBy;
     private Date FUpdateDate;
+    private Date FCheckDate; //审核时间
     private String syncFlag;
     private Date syncTime;
 
