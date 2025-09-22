@@ -780,7 +780,8 @@ public class TaskServiceImpl implements TaskService {
             //9月19日规则调整 从126改为3
             finalSql.append(" AND b.FMaterialTypeNumber NOT LIKE '41%' AND a.FBillType IN (3) ");
         } else if (taskName.equals("服务商品平负库存调整成本（盘点类型1,或2或6）只包含41")) {
-            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (1, 2 ,6) ");
+            //9月19日规则调整 从126改为3
+            finalSql.append(" AND b.FMaterialTypeNumber LIKE '41%' AND a.FBillType IN (3) ");
         } else if (taskName.equals("入库单（只包含总仓）")) {
             finalSql.insert(index + "AS total".length(), ", b.FId");
             groupByFields.add("b.FId");
