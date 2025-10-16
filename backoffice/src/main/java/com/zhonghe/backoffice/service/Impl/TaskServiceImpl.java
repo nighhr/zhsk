@@ -327,10 +327,10 @@ public class TaskServiceImpl implements TaskService {
                 // 金额精度处理
                 batch.forEach(item -> {
                     if (item.getMd() != null) {
-                        item.setMd(item.getMd().setScale(4, RoundingMode.HALF_UP));
+                        item.setMd(item.getMd().setScale(2, RoundingMode.HALF_UP));
                     }
                     if (item.getMc() != null) {
-                        item.setMc(item.getMc().setScale(4, RoundingMode.HALF_UP));
+                        item.setMc(item.getMc().setScale(2, RoundingMode.HALF_UP));
                     }
                 });
 
