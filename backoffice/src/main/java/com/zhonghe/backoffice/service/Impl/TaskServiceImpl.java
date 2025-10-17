@@ -334,6 +334,14 @@ public class TaskServiceImpl implements TaskService {
                     }
                 });
 
+                if("门店销售收入(收款明细)".equals(task.getTaskName())){
+                    batch.forEach(item -> {
+                        if ("12210501".equals(item.getCcode())) {
+                            item.setCdeptId(null);
+                        }
+                    });
+                }
+
                 glAccvouchMapper.batchInsert(batch);
 //                 2. 记录成功日志（独立事务）
                 operationLogService.asyncRecordSuccessLog(taskId, taskName, voucherKey,
@@ -956,6 +964,7 @@ public class TaskServiceImpl implements TaskService {
 
 
     // 添加映射处理逻辑
+    //1 供应商 2部门
     private void processMapping(String type, Map<String, Object> queryData, GLAccvouch glAccvouch) {
         // 使用缓存获取表映射
         List<TableMapping> tableMappings = tableMappingCache.computeIfAbsent(type,
