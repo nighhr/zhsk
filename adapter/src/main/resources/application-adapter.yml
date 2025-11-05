@@ -1,0 +1,53 @@
+spring:
+  datasource:
+    secondary:
+#      jdbc-url: "jdbc:sqlserver://192.168.4.8:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true;serverTimezone=Asia/Shanghai"
+      jdbc-url: "jdbc:sqlserver://192.168.28.63:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true;serverTimezone=Asia/Shanghai"
+#      password: sy1901!!
+      password: Aa123456
+      username: sa
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      hikari:
+        pool-name: SecondarySQLServerPool
+        maximum-pool-size: 10
+        maxLifetime: 1800000
+        idleTimeout: 600000
+        validation-timeout: 5000
+
+mybatis:
+  secondary:
+    mapper-locations: classpath:mapper/U8/*.xml
+    type-aliases-package: com.zhonghe.adapter.model.U8
+
+logging:
+  level:
+    com.zhonghe.adapter.mapper.U8: DEBUG
+    com.zhonghe.adapter.feign: DEBUG
+
+    # 启用 Feign 底层日志
+    feign.Logger: DEBUG
+
+    # 可选：启用 HTTP 客户端日志（如果是 OkHttp 或 Apache HttpClient）
+    feign.okhttp.OkHttpClient: DEBUG
+    org.apache.http.wire: DEBUG
+
+# 钉钉配置
+dingtalk:
+  appKey: "ding3oj3qnkgx7ykeqbt"
+  appSecret: "XCIAXNf3Sja7E4IWpR0lyeVs-NnIekQ--8GPo3hdiK53HdlwzDqflUKV5rDJF_jn"
+  serverUrl: "https://oapi.dingtalk.com"
+  timeout: 5000
+
+bip:
+  config:
+    ip: "112.102.234.196"
+    port: "11110"
+    biz-center: "LT"
+    client-id: "dingding"
+    client-secret: "46742db37b3948e2bfef"
+    pub-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqQLfSbqXDtvg2IucmyI8c0RB678h6dgfKncuDIU+fQmYUVdbUmV7ZKEjFjolo7xqN9SMjrSVUIX4c3AqovzX7NbCVHfQkxmk3SeiIsF8lvjEAMqra5xH9VaZnbSmeyh143bXzO9SJgdegLOQOV2SeENy93BFAyr16Q1E1AYsMq0xmoc/D+fbxDN94aDNKbwzEcSttOVXuOHziF3uO42/8oHYcN3dbudJAu6FkSqR4b5m1ZDVcJb1Q7KcVs44jQ8cpZWBa97RN7S9xROVMnIF43G33Gi7WdwgsbExozaeco3OK3Bew0Z0BLkz1q1G+nF6GqpHgyd1ftrLaL6y9UVBTQIDAQAB+hDwpvAZBUPVem52kfJibm4UPobviXLrWuuahRcrzvVWX6JKlRmDXuFhUw7VomlOYp5kUqOelV6LO9ShKoxx+awtNexvSsEPOX0qluF5TuuSI7jphKSrw3CmCpQcWrOmOBxjsbuKLt3Xu76WDtMmsjiW8HEbL4NbI3/T6hs7b95qbvbm4UJqKQTl1ukQUlV97fboRwPCT+OHmFjJOhQnWg3p65iuQcQwC2yTHM1S2lY8G7xiTvofh3e/Mtb7wXt89mOV4VdS7QdXKEisjM1i7SYiwBLzPKJnV97hCQcV6t/l0Ta0/KHLIwzAfkKgJ2vtjFm1cnhwIDAQAB"
+    user-name: "admin04"
+    pwd: ""
+    tenant-id: null
+    secret-level: "L0"
+    grant-type: "client"

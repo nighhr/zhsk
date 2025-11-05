@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhonghe.adapter.mapper.BIP.BipEmployeeMapper">
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO bip_employee (
+        code, name, mobile, enablestate, pk_psndoc,
+        pk_group_code, pk_group_name, pk_group_pk,
+        pk_org_code, pk_org_name, pk_org_pk,
+        dept_code, dept_name, job_code, job_name,
+        post_code, post_name, creator_code, creator_name,
+        creation_time, ts, dr, dataoriginflag, isshopassist
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.code}, #{item.name}, #{item.mobile}, #{item.enablestate}, #{item.pkPsndoc},
+            #{item.pkGroupCode}, #{item.pkGroupName}, #{item.pkGroupPk},
+            #{item.pkOrgCode}, #{item.pkOrgName}, #{item.pkOrgPk},
+            #{item.deptCode}, #{item.deptName}, #{item.jobCode}, #{item.jobName},
+            #{item.postCode}, #{item.postName}, #{item.creatorCode}, #{item.creatorName},
+            #{item.creationTime}, #{item.ts}, #{item.dr}, #{item.dataoriginflag}, #{item.isshopassist}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        code = VALUES(code)
+    </insert>
+
+
+    <update id="updateDingdingId">
+        UPDATE bip_employee
+        SET dingding_id = #{dingdingId}
+        WHERE code = #{code}
+    </update>
+
+</mapper>

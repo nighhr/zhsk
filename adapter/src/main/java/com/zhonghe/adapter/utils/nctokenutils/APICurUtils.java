@@ -459,22 +459,25 @@ public class APICurUtils implements IAPIUtils {
             System.out.println("token" + token);
 
             //第二步  调接口，
-            util.setApiUrl("nccloud/api/uapbd/suppliermanage/supplierstock/supplierstockquery");
-            String json = "{"
-                    + "\"ufinterface\": {"
-                    +     "\"sender\": \"default\","
-                    +     "\"data\": {"
-                    +         "\"pk_group\": \"1\","
-                    +         "\"pk_org\": ["
-                    +             "\"ASD\""
-                    +         "]"
-                    +     "},"
-                    +     "\"pageInfo\": {"
-                    +         "\"pageIndex\": \"0\","
-                    +         "\"pageSize\": \"5\""
-                    +     "}"
-                    + "}"
-                    + "}";
+            util.setApiUrl("nccloud/api/uapbd/psndocmanage/querypsndoc/condition");
+            String json = "{" +
+                    "\"ufinterface\": {" +
+                    "\"sender\": \"default\"," +
+                    "\"data\": {" +
+                    "\"pk_group\": null," +
+                    "\"pk_org\": [\"A0101\",\"A0102\",\"A0103\"]," +
+                    "\"pk_dept\": []," +
+                    "\"code\": []," +
+                    "\"name\": []," +
+                    "\"id\": []," +
+                    "\"ts\": null" +
+                    "}," +
+                    "\"pageInfo\": {" +
+                    "\"pageIndex\": \"0\"," +
+                    "\"pageSize\": \"500\"" +
+                    "}" +
+                    "}" +
+                    "}";
             String apiRetrun = util.getAPIRetrun(token, json);
 
             System.out.print(" apiRetrun --> " + apiRetrun);

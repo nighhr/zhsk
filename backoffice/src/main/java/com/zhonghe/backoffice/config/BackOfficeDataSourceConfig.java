@@ -20,7 +20,7 @@ import javax.sql.DataSource;
 @Primary
 @Configuration
 @MapperScan(
-        basePackages = {"com.zhonghe.backoffice.mapper","com.zhonghe.adapter.mapper.AT"},
+        basePackages = {"com.zhonghe.backoffice.mapper","com.zhonghe.adapter.mapper.AT","com.zhonghe.adapter.mapper.BIP"},
         sqlSessionFactoryRef = "backofficeSqlSessionFactory"
 )
 public class BackOfficeDataSourceConfig {

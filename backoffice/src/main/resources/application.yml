@@ -1,6 +1,8 @@
 spring:
+  config:
+    import: "classpath:/application-adapter.yml"
+
   datasource:
-    # 主数据源（MySQL）
     backoffice:
       jdbc-url: "jdbc:mysql://localhost:3306/aite?useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true&allowPublicKeyRetrieval=true"
       username: root
@@ -13,21 +15,7 @@ spring:
         idle-timeout: 600000
         max-lifetime: 1800000
 
-    secondary:
-      jdbc-url: "jdbc:sqlserver://192.168.4.8:1433;databaseName=UFDATA_999_2025;encrypt=false;loginTimeout=30;socketTimeout=60000"
-#      jdbc-url: "jdbc:sqlserver://192.168.28.63:1433;databaseName=UFDATA_999_2025;encrypt=false;loginTimeout=30;socketTimeout=60000"
-      password: sy1901!!
-#      password: Aa123456
-      username: sa
-      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-      hikari:
-        pool-name: SecondarySQLServerPool
-        maximum-pool-size: 10
-        maxLifetime: 1800000
-        idleTimeout: 600000
-        validation-timeout: 5000
-        connection-test-query: SELECT 1
-        connection-timeout: 30000
+
 
 #  quartz:
 #    # 使用数据库存储
@@ -73,7 +61,6 @@ logging:
     com.zhonghe.backoffice.mapper: DEBUG
     com.zhonghe.adapter.feign: DEBUG
     feign.Logger: DEBUG
-#    org.quartz: INFO # 添加Quartz日志级别
 
 feign:
   client:
