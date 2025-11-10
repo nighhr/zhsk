@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableFeignClients(basePackages = "com.zhonghe.adapter.feign")
 @Import({
         com.zhonghe.adapter.config.SecondaryDataSourceConfig.class,
+        com.zhonghe.adapter.config.ThirdOracleDataSourceConfig.class,
         com.zhonghe.backoffice.config.BackOfficeDataSourceConfig.class
 })
 @EnableAsync

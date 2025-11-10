@@ -1,9 +1,14 @@
 package com.zhonghe.adapter.service.Impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.zhonghe.adapter.mapper.BIP.BipEmployeeMapper;
+import com.zhonghe.adapter.mapper.AT.BipEmployeeMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zhonghe.adapter.mapper.BIP.WorkFlowMapper;
+import com.zhonghe.adapter.model.BIP.BipEmployee;
+import com.zhonghe.adapter.model.BIP.PersonResponse;
 import com.zhonghe.adapter.service.BipEmployeeSyncService;
 import com.zhonghe.adapter.utils.dingtokentuils.DingTalkService;
+import com.zhonghe.adapter.utils.nctokenutils.BIPService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
@@ -19,14 +24,70 @@ public class BipEmployeeSyncServiceImpl implements BipEmployeeSyncService {
     private DingTalkService dingTalkService;
 
     @Autowired
+    private BIPService bipService;
+
+    @Autowired
     private BipEmployeeMapper bipEmployeeMapper;
+
+    @Autowired
+    private WorkFlowMapper workFlowMapper;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final long AGENT_ID = 4016330818L;
 
     /**
      * 从钉钉同步所有在职员工的userid与工号对应关系，并更新数据库
      */
-    public void syncBipEmployees() {
+    public void syncBipEmployees() throws Exception {
+        Long i1 = workFlowMapper.selectOne();
+        System.out.println("select One  = " + i1);
+
+        //获取bip员工数据
+        String token = bipService.getToken();
+        String json = "{" +
+                "\"ufinterface\": {\"sender\": \"default\",\"data\": {\"pk_group\": null," +
+                "\"pk_org\": [\"A0101\",\"A0102\",\"A0103\"],\"pk_dept\": [],\"code\": [],\"name\": [],\"id\": [],\"ts\": null}," +
+                "\"pageInfo\": {\"pageIndex\": \"0\",\"pageSize\": \"1000\"}}}";
+        String bipResult = bipService.callApi("nccloud/api/uapbd/psndocmanage/querypsndoc/condition", json, token);
+
+        PersonResponse response = objectMapper.readValue(bipResult, PersonResponse.class);
+
+        List<BipEmployee> employees = new ArrayList<>();
+        response.getData().forEach(person -> {
+            BipEmployee e = new BipEmployee();
+            e.setCode(person.getCode());
+            e.setName(person.getName());
+            e.setMobile(person.getMobile());
+            e.setEnablestate(person.getEnablestate());
+            e.setPkPsndoc(person.getPk_psndoc());
+            if (person.getPk_group() != null) {
+                e.setPkGroupCode(person.getPk_group().getCode());
+                e.setPkGroupName(person.getPk_group().getName());
+                e.setPkGroupPk(person.getPk_group().getPk());
+            }
+            if (person.getPk_org() != null) {
+                e.setPkOrgCode(person.getPk_org().getCode());
+                e.setPkOrgName(person.getPk_org().getName());
+                e.setPkOrgPk(person.getPk_org().getPk());
+            }
+            if (person.getCreator() != null) {
+                e.setCreatorCode(person.getCreator().getCode());
+                e.setCreatorName(person.getCreator().getName());
+            }
+            e.setCreationTime(person.getCreationtime());
+            e.setTs(person.getTs());
+            e.setDr(person.getDr());
+            e.setDataoriginflag(person.getDataoriginflag());
+            e.setIsshopassist(person.getIsshopassist());
+            employees.add(e);
+        });
+
+        if (!employees.isEmpty()) {
+            bipEmployeeMapper.batchInsert(employees);
+        }
+
+
         List<String> allUserIds = new ArrayList<>();
 
         // 分页调用 queryonjob 获取所有在职员工 userid

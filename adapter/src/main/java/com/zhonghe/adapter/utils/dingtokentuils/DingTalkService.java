@@ -35,7 +35,6 @@ public class DingTalkService {
                     "?appkey=" + dingTalkProperties.getAppKey() +
                     "&appsecret=" + dingTalkProperties.getAppSecret();
 
-            log.info("请求钉钉 token 地址: {}", url);
             ResponseEntity<TokenResponse> response = restTemplate.getForEntity(url, TokenResponse.class);
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {

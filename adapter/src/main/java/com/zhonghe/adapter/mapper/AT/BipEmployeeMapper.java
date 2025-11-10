@@ -1,4 +1,4 @@
-package com.zhonghe.adapter.mapper.BIP;
+package com.zhonghe.adapter.mapper.AT;
 
 import com.zhonghe.adapter.model.BIP.BipEmployee;
 import org.apache.ibatis.annotations.Mapper;

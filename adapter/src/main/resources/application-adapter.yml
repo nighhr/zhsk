@@ -14,20 +14,32 @@ spring:
         idleTimeout: 600000
         validation-timeout: 5000
 
+    third:
+      url: "jdbc:oracle:thin:@//192.168.11.200:1521/PDB"
+      username: YONBIPV3
+      password: mima
+      driver-class-name: oracle.jdbc.OracleDriver
+      hikari:
+        pool-name: OracleThirdPool
+        maximum-pool-size: 10
+        maxLifetime: 1800000
+        idleTimeout: 600000
+        validation-timeout: 5000
+
 mybatis:
   secondary:
     mapper-locations: classpath:mapper/U8/*.xml
     type-aliases-package: com.zhonghe.adapter.model.U8
+  third:
+    mapper-locations: classpath:mapper/BIP/*.xml
+    type-aliases-package: com.zhonghe.adapter.model.BIP
 
 logging:
   level:
     com.zhonghe.adapter.mapper.U8: DEBUG
+    com.zhonghe.adapter.mapper.BIP: DEBUG
     com.zhonghe.adapter.feign: DEBUG
-
-    # 启用 Feign 底层日志
     feign.Logger: DEBUG
-
-    # 可选：启用 HTTP 客户端日志（如果是 OkHttp 或 Apache HttpClient）
     feign.okhttp.OkHttpClient: DEBUG
     org.apache.http.wire: DEBUG
 
