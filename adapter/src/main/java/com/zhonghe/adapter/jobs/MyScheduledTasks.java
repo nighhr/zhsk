@@ -1,21 +1,25 @@
 package com.zhonghe.adapter.jobs;
 
-import com.zhonghe.adapter.service.BipEmployeeSyncService;
+import com.zhonghe.adapter.service.BipSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
 
 @Component
 public class MyScheduledTasks {
 
     @Autowired
-    private BipEmployeeSyncService bipEmployeeSyncService;
+    private BipSyncService bipSyncService;
 
     @Scheduled(cron = "* * 4 * * *")  //每天凌晨4点同步人员数据
     public void scheduledTask() throws Exception {
-        bipEmployeeSyncService.syncBipEmployees();
+        bipSyncService.syncBipEmployees();
+
+    }
+
+    @Scheduled(cron = "4 * * * * *")  //每天凌晨4点同步人员数据
+    public void scheduled1Task() {
+        bipSyncService.syncBipPrayBill();
 
     }
 }

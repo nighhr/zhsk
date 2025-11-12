@@ -1,5 +1,7 @@
 package com.zhonghe.adapter.service;
 
-public interface BipEmployeeSyncService {
+public interface BipSyncService {
     void syncBipEmployees() throws Exception;
+
+    void syncBipPrayBill();
 }

@@ -17,7 +17,7 @@ spring:
     third:
       url: "jdbc:oracle:thin:@//192.168.11.200:1521/PDB"
       username: YONBIPV3
-      password: mima
+      password: YONBIPV3
       driver-class-name: oracle.jdbc.OracleDriver
       hikari:
         pool-name: OracleThirdPool

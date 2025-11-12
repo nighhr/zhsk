@@ -35,4 +35,14 @@
         WHERE code = #{code}
     </update>
 
+    <select id="selectDingDingIdByPsnDoc" resultType="java.util.Map">
+        SELECT pk_psndoc, dingding_id
+        FROM bip_employee
+        WHERE pk_psndoc IN
+        <foreach collection="pkPsndocList" item="pkPsndoc" open="(" close=")" separator=",">
+            #{pkPsndoc}
+        </foreach>
+        AND dingding_id IS NOT NULL
+        AND dingding_id != ''
+    </select>
 </mapper>

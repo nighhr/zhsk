@@ -20,10 +20,11 @@ import javax.sql.DataSource;
 @Primary
 @Configuration
 @MapperScan(
-        basePackages = {"com.zhonghe.backoffice.mapper","com.zhonghe.adapter.mapper.AT","com.zhonghe.adapter.mapper.BIP"},
+        basePackages = {"com.zhonghe.backoffice.mapper","com.zhonghe.adapter.mapper.AT"},
         sqlSessionFactoryRef = "backofficeSqlSessionFactory"
 )
 public class BackOfficeDataSourceConfig {
+
     @Bean
     @ConfigurationProperties("spring.datasource.backoffice")
     public DataSource backofficeDataSource() {

@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zhonghe.adapter.mapper.BIP.WorkFlowMapper;
 import com.zhonghe.adapter.model.BIP.BipEmployee;
 import com.zhonghe.adapter.model.BIP.PersonResponse;
-import com.zhonghe.adapter.service.BipEmployeeSyncService;
+import com.zhonghe.adapter.service.BipSyncService;
 import com.zhonghe.adapter.utils.dingtokentuils.DingTalkService;
 import com.zhonghe.adapter.utils.nctokenutils.BIPService;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
@@ -18,7 +20,7 @@ import java.util.*;
 
 @Slf4j
 @Service
-public class BipEmployeeSyncServiceImpl implements BipEmployeeSyncService {
+public class BipSyncServiceImpl implements BipSyncService {
 
     @Autowired
     private DingTalkService dingTalkService;
@@ -37,11 +39,9 @@ public class BipEmployeeSyncServiceImpl implements BipEmployeeSyncService {
     private static final long AGENT_ID = 4016330818L;
 
     /**
-     * 从钉钉同步所有在职员工的userid与工号对应关系，并更新数据库
+     * 从bip定时拉取人员数据 从钉钉同步所有在职员工的userid与工号对应关系，并更新数据库
      */
     public void syncBipEmployees() throws Exception {
-        Long i1 = workFlowMapper.selectOne();
-        System.out.println("select One  = " + i1);
 
         //获取bip员工数据
         String token = bipService.getToken();
@@ -169,6 +169,133 @@ public class BipEmployeeSyncServiceImpl implements BipEmployeeSyncService {
         log.info("全部同步完成");
     }
 
+    /**
+     * 在bip中定时获取待审批请购单的事项 人员 审批节点 并将审批通知推送至钉钉
+     */
+    public void syncBipPrayBill() {
+        try {
+            // 获取所有待审批请购单
+            List<HashMap<String, Object>> approvalList = workFlowMapper.selectCheckManAndMessageNote("20-01");
+
+            if (approvalList == null || approvalList.isEmpty()) {
+                log.info("没有待审批的请购单");
+                return;
+            }
+
+            log.info("共获取到 {} 条待审批请购单", approvalList.size());
+
+            // 按审批人分组，避免重复推送
+            Map<String, List<ApprovalItem>> userApprovalMap = new HashMap<>();
+
+            for (HashMap<String, Object> item : approvalList) {
+                String pkPsndoc = (String) item.get("pk_psndoc");
+                String checkMan = (String) item.get("checkman");
+                String userName = (String) item.get("user_name");
+                String messageNote = (String) item.get("messagenote");
+
+                if (pkPsndoc != null && !pkPsndoc.isEmpty()) {
+                    ApprovalItem approvalItem = new ApprovalItem(userName, messageNote, checkMan);
+                    userApprovalMap.computeIfAbsent(pkPsndoc, k -> new ArrayList<>()).add(approvalItem);
+                }
+            }
+
+            // 批量查询所有审批人的钉钉ID
+            List<String> pkPsndocList = new ArrayList<>(userApprovalMap.keySet());
+            Map<String, String> psndocToDingdingMap = bipEmployeeMapper.selectDingDingIdByPsnDoc(pkPsndocList);
+
+            // 推送消息给每个审批人
+            int successCount = 0;
+            int failCount = 0;
+
+            for (Map.Entry<String, List<ApprovalItem>> entry : userApprovalMap.entrySet()) {
+                String pkPsndoc = entry.getKey();
+                List<ApprovalItem> approvalItems = entry.getValue();
+                String dingDingId = psndocToDingdingMap.get(pkPsndoc);
+
+                if (dingDingId != null && !dingDingId.isEmpty()) {
+                    boolean pushSuccess = pushApprovalMessageToUser(dingDingId, approvalItems);
+                    if (pushSuccess) {
+                        successCount++;
+                        log.info("推送成功 -> 用户: {}, 待审批数量: {}", approvalItems.get(0).getUserName(), approvalItems.size());
+                    } else {
+                        failCount++;
+                        log.error("推送失败 -> 用户: {}", approvalItems.get(0).getUserName());
+                    }
+                } else {
+                    failCount++;
+                    log.warn("未找到钉钉ID -> pk_psndoc: {}, 用户名: {}", pkPsndoc, approvalItems.get(0).getUserName());
+                }
+            }
+
+            log.info("请购单审批通知推送完成: 成功 {} 条, 失败 {} 条", successCount, failCount);
+
+        } catch (Exception e) {
+            log.error("同步请购单审批信息时发生异常", e);
+        }
+    }
+
+    /**
+     * 推送审批消息给单个用户
+     */
+    private boolean pushApprovalMessageToUser(String dingDingId, List<ApprovalItem> approvalItems) {
+        try {
+            String messageContent = buildDingTalkMessage(approvalItems);
+
+            Map<String, Object> msgParams = new HashMap<>();
+            msgParams.put("agent_id", AGENT_ID);
+            msgParams.put("userid_list", dingDingId);
+
+            Map<String, Object> msgContent = new HashMap<>();
+            msgContent.put("msgtype", "markdown");
+
+            Map<String, String> markdownContent = new HashMap<>();
+            markdownContent.put("title", "请购单审批提醒");
+            markdownContent.put("text", messageContent);
+            msgContent.put("markdown", markdownContent);
+
+            msgParams.put("msg", msgContent);
+
+            JsonNode result = dingTalkService.callDingTalkApi(
+                    "topapi/message/corpconversation/asyncsend_v2",
+                    msgParams,
+                    HttpMethod.POST,
+                    true
+            );
+
+            return result != null && result.path("errcode").asInt() == 0;
+
+        } catch (Exception e) {
+            log.error("推送钉钉消息时发生异常, dingDingId: {}", dingDingId, e);
+            return false;
+        }
+    }
+
+    /**
+     * 构建钉钉消息内容 (支持多条审批事项)
+     */
+    private String buildDingTalkMessage(List<ApprovalItem> approvalItems) {
+        StringBuilder message = new StringBuilder();
+        message.append("### 【请购单审批通知】 \n\n");
+        message.append("您好 **").append(approvalItems.get(0).getUserName()).append("**，您有以下待审批请购单：\n\n");
+
+        for (int i = 0; i < approvalItems.size(); i++) {
+            ApprovalItem item = approvalItems.get(i);
+            message.append(i + 1).append(". ").append(item.getMessageNote()).append("\n");
+        }
+
+        message.append("\n---\n");
+        message.append("请及时登录系统进行处理。");
+
+        return message.toString();
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class ApprovalItem {
+        private String userName;
+        private String messageNote;
+        private String checkMan;
+    }
     /**
      * 从员工详情节点中提取工号 (sys00-jobNumber)
      */
