@@ -35,13 +35,16 @@
         WHERE code = #{code}
     </update>
 
-    <select id="selectDingDingIdByPsnDoc" resultType="java.util.Map">
-        SELECT pk_psndoc, dingding_id
+    <select id="selectDingDingIdByPsnDoc" resultType="com.zhonghe.adapter.model.BIP.BipEmployeeAsOtherId">
+        SELECT pk_psndoc as pkPsndoc, dingding_id as dingdingId
         FROM bip_employee
-        WHERE pk_psndoc IN
-        <foreach collection="pkPsndocList" item="pkPsndoc" open="(" close=")" separator=",">
-            #{pkPsndoc}
-        </foreach>
+        WHERE 1=1
+        <if test="pkPsndocList != null and pkPsndocList.size() > 0">
+            AND pk_psndoc IN
+            <foreach collection="pkPsndocList" item="pkPsndoc" open="(" close=")" separator=",">
+                #{pkPsndoc}
+            </foreach>
+        </if>
         AND dingding_id IS NOT NULL
         AND dingding_id != ''
     </select>

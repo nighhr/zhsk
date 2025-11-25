@@ -15,7 +15,7 @@ spring:
         validation-timeout: 5000
 
     third:
-      url: "jdbc:oracle:thin:@//192.168.11.200:1521/PDB"
+      jdbc-url: "jdbc:oracle:thin:@//192.168.11.200:1521/PDB"
       username: YONBIPV3
       password: YONBIPV3
       driver-class-name: oracle.jdbc.OracleDriver
@@ -52,8 +52,8 @@ dingtalk:
 
 bip:
   config:
-    ip: "112.102.234.196"
-    port: "11110"
+    ip: "192.168.10.51"
+    port: "9090"
     biz-center: "LT"
     client-id: "dingding"
     client-secret: "46742db37b3948e2bfef"

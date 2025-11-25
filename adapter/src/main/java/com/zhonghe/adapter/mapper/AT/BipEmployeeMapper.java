@@ -1,6 +1,7 @@
 package com.zhonghe.adapter.mapper.AT;
 
 import com.zhonghe.adapter.model.BIP.BipEmployee;
+import com.zhonghe.adapter.model.BIP.BipEmployeeAsOtherId;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -16,5 +17,5 @@ public interface BipEmployeeMapper {
     int updateDingdingId(@Param("code") String code, @Param("dingdingId") String dingdingId);
 
     @MapKey("pkPsndoc")
-    Map<String, String> selectDingDingIdByPsnDoc(@Param("pkPsndocList") List<String> pkPsndocList);
+    Map<String, BipEmployeeAsOtherId> selectDingDingIdByPsnDoc(@Param("pkPsndocList") List<String> pkPsndocList);
 }

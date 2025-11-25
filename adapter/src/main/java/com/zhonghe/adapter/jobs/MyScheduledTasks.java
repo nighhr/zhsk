@@ -17,7 +17,7 @@ public class MyScheduledTasks {
 
     }
 
-    @Scheduled(cron = "4 * * * * *")  //每天凌晨4点同步人员数据
+    @Scheduled(cron = "4 * * * * *")  //每天凌晨4点发送消息
     public void scheduled1Task() {
         bipSyncService.syncBipPrayBill();
 

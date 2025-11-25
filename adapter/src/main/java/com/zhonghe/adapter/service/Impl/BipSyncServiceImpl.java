@@ -5,12 +5,14 @@ import com.zhonghe.adapter.mapper.AT.BipEmployeeMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zhonghe.adapter.mapper.BIP.WorkFlowMapper;
 import com.zhonghe.adapter.model.BIP.BipEmployee;
+import com.zhonghe.adapter.model.BIP.BipEmployeeAsOtherId;
 import com.zhonghe.adapter.model.BIP.PersonResponse;
 import com.zhonghe.adapter.service.BipSyncService;
 import com.zhonghe.adapter.utils.dingtokentuils.DingTalkService;
 import com.zhonghe.adapter.utils.nctokenutils.BIPService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
@@ -175,7 +177,7 @@ public class BipSyncServiceImpl implements BipSyncService {
     public void syncBipPrayBill() {
         try {
             // 获取所有待审批请购单
-            List<HashMap<String, Object>> approvalList = workFlowMapper.selectCheckManAndMessageNote("20-01");
+            List<HashMap<String, Object>> approvalList = workFlowMapper.selectCheckManAndMessageNote("10WL");
 
             if (approvalList == null || approvalList.isEmpty()) {
                 log.info("没有待审批的请购单");
@@ -188,10 +190,10 @@ public class BipSyncServiceImpl implements BipSyncService {
             Map<String, List<ApprovalItem>> userApprovalMap = new HashMap<>();
 
             for (HashMap<String, Object> item : approvalList) {
-                String pkPsndoc = (String) item.get("pk_psndoc");
-                String checkMan = (String) item.get("checkman");
-                String userName = (String) item.get("user_name");
-                String messageNote = (String) item.get("messagenote");
+                String pkPsndoc = (String) item.get("PK_PSNDOC");
+                String checkMan = (String) item.get("CHECKMAN");
+                String userName = (String) item.get("USER_NAME");
+                String messageNote = (String) item.get("MESSAGE_NOTE");
 
                 if (pkPsndoc != null && !pkPsndoc.isEmpty()) {
                     ApprovalItem approvalItem = new ApprovalItem(userName, messageNote, checkMan);
@@ -201,7 +203,7 @@ public class BipSyncServiceImpl implements BipSyncService {
 
             // 批量查询所有审批人的钉钉ID
             List<String> pkPsndocList = new ArrayList<>(userApprovalMap.keySet());
-            Map<String, String> psndocToDingdingMap = bipEmployeeMapper.selectDingDingIdByPsnDoc(pkPsndocList);
+            Map<String, BipEmployeeAsOtherId> psndocToDingdingMap = bipEmployeeMapper.selectDingDingIdByPsnDoc(pkPsndocList);
 
             // 推送消息给每个审批人
             int successCount = 0;
@@ -210,10 +212,13 @@ public class BipSyncServiceImpl implements BipSyncService {
             for (Map.Entry<String, List<ApprovalItem>> entry : userApprovalMap.entrySet()) {
                 String pkPsndoc = entry.getKey();
                 List<ApprovalItem> approvalItems = entry.getValue();
-                String dingDingId = psndocToDingdingMap.get(pkPsndoc);
-
-                if (dingDingId != null && !dingDingId.isEmpty()) {
-                    boolean pushSuccess = pushApprovalMessageToUser(dingDingId, approvalItems);
+                BipEmployeeAsOtherId empInfo = psndocToDingdingMap.get(pkPsndoc);
+                if (empInfo == null) {
+                    break;
+                }
+                String dingdingId = empInfo.getDingdingId();
+                if (dingdingId != null && !dingdingId.isEmpty()) {
+                    boolean pushSuccess = pushApprovalMessageToUser(dingdingId, approvalItems);
                     if (pushSuccess) {
                         successCount++;
                         log.info("推送成功 -> 用户: {}, 待审批数量: {}", approvalItems.get(0).getUserName(), approvalItems.size());
