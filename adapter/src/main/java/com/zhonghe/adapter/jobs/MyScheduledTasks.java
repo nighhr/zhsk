@@ -17,7 +17,7 @@ public class MyScheduledTasks {
 
     }
 
-    @Scheduled(cron = "4 * * * * *")  //每天凌晨4点发送消息
+    @Scheduled(cron = "0 30 * * * *")  //每小时推送一次
     public void scheduled1Task() {
         bipSyncService.syncBipPrayBill();
 
