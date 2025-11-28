@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+import static com.zhonghe.adapter.utils.PasswordUtils.*;
+
 @Service
 @Transactional(rollbackFor = Exception.class)
 @Slf4j
@@ -94,11 +96,8 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         dbConnection.setUpdateTime(now);
 
         // 密码处理
-        if (StringUtils.hasText(dbConnection.getPassword())) {
-            dbConnection.setPassword(PasswordUtils.decryptDBPassword(dbConnection.getPassword()));
-        } else {
-            // 不更新密码
-            dbConnection.setPassword(null);
+        if (!isEncryptedPassword(dbConnection.getPassword())) {
+            dbConnection.setPassword(PasswordUtils.encryptDBPassword(dbConnection.getPassword()));
         }
 
         dbConnectionMapper.updateByIdSelective(dbConnection);
@@ -115,14 +114,14 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         dbConnection.setId(id);
         dbConnection.setIsDeleted(true);
         dbConnection.setUpdateTime(new Date());
-        // 这里需要设置updater，您可以在Controller中获取当前用户后设置
-        // dbConnection.setUpdater(currentUser);
 
         dbConnectionMapper.updateByIdSelective(dbConnection);
     }
 
     @Override
     public Result<String> testConnection(DbConnection dbConnection) {
+        String safePassword = getSafePassword(dbConnection.getPassword());
+        dbConnection.setPassword(safePassword);
         try {
             // 根据不同类型数据库进行测试
             switch (dbConnection.getConnectionType().toUpperCase()) {
@@ -182,7 +181,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             connection = DriverManager.getConnection(
                     jdbcUrl,
                     dbConnection.getUsername(),
-                    dbConnection.getPassword()
+                    decryptDBPassword(dbConnection.getPassword())
             );
 
             // 3. 获取数据库元数据
@@ -261,7 +260,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
 
         switch (dbType) {
             case "mysql":
-                return String.format("jdbc:mysql://%s:%d/%s?useSSL=false&characterEncoding=%s&serverTimezone=UTC",
+                return String.format("jdbc:mysql://%s:%d/%s?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=%s&serverTimezone=Asia/Shanghai",
                         host, port, dbName, charset);
 
             case "oracle":
