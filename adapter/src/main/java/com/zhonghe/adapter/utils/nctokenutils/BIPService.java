@@ -2,7 +2,6 @@ package com.zhonghe.adapter.utils.nctokenutils;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import com.alibaba.fastjson.JSONObject;
 
 /**
  * API 服务类

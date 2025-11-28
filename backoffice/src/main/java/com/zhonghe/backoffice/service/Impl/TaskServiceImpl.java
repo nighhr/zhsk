@@ -119,11 +119,11 @@ public class TaskServiceImpl implements TaskService {
             taskMapper.update(task);
         }
         // 只有当执行类型不是MANUAL且executeTime不为空时才调度任务
-        if (task.getExecuteType() != ExecuteTypeEnum.MANUAL &&
+        /*        if (task.getExecuteType() != ExecuteTypeEnum.MANUAL &&
                 task.getExecuteTime() != null &&
                 !task.getExecuteTime().isEmpty()) {
-//            taskSchedulerService.scheduleTask(task);
-        }
+            taskSchedulerService.scheduleTask(task);
+        }*/
         return task.getId();
     }
 

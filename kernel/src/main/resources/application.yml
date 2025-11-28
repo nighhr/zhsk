@@ -7,14 +7,3 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.http.converter.json: DEBUG
     com.zhonghe: DEBUG
-
-
-  liquibase:
-    enabled: false
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: aite
-    user: root
-    password: Root@1234
-    url: ${spring.datasource.url}
-    contexts: dev
-    drop-first: false # 生产环境必须为false

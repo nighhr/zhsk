@@ -11,13 +11,13 @@ public class MyScheduledTasks {
     @Autowired
     private BipSyncService bipSyncService;
 
-    @Scheduled(cron = "* * 4 * * *")  //每天凌晨4点同步人员数据
+    @Scheduled(cron = "0 0 4 * * ?")  //每天凌晨4点同步人员数据
     public void scheduledTask() throws Exception {
         bipSyncService.syncBipEmployees();
 
     }
 
-    @Scheduled(cron = "0 30 * * * *")  //每小时推送一次
+    @Scheduled(cron = "0 30 * * * ?")  //每小时推送一次
     public void scheduled1Task() {
         bipSyncService.syncBipPrayBill();
 
