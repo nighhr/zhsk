@@ -1,9 +1,8 @@
-package com.zhonghe.backoffice.service;
+package com.zhonghe.adapter.service;
 
 
-import cn.hutool.db.Db;
-import com.zhonghe.backoffice.model.DTO.DbConnectionDTO;
-import com.zhonghe.backoffice.model.DbConnection;
+import com.zhonghe.adapter.model.DbConnection;
+import com.zhonghe.adapter.model.DbConnectionDTO;
 import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 
@@ -32,4 +31,6 @@ public interface DbConnectionService {
     List<String> getAllTableNames(Long databaseId) throws Exception;
 
     List<String> getTableFields(String[] tableNames);
+
+    DbConnection getConnectionById(Long connectionId);
 }

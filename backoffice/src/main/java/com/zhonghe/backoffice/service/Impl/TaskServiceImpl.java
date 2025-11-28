@@ -7,9 +7,6 @@ import com.zhonghe.adapter.mapper.U8.GLAccvouchMapper;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Field;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -21,11 +18,12 @@ import java.util.stream.Collectors;
 
 import com.zhonghe.adapter.model.U8.GLAccvouch;
 import com.zhonghe.adapter.service.*;
+import com.zhonghe.adapter.config.DynamicDataSourceManager;
 import com.zhonghe.backoffice.mapper.*;
 import com.zhonghe.backoffice.model.*;
 import com.zhonghe.backoffice.model.DTO.TaskDTO;
 import com.zhonghe.backoffice.model.enums.ExecuteTypeEnum;
-import com.zhonghe.backoffice.service.DbConnectionService;
+import com.zhonghe.adapter.service.DbConnectionService;
 import com.zhonghe.backoffice.service.OperationLogService;
 import com.zhonghe.backoffice.service.StockService;
 import com.zhonghe.backoffice.service.TaskService;
@@ -37,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.quartz.SchedulerException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +57,7 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private EntriesMapper entriesMapper;
     @Autowired
+    @Qualifier("dynamicJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private PurInService purInService;
@@ -97,6 +97,8 @@ public class TaskServiceImpl implements TaskService {
     private StockService stockService;
     @Autowired
     private OperationLogService operationLogService;
+    @Autowired
+    private DynamicDataSourceManager dynamicDataSourceManager;
 
     // 添加映射规则缓存
     private final Map<String, List<TableMapping>> tableMappingCache = new ConcurrentHashMap<>();
@@ -168,12 +170,27 @@ public class TaskServiceImpl implements TaskService {
         return ruleId;
     }
 
+    /**
+     * 改造的 manualExecution 方法 - 支持多数据源 + 事务回滚
+     *
+     * 数据源说明：
+     * ✅ 源数据库(sourceDbId)：handleExecution() 及其他查询操作使用
+     * ✅ 目标数据库(U8)：glAccvouchMapper.batchInsert() 使用（写回默认数据库）
+     *
+     * 执行流程：
+     * 1. 从源数据库查询数据 (switchDataSource -> handleExecution)
+     * 2. 恢复默认数据源
+     * 3. 数据处理和聚合
+     * 4. 写入到目标数据库 (glAccvouchMapper.batchInsert 使用默认数据源)
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Integer manualExecution(Map<String, Object> params) {
         Long taskId = null;
         String taskName = null;
         String voucherKey = "N/A";
+        Long sourceDbId = null;
+        Long targetDbId = null;
 
         try {
             if (params == null || !params.containsKey("taskId")) {
@@ -191,8 +208,8 @@ public class TaskServiceImpl implements TaskService {
                 throw new RuntimeException("任务不存在");
             }
             taskName = task.getTaskName();
-
-
+            sourceDbId = task.getSourceDbId();
+            targetDbId = task.getTargetAppId();
 
             String start;
             String end;
@@ -205,14 +222,12 @@ public class TaskServiceImpl implements TaskService {
 
             // 处理开始时间
             if (!params.containsKey("startTime")) {
-                //自动执行
                 if (task.getStartTime() == null) {
                     start = firstDay.format(formatter);
                 } else {
                     start = sdf.format(task.getStartTime());
                 }
             } else {
-                //手动执行
                 start = params.get("startTime").toString();
                 if (start == null || start.trim().isEmpty()) {
                     start = firstDay.format(formatter);
@@ -221,134 +236,156 @@ public class TaskServiceImpl implements TaskService {
 
             // 处理结束时间
             if (!params.containsKey("endTime")) {
-                //自动执行
                 if (task.getEndTime() == null) {
                     end = lastDay.format(formatter);
                 } else {
                     end = sdf.format(task.getEndTime());
                 }
             } else {
-                //手动执行
                 end = params.get("endTime").toString();
                 if (end == null || end.trim().isEmpty()) {
                     end = lastDay.format(formatter);
                 }
             }
 
-            if("门店销售收入(收款明细)".equals(task.getTaskName())){
+            if ("门店销售收入(收款明细)".equals(task.getTaskName())) {
                 int countByTime = saleService.getCountByTime(start, end);
-                if (countByTime==0){
-                    throw new BusinessException(ErrorCode.ORDER_PRE_TASK,"本月还未成功生成门店销售收入,会影响收款明细参数");
+                if (countByTime == 0) {
+                    throw new BusinessException(ErrorCode.ORDER_PRE_TASK,
+                            "本月还未成功生成门店销售收入,会影响收款明细参数");
                 }
             }
+
             // 获取凭证头列表
             List<TaskVoucherHead> taskVoucherHeads = taskVoucherHeadMapper.selectByTaskId(taskId);
             if (!taskVoucherHeads.isEmpty()) {
                 voucherKey = taskVoucherHeads.get(0).getVoucherKey();
             }
+
             LocalDateTime dateTime = LocalDateTime.parse(end, formatter);
-            // 提取年月（202505）
             String yearMonth = dateTime.format(DateTimeFormatter.ofPattern("yyyyMM"));
-            List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
-            int totalRecords = glAccvouches.size();
-            if (totalRecords == 0) {
-                throw new BusinessException(ErrorCode.PARAM_ERROR, "没有需要处理的凭证数据");
-            }
 
+            // ============ 第一步：切换到源数据库 ============
+            // 后续的 handleExecution() 等操作会使用源数据库查询数据
+            switchDataSourceIfNeeded(targetDbId);
 
-            //按照当前月的最大inoId计算
-//            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByMonth();
-            //按照end月份的最大inoId计算
-            Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByEndMonth(yearMonth);
-            if (inoIdMax == null) {
-                inoIdMax = 0;
-            }
-            int baseInoId = inoIdMax + 1;
+            try {
+                // ============ 第二步：从源数据库查询和处理数据 ============
+                log.info("开始从目标数据库查询数据: taskId={}, targetDbId={}", taskId, targetDbId);
 
-            List<GLAccvouch> sortedList = glAccvouches.stream()
-                    .filter(item -> {
-                        boolean bothZero = item.getMd() != null && item.getMc() != null
-                                && item.getMd().compareTo(BigDecimal.ZERO) == 0
-                                && item.getMc().compareTo(BigDecimal.ZERO) == 0;
+                List<GLAccvouch> glAccvouches = handleExecution(task, start, end);
+                int totalRecords = glAccvouches.size();
+                if (totalRecords == 0) {
+                    throw new BusinessException(ErrorCode.PARAM_ERROR, "没有需要处理的凭证数据");
+                }
 
-                        boolean bothNull = item.getMd() == null && item.getMc() == null;
+                Integer inoIdMax = glAccvouchMapper.selectInoIdMaxByEndMonth(yearMonth);
+                if (inoIdMax == null) {
+                    inoIdMax = 0;
+                }
+                int baseInoId = inoIdMax + 1;
 
-                        return !(bothZero || bothNull); // 保留不符合这两种情况的数据
-                    })
-                    .collect(Collectors.toList());
+                List<GLAccvouch> sortedList = glAccvouches.stream()
+                        .filter(item -> {
+                            boolean bothZero = item.getMd() != null && item.getMc() != null
+                                    && item.getMd().compareTo(BigDecimal.ZERO) == 0
+                                    && item.getMc().compareTo(BigDecimal.ZERO) == 0;
 
-            // 拆分处理 md == 0 的记录 用于排序 借方在上 贷方在下
-            List<GLAccvouch> mdZeroList = sortedList.stream()
-                    .filter(item -> item.getMd() != null && item.getMd().compareTo(BigDecimal.ZERO) == 0)
-                    .collect(Collectors.toList());
+                            boolean bothNull = item.getMd() == null && item.getMc() == null;
 
-            List<GLAccvouch> otherList = sortedList.stream()
-                    .filter(item -> item.getMd() == null || item.getMd().compareTo(BigDecimal.ZERO) != 0)
-                    .collect(Collectors.toList());
+                            return !(bothZero || bothNull); // 保留不符合这两种情况的数据
+                        })
+                        .collect(Collectors.toList());
 
-            List<GLAccvouch> sortedList1 = new ArrayList<>();
-            sortedList1.addAll(otherList);
-            sortedList1.addAll(mdZeroList);
+                // 拆分处理 md == 0 的记录 用于排序 借方在上 贷方在下
+                List<GLAccvouch> mdZeroList = sortedList.stream()
+                        .filter(item -> item.getMd() != null && item.getMd().compareTo(BigDecimal.ZERO) == 0)
+                        .collect(Collectors.toList());
 
-            // 分配ID
-            if("门店销售收入(收款明细)".equals(task.getTaskName())){
-                // 按门店分组
-                Map<String, List<GLAccvouch>> groupByDept = sortedList1.stream()
-                        .collect(Collectors.groupingBy(GLAccvouch::getCdeptId));
+                List<GLAccvouch> otherList = sortedList.stream()
+                        .filter(item -> item.getMd() == null || item.getMd().compareTo(BigDecimal.ZERO) != 0)
+                        .collect(Collectors.toList());
 
-                // 为每个门店分配不同的InoId（baseInoId递增），门店内部分配自增Inid
-                AtomicInteger deptInoIdCounter = new AtomicInteger(baseInoId);
-                groupByDept.forEach((deptId, deptList) -> {
-                    int currentInoId = deptInoIdCounter.getAndIncrement();
-                    AtomicInteger inidCounter = new AtomicInteger(1);
-                    deptList.forEach(item -> {
-                        item.setInoId(currentInoId);
-                        item.setInid(inidCounter.getAndIncrement());
+                List<GLAccvouch> sortedList1 = new ArrayList<>();
+                sortedList1.addAll(otherList);
+                sortedList1.addAll(mdZeroList);
+
+                // 分配ID
+                if ("门店销售收入(收款明细)".equals(task.getTaskName())) {
+                    // 按门店分组
+                    Map<String, List<GLAccvouch>> groupByDept = sortedList1.stream()
+                            .collect(Collectors.groupingBy(GLAccvouch::getCdeptId));
+
+                    // 为每个门店分配不同的InoId（baseInoId递增），门店内部分配自增Inid
+                    AtomicInteger deptInoIdCounter = new AtomicInteger(baseInoId);
+                    groupByDept.forEach((deptId, deptList) -> {
+                        int currentInoId = deptInoIdCounter.getAndIncrement();
+                        AtomicInteger inidCounter = new AtomicInteger(1);
+                        deptList.forEach(item -> {
+                            item.setInoId(currentInoId);
+                            item.setInid(inidCounter.getAndIncrement());
+                        });
                     });
-                });
-            }else{
-                AtomicInteger inidCounter = new AtomicInteger(1);
-                sortedList1.forEach(item -> {
-                    item.setInoId(baseInoId);
-                    item.setInid(inidCounter.getAndIncrement());
-                });
-            }
-
-            int totalRecord = sortedList1.size();
-            int batchSize = 50;
-            int totalBatches = (totalRecord + batchSize - 1) / batchSize;
-
-            // 处理每个批次
-            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
-                int fromIndex = batchIndex * batchSize;
-                int toIndex = Math.min(fromIndex + batchSize, totalRecord);
-                List<GLAccvouch> batch = sortedList1.subList(fromIndex, toIndex);
-
-                // 金额精度处理
-                batch.forEach(item -> {
-                    if (item.getMd() != null) {
-                        item.setMd(item.getMd().setScale(2, RoundingMode.HALF_UP));
-                    }
-                    if (item.getMc() != null) {
-                        item.setMc(item.getMc().setScale(2, RoundingMode.HALF_UP));
-                    }
-                });
-
-                if("门店销售收入(收款明细)".equals(task.getTaskName())){
-                    batch.forEach(item -> {
-                        if ("12210501".equals(item.getCcode())) {
-                            item.setCdeptId(null);
-                        }
+                } else {
+                    AtomicInteger inidCounter = new AtomicInteger(1);
+                    sortedList1.forEach(item -> {
+                        item.setInoId(baseInoId);
+                        item.setInid(inidCounter.getAndIncrement());
                     });
                 }
 
-                glAccvouchMapper.batchInsert(batch);
-//                 2. 记录成功日志（独立事务）
-                operationLogService.asyncRecordSuccessLog(taskId, taskName, voucherKey,
-                        batch, "凭证批量插入成功，数量：" + batch.size());
-            }
+                int totalRecord = sortedList1.size();
+                int batchSize = 50;
+                int totalBatches = (totalRecord + batchSize - 1) / batchSize;
 
-            return sortedList1.size();
+                restoreDefaultDataSource(targetDbId);
+
+                // 处理每个批次
+                for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+                    int fromIndex = batchIndex * batchSize;
+                    int toIndex = Math.min(fromIndex + batchSize, totalRecord);
+                    List<GLAccvouch> batch = sortedList1.subList(fromIndex, toIndex);
+
+                    // 金额精度处理
+                    batch.forEach(item -> {
+                        if (item.getMd() != null) {
+                            item.setMd(item.getMd().setScale(2, RoundingMode.HALF_UP));
+                        }
+                        if (item.getMc() != null) {
+                            item.setMc(item.getMc().setScale(2, RoundingMode.HALF_UP));
+                        }
+                    });
+
+                    if ("门店销售收入(收款明细)".equals(task.getTaskName())) {
+                        batch.forEach(item -> {
+                            if ("12210501".equals(item.getCcode())) {
+                                item.setCdeptId(null);
+                            }
+                        });
+                    }
+
+                    // 使用目标数据库（默认的U8数据库）进行插入
+                    glAccvouchMapper.batchInsert(batch);
+                    log.info("凭证批量插入成功: 批次={}/{}, 插入数量={}",
+                            batchIndex + 1, totalBatches, batch.size());
+
+                    // 记录成功日志
+                    operationLogService.asyncRecordSuccessLog(taskId, taskName, voucherKey,
+                            batch, "凭证批量插入成功，数量：" + batch.size());
+                }
+
+                log.info("任务执行成功: taskId={}, taskName={}, 处理记录数={}",
+                        taskId, taskName, sortedList1.size());
+                return sortedList1.size();
+
+            } finally {
+                // ============ 第五步：确保恢复到默认数据源（即使异常也会执行） ============
+                // 如果在第三步之前发生异常（比如查询失败），这里会恢复数据源
+                if (sourceDbId != null && sourceDbId != 0) {
+                    restoreDefaultDataSource(sourceDbId);
+                    log.debug("finally块中已恢复默认数据源");
+                }
+            }
 
         } catch (BusinessException be) {
             // 业务异常，记录日志并重新抛出
@@ -359,12 +396,49 @@ public class TaskServiceImpl implements TaskService {
             throw be;
 
         } catch (Exception e) {
-            // 全局异常，记录失败日志（独立事务）
+            // 全局异常，记录失败日志
             String errorMsg = "凭证处理失败: " + e.getMessage();
             log.error(errorMsg, e);
             operationLogService.recordFailureLog(taskId, taskName, voucherKey,
                     params, errorMsg + "\n堆栈信息: " + getStackTraceAsString(e));
             throw new BusinessException(ErrorCode.DB_CONNECT_ERROR, errorMsg);
+        }
+    }
+
+    /**
+     * 根据需要切换数据源
+     * 如果 sourceDbId 为空或为 0，则使用默认数据源（原有行为）
+     * 否则切换到指定的数据源
+     */
+    private void switchDataSourceIfNeeded(Long sourceDbId) {
+        if (sourceDbId == null || sourceDbId == 0) {
+            log.debug("使用默认数据源");
+            return;
+        }
+
+        try {
+            dynamicDataSourceManager.switchDataSource(sourceDbId);
+            log.info("切换数据源成功: sourceDbId={}", sourceDbId);
+        } catch (Exception e) {
+            log.error("切换数据源失败: sourceDbId={}", sourceDbId, e);
+            throw new BusinessException(ErrorCode.DB_CONNECT_ERROR,
+                    "切换数据源失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 恢复默认数据源
+     */
+    private void restoreDefaultDataSource(Long sourceDbId) {
+        // 只有当真正切换过数据源时才需要恢复
+        if (sourceDbId != null && sourceDbId != 0) {
+            try {
+                dynamicDataSourceManager.restoreDataSource();
+                log.debug("已恢复默认数据源");
+            } catch (Exception e) {
+                log.warn("恢复默认数据源时出现异常", e);
+                // 不抛出异常，只记录日志
+            }
         }
     }
 
@@ -450,6 +524,12 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(!task.getStatus());
         taskMapper.update(task);
         return task.getStatus();
+    }
+
+    @Override
+    public Optional<Task> findById(Long id) {
+        Task task = taskMapper.selectById(id);
+        return Optional.ofNullable(task);
     }
 
     public List<GLAccvouch> handleExecution(Task task, String start, String end) throws Exception {

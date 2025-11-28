@@ -29,9 +29,6 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Autowired
     private GoodsMapper goodsMapper;
-    @Autowired
-    @Qualifier("secondarySqlSessionTemplate")
-    private SqlSessionTemplate secondarySqlSessionTemplate;
 
     private static final int BATCH_SIZE = 500; // 每批处理量
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.zhonghe.backoffice.mapper.DbConnectionMapper">
+<mapper namespace="com.zhonghe.adapter.mapper.AT.DbConnectionMapper">
 
-    <resultMap id="BaseResultMap" type="com.zhonghe.backoffice.model.DbConnection">
+    <resultMap id="BaseResultMap" type="com.zhonghe.adapter.model.DbConnection">
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="connection_name" property="connectionName" jdbcType="VARCHAR"/>
         <result column="connection_type" property="connectionType" jdbcType="VARCHAR"/>
@@ -57,7 +57,7 @@
         </if>
     </select>
 
-    <insert id="insert" parameterType="com.zhonghe.backoffice.model.DbConnection" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.zhonghe.adapter.model.DbConnection" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO db_connections (
             connection_name, connection_type, db_host, db_port, db_name,
             username, password, charset,
@@ -69,7 +69,7 @@
                  )
     </insert>
 
-    <update id="updateByIdSelective" parameterType="com.zhonghe.backoffice.model.DbConnection">
+    <update id="updateByIdSelective" parameterType="com.zhonghe.adapter.model.DbConnection">
         UPDATE db_connections
         <set>
             <if test="connectionName != null">connection_name = #{connectionName},</if>

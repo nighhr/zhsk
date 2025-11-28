@@ -1,10 +1,10 @@
-package com.zhonghe.backoffice.service.Impl;
+package com.zhonghe.adapter.service.Impl;
 
+import com.zhonghe.adapter.mapper.AT.DbConnectionMapper;
+import com.zhonghe.adapter.model.DbConnection;
+import com.zhonghe.adapter.model.DbConnectionDTO;
 import com.zhonghe.adapter.utils.PasswordUtils;
-import com.zhonghe.backoffice.mapper.DbConnectionMapper;
-import com.zhonghe.backoffice.model.DbConnection;
-import com.zhonghe.backoffice.model.DTO.DbConnectionDTO;
-import com.zhonghe.backoffice.service.DbConnectionService;
+import com.zhonghe.adapter.service.DbConnectionService;
 import com.zhonghe.kernel.exception.BusinessException;
 import com.zhonghe.kernel.exception.ErrorCode;
 import com.zhonghe.kernel.vo.PageResult;
@@ -146,6 +146,8 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         return dbConnectionMapper.selectAllAppNames();
     }
 
+
+
     @Override
     public List<String> getTablesByConnectionId(Long connectionId) {
         DbConnection connection = dbConnectionMapper.selectById(connectionId);
@@ -230,6 +232,11 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         }
 
         return new ArrayList<>(fieldSet);
+    }
+
+    @Override
+    public DbConnection getConnectionById(Long connectionId) {
+        return dbConnectionMapper.selectById(connectionId);
     }
 
 

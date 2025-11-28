@@ -1,4 +1,4 @@
-package com.zhonghe.backoffice.model;
+package com.zhonghe.adapter.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

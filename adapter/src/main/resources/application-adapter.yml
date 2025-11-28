@@ -1,39 +1,3 @@
-spring:
-  datasource:
-    secondary:
-#      jdbc-url: "jdbc:sqlserver://192.168.4.8:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true;serverTimezone=Asia/Shanghai"
-      jdbc-url: "jdbc:sqlserver://192.168.28.63:1433;databaseName=UFDATA_999_2025;encrypt=true;trustServerCertificate=true;serverTimezone=Asia/Shanghai"
-#      password: sy1901!!
-      password: Aa123456
-      username: sa
-      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-      hikari:
-        pool-name: SecondarySQLServerPool
-        maximum-pool-size: 10
-        maxLifetime: 1800000
-        idleTimeout: 600000
-        validation-timeout: 5000
-
-    third:
-      jdbc-url: "jdbc:oracle:thin:@//192.168.11.200:1521/PDB"
-      username: YONBIPV3
-      password: YONBIPV3
-      driver-class-name: oracle.jdbc.OracleDriver
-      hikari:
-        pool-name: OracleThirdPool
-        maximum-pool-size: 10
-        maxLifetime: 1800000
-        idleTimeout: 600000
-        validation-timeout: 5000
-
-mybatis:
-  secondary:
-    mapper-locations: classpath:mapper/U8/*.xml
-    type-aliases-package: com.zhonghe.adapter.model.U8
-  third:
-    mapper-locations: classpath:mapper/BIP/*.xml
-    type-aliases-package: com.zhonghe.adapter.model.BIP
-
 logging:
   level:
     com.zhonghe.adapter.mapper.U8: DEBUG

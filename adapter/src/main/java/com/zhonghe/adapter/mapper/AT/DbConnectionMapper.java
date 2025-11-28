@@ -1,9 +1,8 @@
-package com.zhonghe.backoffice.mapper;
+package com.zhonghe.adapter.mapper.AT;
 
-import com.zhonghe.backoffice.model.DbConnection;
+import com.zhonghe.adapter.model.DbConnection;
 import org.apache.ibatis.annotations.Mapper;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 

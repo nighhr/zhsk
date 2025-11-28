@@ -8,10 +8,7 @@ import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 import org.quartz.SchedulerException;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public interface TaskService {
     Long createTask(Task task) throws SchedulerException;
@@ -39,4 +36,8 @@ public interface TaskService {
     List<Map<String, Object>> getSubjectByRuleId(Long ruleId);
 
     Boolean changeTaskStatus(Long taskId);
+
+    Optional<Task> findById(Long id);
+
+
 }

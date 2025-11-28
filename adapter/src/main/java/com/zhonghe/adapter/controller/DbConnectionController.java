@@ -1,8 +1,8 @@
-package com.zhonghe.backoffice.controller;
+package com.zhonghe.adapter.controller;
 
-import com.zhonghe.backoffice.model.DTO.DbConnectionDTO;
-import com.zhonghe.backoffice.model.DbConnection;
-import com.zhonghe.backoffice.service.DbConnectionService;
+import com.zhonghe.adapter.model.DbConnection;
+import com.zhonghe.adapter.model.DbConnectionDTO;
+import com.zhonghe.adapter.service.DbConnectionService;
 import com.zhonghe.kernel.vo.PageResult;
 import com.zhonghe.kernel.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;

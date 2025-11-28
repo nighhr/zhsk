@@ -1,4 +1,4 @@
-package com.zhonghe.backoffice.model.DTO;
+package com.zhonghe.adapter.model;
 
 import lombok.Data;
 
