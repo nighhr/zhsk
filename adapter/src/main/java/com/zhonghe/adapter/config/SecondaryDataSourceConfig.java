@@ -19,10 +19,6 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * 改造后的 SecondaryDataSourceConfig - U8 Mapper 数据源配置
- * 支持动态数据源切换
- */
 @Configuration
 @MapperScan(
         basePackages = "com.zhonghe.adapter.mapper.U8",
@@ -84,10 +80,6 @@ public class SecondaryDataSourceConfig {
         return new SqlSessionTemplate(sqlSessionFactory);
     }
 
-    /**
-     * ========== 核心：动态路由DataSource ==========
-     * 根据 DynamicDataSourceManager 中的 ThreadLocal 动态返回数据源
-     */
     @Slf4j
     public static class RoutingDataSource extends AbstractRoutingDataSource {
 
@@ -146,7 +138,6 @@ public class SecondaryDataSourceConfig {
 
         /**
          * 重写 getTargetDataSource() 来支持动态获取
-         * 这是关键方法！
          */
         protected DataSource getTargetDataSource() {
             Object lookupKey = determineCurrentLookupKey();
